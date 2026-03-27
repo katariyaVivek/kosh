@@ -85,6 +85,10 @@
   --platform-openai-soft: oklch(0.95 0.06 152);
   --platform-anthropic: oklch(0.57 0.12 48);
   --platform-anthropic-soft: oklch(0.93 0.04 48);
+  --platform-openrouter: oklch(0.62 0.17 214);
+  --platform-openrouter-soft: oklch(0.94 0.05 214);
+  --platform-nim: oklch(0.74 0.18 144);
+  --platform-nim-soft: oklch(0.95 0.05 144);
   --platform-google: oklch(0.63 0.18 251);
   --platform-google-soft: oklch(0.94 0.05 251);
   --platform-stripe: oklch(0.61 0.19 280);
@@ -131,6 +135,10 @@
   --platform-openai-soft: oklch(0.36 0.08 152);
   --platform-anthropic: oklch(0.74 0.1 48);
   --platform-anthropic-soft: oklch(0.35 0.05 48);
+  --platform-openrouter: oklch(0.78 0.13 214);
+  --platform-openrouter-soft: oklch(0.34 0.07 214);
+  --platform-nim: oklch(0.8 0.14 144);
+  --platform-nim-soft: oklch(0.34 0.08 144);
   --platform-google: oklch(0.75 0.14 251);
   --platform-google-soft: oklch(0.34 0.07 251);
   --platform-stripe: oklch(0.75 0.15 280);

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { KoshShell } from "@/components/kosh-shell"
 import { VaultView } from "@/components/vault-view"
 
 export default async function Home() {
@@ -7,5 +8,9 @@ export default async function Home() {
     include: { usageLogs: { orderBy: { date: "desc" }, take: 7 } }
   })
 
-  return <VaultView keys={keys} />
+  return (
+    <KoshShell>
+      <VaultView keys={keys} />
+    </KoshShell>
+  )
 }
