@@ -8,7 +8,7 @@ import {
 } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Plus, Vault } from "lucide-react"
+import { Plus, Settings, Vault, type LucideIcon } from "lucide-react"
 
 import { AddAlertDialog } from "@/components/add-alert-dialog"
 import { AddKeyDialog } from "@/components/add-key-dialog"
@@ -16,11 +16,19 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-const NAV_ITEMS = [
-  { label: "Vault", href: "/" },
+type NavItem = {
+  label: string
+  href: string
+  icon?: LucideIcon
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { label: "Dashboard", href: "/" },
+  { label: "Vault", href: "/vault" },
   { label: "Pulse", href: "/pulse" },
   { label: "Alerts", href: "/alerts" },
-] as const
+  { label: "Settings", href: "/settings", icon: Settings },
+]
 
 type SidebarAction =
   | { kind: "key" }
@@ -73,6 +81,14 @@ export function KoshShell({
               <nav className="space-y-1">
                 {NAV_ITEMS.map((item) => {
                   const isActive = pathname === item.href
+                  const labelContent = (
+                    <span className="flex items-center gap-2.5">
+                      {item.icon ? (
+                        <item.icon className="size-4 text-sidebar-foreground/70" />
+                      ) : null}
+                      <span>{item.label}</span>
+                    </span>
+                  )
 
                   return (
                     <Link
@@ -88,10 +104,10 @@ export function KoshShell({
                       {isActive ? (
                         <span className="flex items-center gap-2.5">
                           <span className="size-1.5 rounded-full bg-sidebar-foreground/80" />
-                          <span>{item.label}</span>
+                          {labelContent}
                         </span>
                       ) : (
-                        <span>{item.label}</span>
+                        labelContent
                       )}
                     </Link>
                   )
