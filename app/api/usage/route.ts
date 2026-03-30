@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
       calls: Number(calls),
       cost: Number(cost),
       tokens: tokens === null || tokens === "" ? null : Number(tokens),
+      date: new Date(),
     },
   })
 
