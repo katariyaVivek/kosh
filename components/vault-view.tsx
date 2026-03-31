@@ -1,7 +1,7 @@
 "use client"
 
 import { useDeferredValue, useState } from "react"
-import { formatDistanceToNow } from "date-fns"
+import { differenceInDays, formatDistanceToNow } from "date-fns"
 import {
   Copy,
   Eye,
@@ -138,6 +138,8 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
     return matchesPlatform && matchesSearch
   })
 
+  const now = new Date()
+
   if (keys.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -255,9 +257,51 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
           filteredKeys.map((key) => {
             const accentColor = getPlatformColor(key.platform)
             const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
-            const initial = getPlatformInitial(key.platform)
+          const initial = getPlatformInitial(key.platform)
+          const expiresAt = key.expiresAt ? new Date(key.expiresAt) : null
+          const daysUntilExpiry =
+            expiresAt !== null ? differenceInDays(expiresAt, now) : null
+          const expiryBadge =
+            expiresAt !== null && daysUntilExpiry !== null
+              ? (() => {
+                  if (daysUntilExpiry < 0) {
+                    return (
+                      <Badge
+                        variant="outline"
+                        className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                      >
+                        Expired
+                      </Badge>
+                    )
+                  }
 
-            return (
+                  if (daysUntilExpiry <= 7) {
+                    return (
+                      <Badge
+                        variant="outline"
+                        className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                      >
+                        Expiring soon
+                      </Badge>
+                    )
+                  }
+
+                  if (daysUntilExpiry <= 30) {
+                    return (
+                      <Badge
+                        variant="outline"
+                        className="h-5 rounded-full border border-amber-400/70 bg-amber-400/10 px-2.5 text-[11px] font-medium text-amber-400"
+                      >
+                        Expires in {daysUntilExpiry} days
+                      </Badge>
+                    )
+                  }
+
+                  return null
+                })()
+              : null
+
+          return (
               <Card
                 key={key.id}
                 className="border-l-4 bg-card/85 shadow-sm ring-border/80 transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-accent/40 hover:shadow-md"
@@ -278,9 +322,12 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
 
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-base font-semibold tracking-tight">
-                          {key.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-base font-semibold tracking-tight">
+                            {key.name}
+                          </p>
+                          {expiryBadge}
+                        </div>
                         <Badge
                           variant="outline"
                           className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"

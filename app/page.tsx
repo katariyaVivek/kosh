@@ -4,6 +4,7 @@ import { BellRing, Clock, DollarSign, Key, LayoutDashboard } from "lucide-react"
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
 import { KoshShell } from "@/components/kosh-shell"
 import { Card, CardContent } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { db } from "@/lib/db"
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -71,6 +72,7 @@ export default async function Home() {
     platform: key.platform,
     environment: key.environment,
     lastLog: key.usageLogs[0]?.date?.toISOString() ?? null,
+    expiresAt: key.expiresAt ? key.expiresAt.toISOString() : null,
   }))
 
   return (
@@ -84,11 +86,18 @@ export default async function Home() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map(({ label, value, icon: Icon, hasWarning }) => (
+        {stats.map(({ label, value, icon: Icon, hasWarning }) => {
+          const highlightExpiring =
+            label === "Expiring Soon" && typeof value === "number" && value > 0
+
+          return (
             <Card
               key={label}
               size="sm"
-              className="bg-card/80 shadow-sm ring-border/70 backdrop-blur"
+              className={cn(
+                "bg-card/80 shadow-sm ring-border/70 backdrop-blur",
+                highlightExpiring && "bg-amber-400/10 ring-amber-300/50"
+              )}
             >
               <CardContent className="flex items-center gap-3 py-3">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -101,13 +110,20 @@ export default async function Home() {
                       <span className="size-2 rounded-full bg-destructive" />
                     ) : null}
                   </p>
-                  <p className="text-2xl font-medium tracking-tight text-foreground/85">
-                    {value}
+                  <p className="text-2xl font-medium tracking-tight">
+                    <span
+                      className={cn(
+                        highlightExpiring ? "text-amber-400" : "text-foreground/85"
+                      )}
+                    >
+                      {value}
+                    </span>
                   </p>
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )
+        })}
         </div>
 
         {tableKeys.length === 0 ? (
