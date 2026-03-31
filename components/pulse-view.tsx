@@ -7,6 +7,7 @@ import {
   Layers,
   Plus,
   RefreshCw,
+  Search,
   ShieldCheck,
 } from "lucide-react"
 import {
@@ -96,6 +97,8 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
     cost: "",
     tokens: "",
   })
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activePlatform, setActivePlatform] = useState("All")
 
   useEffect(() => {
     const fadeTimeouts = validationFadeTimeouts.current
@@ -162,6 +165,28 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
         mostActive && mostActive.calls > 0 ? mostActive.name : "No data yet",
     }
   }, [keys])
+
+  const platforms = useMemo(
+    () => Array.from(new Set(keys.map((key) => key.platform))),
+    [keys]
+  )
+  const normalizedSearch = searchQuery.trim().toLowerCase()
+  const effectivePlatform = platforms.includes(activePlatform)
+    ? activePlatform
+    : "All"
+  const filteredKeys = useMemo(() => {
+    return keys.filter((key) => {
+      const matchesPlatform =
+        effectivePlatform === "All" || key.platform === effectivePlatform
+
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        key.name.toLowerCase().includes(normalizedSearch) ||
+        key.platform.toLowerCase().includes(normalizedSearch)
+
+      return matchesPlatform && matchesSearch
+    })
+  }, [effectivePlatform, keys, normalizedSearch])
 
   const buildSparklineData = (logs: KoshUsageLog[]) => {
     const today = startOfDay(new Date())
@@ -429,8 +454,51 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
 
       <div className="mb-6 h-px bg-border/70" />
 
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search keys..."
+            className="h-10 rounded-xl border-border/70 bg-card/70 pl-9 shadow-sm"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          {["All", ...platforms].map((platform) => {
+            const isActive = platform === effectivePlatform
+            return (
+              <Button
+                key={platform}
+                type="button"
+                variant={isActive ? "secondary" : "outline"}
+                size="sm"
+                onClick={() =>
+                  setActivePlatform((current) =>
+                    platform === "All" ? "All" : current === platform ? "All" : platform
+                  )
+                }
+                className={cn(
+                  "rounded-full px-3",
+                  isActive
+                    ? "bg-secondary text-secondary-foreground shadow-sm"
+                    : "border-border/70 bg-card/70 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {platform}
+              </Button>
+            )
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col gap-3">
-        {keys.map((key) => {
+        {filteredKeys.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center text-sm text-muted-foreground">
+            No keys match your search
+          </div>
+        ) : (
+          filteredKeys.map((key) => {
           const accentColor = getPlatformColor(key.platform)
           const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
           const initial = getPlatformInitial(key.platform)
@@ -692,7 +760,8 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
               </CardContent>
             </Card>
           )
-        })}
+        })
+      )}
       </div>
 
       <Dialog
