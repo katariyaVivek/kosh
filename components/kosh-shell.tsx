@@ -76,12 +76,12 @@ export function KoshShell({
         <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)]">
           <aside className="border-b border-sidebar-border bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
             <div className="flex h-full flex-col gap-6 p-4">
-              <div className="flex items-center gap-3 px-2 pt-1">
-                <div className="flex size-10 items-center justify-center rounded-xl border border-sidebar-border bg-background text-sidebar-foreground shadow-sm">
-                  <Shield className="size-5 text-sidebar-accent" />
+              <div className="flex flex-row items-center gap-3 px-2 pt-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
+                  K
                 </div>
-                <div>
-                  <p className="text-sm font-semibold tracking-tight text-sidebar-foreground">
+                <div className="flex flex-col leading-tight">
+                  <p className="text-sm font-semibold text-sidebar-foreground">
                     Kosh
                   </p>
                   <p className="text-xs text-muted-foreground">API treasury</p>

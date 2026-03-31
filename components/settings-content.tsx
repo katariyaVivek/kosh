@@ -211,6 +211,8 @@ export function SettingsContent() {
   }, [router])
 
   const activeTheme = mounted && (theme ?? "system")
+  const keyLength = masterKey?.length ?? 0
+  const isStrongKey = keyLength >= 32 && Boolean(masterKey)
 
   const themeCards = useMemo(
     () =>
@@ -290,8 +292,21 @@ export function SettingsContent() {
                   <p>
                     This key encrypts all your API keys. Never share it. Back it
                     up somewhere safe.
-                  </p>
-                </div>
+                    </p>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p
+                      className={cn(
+                        "font-medium",
+                        isStrongKey ? "text-emerald-400" : "text-destructive"
+                      )}
+                    >
+                      {isStrongKey ? "✓ Strong" : "⚠ Weak"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      To change your master key, all stored keys must be re-encrypted. Coming soon.
+                    </p>
+                  </div>
               </div>
 
               <div className="space-y-2 text-sm">
