@@ -4,6 +4,7 @@ export type KoshKey = {
   platform: string
   projectTag: string | null
   environment: string
+  expiresAt?: string | Date | null
   createdAt: string | Date
 }
 

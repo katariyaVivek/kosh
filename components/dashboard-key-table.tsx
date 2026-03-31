@@ -1,14 +1,15 @@
 "use client"
 
-import { type MouseEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
+  differenceInDays,
   eachDayOfInterval,
   format,
   formatDistanceToNow,
   subDays,
 } from "date-fns"
 import { Bar, BarChart, ResponsiveContainer, Tooltip } from "recharts"
-import { Copy, X } from "lucide-react"
+import { AlertTriangle, Copy, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,6 +27,7 @@ export type DashboardKeyRow = {
   name: string
   platform: string
   environment: string
+  expiresAt: string | null
   lastLog: string | null
 }
 
@@ -44,6 +46,7 @@ type DashboardKeyDetails = {
     projectTag: string | null
     environment: string
     createdAt: string
+    expiresAt: string | null
   }
   usageLogs: UsageLogEntry[]
   totalCalls: number
@@ -106,7 +109,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [panelDetails, setPanelDetails] = useState<DashboardKeyDetails | null>(null)
-  const [isPanelLoading, setIsPanelLoading] = useState(false)
   const [panelError, setPanelError] = useState<string | null>(null)
   const [panelCopied, setPanelCopied] = useState(false)
 
@@ -120,6 +122,11 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
       return haystack.includes(normalizedQuery)
     })
   }, [keys, normalizedQuery])
+
+  const keyExpiryMap = useMemo(
+    () => new Map(keys.map((key) => [key.id, key.expiresAt])),
+    [keys]
+  )
 
   const handleCopy = async (id: string) => {
     try {
@@ -167,18 +174,23 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const closePanel = useCallback(() => {
     setSelectedKeyId(null)
     setPanelDetails(null)
-    setIsPanelLoading(false)
     setPanelError(null)
     setPanelCopied(false)
   }, [])
+
+  const openPanelForKey = useCallback(
+    (keyId: string) => {
+      setPanelError(null)
+      setPanelDetails(null)
+      setSelectedKeyId(keyId)
+    },
+    [setPanelDetails, setPanelError, setSelectedKeyId]
+  )
 
   useEffect(() => {
     if (!selectedKeyId) return
 
     const controller = new AbortController()
-    setIsPanelLoading(true)
-    setPanelError(null)
-    setPanelDetails(null)
 
     fetch(`/api/keys/${selectedKeyId}/details`, { signal: controller.signal })
       .then(async (res) => {
@@ -186,22 +198,24 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
         return res.json()
       })
       .then((data: DashboardKeyDetails) => {
-        setPanelDetails(data)
+        const expiresAt = keyExpiryMap.get(data.key.id) ?? null
+        setPanelDetails({
+          ...data,
+          key: {
+            ...data.key,
+            expiresAt,
+          },
+        })
       })
       .catch((error) => {
         if (controller.signal.aborted) return
         setPanelError(error.message || "Unable to load key details")
       })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsPanelLoading(false)
-        }
-      })
 
     return () => {
       controller.abort()
     }
-  }, [selectedKeyId])
+  }, [selectedKeyId, keyExpiryMap])
 
   useEffect(() => {
     if (!selectedKeyId) return
@@ -215,13 +229,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     document.addEventListener("keydown", handleKey)
     return () => document.removeEventListener("keydown", handleKey)
   }, [selectedKeyId, closePanel])
-
-  const parseLocalDate = (dateStr: string): Date => {
-    const parts = dateStr.split("-")
-    if (parts.length !== 3) return new Date()
-    const [year, month, day] = parts.map(Number)
-    return new Date(year, month - 1, day)
-  }
 
   const chartData = useMemo(() => {
     if (!panelDetails) return []
@@ -269,6 +276,62 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const panelInitial = panelDetails
     ? getPlatformInitial(panelDetails.key.platform)
     : getPlatformInitial("Other")
+  const isPanelLoading = Boolean(
+    selectedKeyId && panelDetails === null && panelError === null
+  )
+  const panelExpiresAt = panelDetails?.key.expiresAt
+    ? new Date(panelDetails.key.expiresAt)
+    : null
+  const panelExpiresInDays =
+    panelExpiresAt !== null ? differenceInDays(panelExpiresAt, new Date()) : null
+  const panelInfoItems = panelDetails
+    ? [
+        {
+          label: "Environment",
+          value: formatEnvironment(panelDetails.key.environment),
+          dotColor:
+            ENVIRONMENT_COLORS[panelDetails.key.environment] ??
+            "bg-muted-foreground/80",
+        },
+        {
+          label: "Project",
+          value: panelDetails.key.projectTag ?? "—",
+        },
+        {
+          label: "Last Logged",
+          value: panelDetails.usageLogs[0]
+            ? (() => {
+                const dateStr = panelDetails.usageLogs[0].date
+                if (!dateStr || typeof dateStr !== "string") return "Never"
+                const parts = dateStr.split("-")
+                if (parts.length !== 3) return "Never"
+                const [year, month, day] = parts.map(Number)
+                return `${formatDistanceToNow(new Date(year, month - 1, day))} ago`
+              })()
+            : "Never",
+        },
+        {
+          label: "Created",
+          value: format(new Date(panelDetails.key.createdAt), "MMM d, yyyy"),
+        },
+        ...(panelExpiresAt
+          ? [
+              {
+                label: "Expires",
+                value: format(panelExpiresAt, "MMM d, yyyy"),
+                valueClassName:
+                  panelExpiresInDays === null
+                    ? "text-foreground"
+                    : panelExpiresInDays < 0
+                      ? "text-destructive"
+                      : panelExpiresInDays <= 30
+                        ? "text-amber-400"
+                        : "text-foreground",
+              },
+            ]
+          : []),
+      ]
+    : []
 
   return (
     <div className="space-y-5">
@@ -314,16 +377,22 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                   const lastLogLabel = key.lastLog
                     ? `${formatDistanceToNow(new Date(key.lastLog))} ago`
                     : "Never"
+                  const now = new Date()
+                  const expiresAt = key.expiresAt ? new Date(key.expiresAt) : null
+                  const daysUntilExpiry =
+                    expiresAt !== null ? differenceInDays(expiresAt, now) : null
+                  const isExpiringWithinThirty =
+                    daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 30
                   const maskedValue = `sk-${MASKED_SEGMENT}${key.id.slice(-4)}`
 
                   return (
                     <tr
                       key={key.id}
                       className="cursor-pointer transition-colors hover:bg-muted/40"
-                      onClick={() => setSelectedKeyId(key.id)}
+                      onClick={() => openPanelForKey(key.id)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter") {
-                          setSelectedKeyId(key.id)
+                          openPanelForKey(key.id)
                         }
                       }}
                     >
@@ -346,8 +415,11 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                       </td>
                       <td className="px-4 py-4 align-middle">
                         <div className="space-y-1">
-                          <p className="text-base font-semibold text-foreground">
+                          <p className="flex items-center gap-2 text-base font-semibold text-foreground">
                             {key.name}
+                            {isExpiringWithinThirty ? (
+                              <AlertTriangle size={14} className="text-amber-400" />
+                            ) : null}
                           </p>
                           <p className="text-xs text-muted-foreground">{maskedValue}</p>
                         </div>
@@ -494,39 +566,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
 
             <div className="px-6">
               <div className="grid gap-3 md:grid-cols-2">
-                {[
-                  {
-                    label: "Environment",
-                    value: formatEnvironment(panelDetails.key.environment),
-                    dotColor:
-                      ENVIRONMENT_COLORS[panelDetails.key.environment] ??
-                      "bg-muted-foreground/80",
-                  },
-                  {
-                    label: "Project",
-                    value: panelDetails.key.projectTag ?? "—",
-                  },
-                  {
-                    label: "Last Logged",
-                    value: panelDetails.usageLogs[0]
-                      ? (() => {
-                          const dateStr = panelDetails.usageLogs[0].date
-                          if (!dateStr || typeof dateStr !== "string") return "Never"
-                          const parts = dateStr.split("-")
-                          if (parts.length !== 3) return "Never"
-                          const [year, month, day] = parts.map(Number)
-                          return `${formatDistanceToNow(new Date(year, month - 1, day))} ago`
-                        })()
-                      : "Never",
-                  },
-                  {
-                    label: "Created",
-                    value: format(
-                      new Date(panelDetails.key.createdAt),
-                      "MMM d, yyyy"
-                    ),
-                  },
-                ].map((item) => (
+                {panelInfoItems.map((item) => (
                   <div
                     key={item.label}
                     className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3"
@@ -534,11 +574,18 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                     <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
                       {item.label}
                     </p>
-                    <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <div className="mt-2 flex items-center gap-2">
                       {item.dotColor ? (
                         <span className={cn("h-2 w-2 rounded-full", item.dotColor)} />
                       ) : null}
-                      <span>{item.value}</span>
+                      <span
+                        className={cn(
+                          "text-sm font-semibold",
+                          item.valueClassName ?? "text-foreground"
+                        )}
+                      >
+                        {item.value}
+                      </span>
                     </div>
                   </div>
                 ))}
