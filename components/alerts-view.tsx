@@ -8,11 +8,12 @@ import { useKoshShell } from "@/components/kosh-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { formatEnvironment, KoshAlertWithKey } from "@/lib/kosh"
 import {
-  formatEnvironment,
-  KoshAlertWithKey,
-  PLATFORM_THEMES,
-} from "@/lib/kosh"
+  getPlatformColor,
+  getPlatformColorWithAlpha,
+  getPlatformInitial,
+} from "@/lib/platform-config"
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -78,8 +79,8 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="mx-auto flex max-w-md flex-col items-center rounded-3xl border border-border/70 bg-card/80 px-8 py-12 text-center shadow-sm backdrop-blur">
-          <div className="mb-6 flex size-[4.5rem] items-center justify-center rounded-3xl bg-muted text-foreground shadow-inner">
-            <BellOff className="size-8" />
+          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-3xl bg-muted text-muted-foreground/80 shadow-inner">
+            <BellOff className="size-12 text-muted-foreground/70" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
             No alerts configured
@@ -150,27 +151,28 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
 
       <div className="flex flex-col gap-3">
         {alerts.map((alert) => {
-          const platformTheme =
-            PLATFORM_THEMES[alert.apiKey.platform] ?? PLATFORM_THEMES.Other
+          const accentColor = getPlatformColor(alert.apiKey.platform)
+          const softColor = getPlatformColorWithAlpha(alert.apiKey.platform, 0.16)
+          const initial = getPlatformInitial(alert.apiKey.platform)
           const isPending = pendingId === alert.id
 
           return (
             <Card
               key={alert.id}
               className="overflow-visible border-l-4 bg-card/85 shadow-sm ring-border/80 transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-accent/40 hover:shadow-md"
-              style={{ borderLeftColor: platformTheme.accent }}
+              style={{ borderLeftColor: accentColor }}
             >
               <CardContent className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex min-w-0 items-center gap-4">
                   <div
                     className="flex size-10 shrink-0 items-center justify-center rounded-full border text-sm font-semibold"
                     style={{
-                      color: platformTheme.accent,
-                      backgroundColor: platformTheme.soft,
-                      borderColor: platformTheme.soft,
+                      color: accentColor,
+                      backgroundColor: softColor,
+                      borderColor: softColor,
                     }}
                   >
-                    {platformTheme.initial}
+                    {initial}
                   </div>
 
                   <div className="min-w-0">
