@@ -33,12 +33,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { ConnectorInfo } from "@/lib/connectors/types"
+import { formatEnvironment, KoshKey, KoshUsageLog } from "@/lib/kosh"
 import {
-  formatEnvironment,
-  KoshKey,
-  KoshUsageLog,
-  PLATFORM_THEMES,
-} from "@/lib/kosh"
+  getPlatformColor,
+  getPlatformColorWithAlpha,
+  getPlatformInitial,
+} from "@/lib/platform-config"
 import { cn } from "@/lib/utils"
 
 type PulseKey = KoshKey & {
@@ -431,8 +431,9 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
 
       <div className="flex flex-col gap-3">
         {keys.map((key) => {
-          const platformTheme =
-            PLATFORM_THEMES[key.platform] ?? PLATFORM_THEMES.Other
+          const accentColor = getPlatformColor(key.platform)
+          const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
+          const initial = getPlatformInitial(key.platform)
           const capability = connectorInfo[key.platform] ?? connectorInfo.Other
           const canSync = capability?.canSync ?? false
           const canValidate = capability?.canValidate ?? false
@@ -453,19 +454,19 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
             <Card
               key={key.id}
               className="overflow-visible border-l-4 bg-card/85 shadow-sm ring-border/80 transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-accent/40 hover:shadow-md"
-              style={{ borderLeftColor: platformTheme.accent }}
+              style={{ borderLeftColor: accentColor }}
             >
               <CardContent className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex min-w-0 items-center gap-4">
                   <div
                     className="flex size-10 shrink-0 items-center justify-center rounded-full border text-sm font-semibold"
                     style={{
-                      color: platformTheme.accent,
-                      backgroundColor: platformTheme.soft,
-                      borderColor: platformTheme.soft,
+                      color: accentColor,
+                      backgroundColor: softColor,
+                      borderColor: softColor,
                     }}
                   >
-                    {platformTheme.initial}
+                    {initial}
                   </div>
 
                   <div className="min-w-0">
@@ -571,12 +572,12 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
                             >
                               <stop
                                 offset="0%"
-                                stopColor={platformTheme.accent}
+                                stopColor={accentColor}
                                 stopOpacity={0.28}
                               />
                               <stop
                                 offset="100%"
-                                stopColor={platformTheme.accent}
+                                stopColor={accentColor}
                                 stopOpacity={0.04}
                               />
                             </linearGradient>
@@ -615,14 +616,14 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
                           <Area
                             type="monotone"
                             dataKey="calls"
-                            stroke={platformTheme.accent}
+                            stroke={accentColor}
                             strokeWidth={2}
                             fill={`url(#pulse-gradient-${key.id})`}
                             dot={false}
                             activeDot={{
                               r: 3,
                               strokeWidth: 0,
-                              fill: platformTheme.accent,
+                              fill: accentColor,
                             }}
                           />
                         </AreaChart>

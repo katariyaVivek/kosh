@@ -2,13 +2,23 @@
 
 import {
   createContext,
+  type ElementType,
   type ReactNode,
   useContext,
   useState,
 } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Plus, Settings, Vault, type LucideIcon } from "lucide-react"
+import {
+  Plus,
+  Settings,
+  LayoutDashboard,
+  KeyRound,
+  Activity,
+  BellRing,
+  Settings2,
+  Shield,
+} from "lucide-react"
 
 import { AddAlertDialog } from "@/components/add-alert-dialog"
 import { AddKeyDialog } from "@/components/add-key-dialog"
@@ -19,15 +29,15 @@ import { cn } from "@/lib/utils"
 type NavItem = {
   label: string
   href: string
-  icon?: LucideIcon
+  icon?: ElementType
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/" },
-  { label: "Vault", href: "/vault" },
-  { label: "Pulse", href: "/pulse" },
-  { label: "Alerts", href: "/alerts" },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Vault", href: "/vault", icon: KeyRound },
+  { label: "Pulse", href: "/pulse", icon: Activity },
+  { label: "Alerts", href: "/alerts", icon: BellRing },
+  { label: "Settings", href: "/settings", icon: Settings2 },
 ]
 
 type SidebarAction =
@@ -68,7 +78,7 @@ export function KoshShell({
             <div className="flex h-full flex-col gap-6 p-4">
               <div className="flex items-center gap-3 px-2 pt-1">
                 <div className="flex size-10 items-center justify-center rounded-xl border border-sidebar-border bg-background text-sidebar-foreground shadow-sm">
-                  <Vault className="size-4" />
+                  <Shield className="size-5 text-sidebar-accent" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold tracking-tight text-sidebar-foreground">
@@ -82,9 +92,9 @@ export function KoshShell({
                 {NAV_ITEMS.map((item) => {
                   const isActive = pathname === item.href
                   const labelContent = (
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-2">
                       {item.icon ? (
-                        <item.icon className="size-4 text-sidebar-foreground/70" />
+                        <item.icon className="size-4 text-current" />
                       ) : null}
                       <span>{item.label}</span>
                     </span>
@@ -98,17 +108,10 @@ export function KoshShell({
                         "flex items-center rounded-xl px-3 py-2.5 text-sm transition-colors",
                         isActive
                           ? "justify-between bg-sidebar-accent font-medium text-sidebar-foreground shadow-sm ring-1 ring-sidebar-border"
-                          : "gap-2.5 text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                          : "gap-2 text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
                       )}
                     >
-                      {isActive ? (
-                        <span className="flex items-center gap-2.5">
-                          <span className="size-1.5 rounded-full bg-sidebar-foreground/80" />
-                          {labelContent}
-                        </span>
-                      ) : (
-                        labelContent
-                      )}
+                      {labelContent}
                     </Link>
                   )
                 })}

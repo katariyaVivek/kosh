@@ -1,5 +1,5 @@
 import { addDays, addMonths, startOfMonth } from "date-fns"
-import { BellRing, Clock, DollarSign, Key, KeyRound } from "lucide-react"
+import { BellRing, Clock, DollarSign, Key, LayoutDashboard } from "lucide-react"
 
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
 import { KoshShell } from "@/components/kosh-shell"
@@ -92,7 +92,7 @@ export default async function Home() {
             >
               <CardContent className="flex items-center gap-3 py-3">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                  <Icon className="size-4" />
+                  <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="space-y-0.5">
                   <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
@@ -113,8 +113,8 @@ export default async function Home() {
         {tableKeys.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-12">
             <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-border/70 bg-card/70 px-10 py-12 text-center shadow-sm">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-foreground/80">
-                <KeyRound className="size-8" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground/70">
+                <LayoutDashboard className="size-12 text-muted-foreground/70" />
               </div>
               <p className="text-xl font-semibold tracking-tight">
                 No API keys yet

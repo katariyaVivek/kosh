@@ -13,7 +13,12 @@ import { Copy, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { PLATFORM_THEMES, formatEnvironment } from "@/lib/kosh"
+import { formatEnvironment } from "@/lib/kosh"
+import {
+  getPlatformColor,
+  getPlatformColorWithAlpha,
+  getPlatformInitial,
+} from "@/lib/platform-config"
 import { cn } from "@/lib/utils"
 
 export type DashboardKeyRow = {
@@ -255,9 +260,15 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     ? `${changePercent > 0 ? "+" : ""}${changePercent}% vs last week`
     : "— vs last week"
 
-  const panelTheme = panelDetails
-    ? PLATFORM_THEMES[panelDetails.key.platform] ?? PLATFORM_THEMES.Other
-    : PLATFORM_THEMES.Other
+  const panelAccentColor = panelDetails
+    ? getPlatformColor(panelDetails.key.platform)
+    : getPlatformColor("Other")
+  const panelSoftColor = panelDetails
+    ? getPlatformColorWithAlpha(panelDetails.key.platform, 0.16)
+    : getPlatformColorWithAlpha("Other", 0.16)
+  const panelInitial = panelDetails
+    ? getPlatformInitial(panelDetails.key.platform)
+    : getPlatformInitial("Other")
 
   return (
     <div className="space-y-5">
@@ -297,8 +308,9 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 </tr>
               ) : (
                 filteredKeys.map((key) => {
-                  const platformTheme =
-                    PLATFORM_THEMES[key.platform] ?? PLATFORM_THEMES.Other
+                  const accentColor = getPlatformColor(key.platform)
+                  const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
+                  const initial = getPlatformInitial(key.platform)
                   const lastLogLabel = key.lastLog
                     ? `${formatDistanceToNow(new Date(key.lastLog))} ago`
                     : "Never"
@@ -320,12 +332,12 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                           <div
                             className="flex size-9 items-center justify-center rounded-full border text-sm font-semibold"
                             style={{
-                              color: platformTheme.accent,
-                              backgroundColor: platformTheme.soft,
-                              borderColor: platformTheme.soft,
+                              color: accentColor,
+                              backgroundColor: softColor,
+                              borderColor: softColor,
                             }}
                           >
-                            {platformTheme.initial}
+                            {initial}
                           </div>
                           <span className="font-medium text-foreground">
                             {key.platform}
@@ -377,7 +389,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                             aria-label="Copy key"
                             title="Copy key"
                           >
-                            <Copy className="size-4" />
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
                         </div>
                       </td>
@@ -419,12 +431,12 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
             <div
               className="flex size-10 items-center justify-center rounded-2xl border text-sm font-semibold"
               style={{
-                color: panelTheme.accent,
-                backgroundColor: panelTheme.soft,
-                borderColor: panelTheme.soft,
+                color: panelAccentColor,
+                backgroundColor: panelSoftColor,
+                borderColor: panelSoftColor,
               }}
             >
-              {panelTheme.initial}
+              {panelInitial}
             </div>
             <div>
               <p className="text-lg font-semibold text-foreground">
@@ -474,7 +486,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                     className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                     aria-label="Copy key"
                   >
-                    <Copy className="size-4" />
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                   </Button>
                 </div>
               </div>
@@ -561,10 +573,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                     />
                     <Bar
                       dataKey="calls"
-                      fill={
-                        PLATFORM_THEMES[panelDetails.key.platform]?.accent ??
-                        PLATFORM_THEMES.Other.accent
-                      }
+                      fill={panelAccentColor}
                       radius={[999, 999, 0, 0]}
                       barSize={24}
                     />
