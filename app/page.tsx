@@ -3,7 +3,8 @@ import { BellRing, Clock, DollarSign, Key, LayoutDashboard } from "lucide-react"
 
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
 import { KoshShell } from "@/components/kosh-shell"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { db } from "@/lib/db"
 
@@ -78,8 +79,10 @@ export default async function Home() {
   return (
     <KoshShell>
       <div className="flex flex-col gap-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+        <div className="space-y-1 border-b border-border pb-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Dashboard
+          </h1>
           <p className="text-sm text-muted-foreground">
             Real-time overview of your API keys and usage.
           </p>
@@ -87,40 +90,29 @@ export default async function Home() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map(({ label, value, icon: Icon, hasWarning }) => {
-          const highlightExpiring =
-            label === "Expiring Soon" && typeof value === "number" && value > 0
-
+          const isWarning = label === "Expiring Soon" && typeof value === "number" && value > 0
           return (
             <Card
               key={label}
-              size="sm"
               className={cn(
-                "bg-card/80 shadow-sm ring-border/70 backdrop-blur",
-                highlightExpiring && "bg-amber-400/10 ring-amber-300/50"
+                "bg-card border border-border shadow-sm rounded-xl p-6",
+                isWarning && "ring-1 ring-amber-200"
               )}
             >
-              <CardContent className="flex items-center gap-3 py-3">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                     {label}
-                    {hasWarning ? (
-                      <span className="size-2 rounded-full bg-destructive" />
-                    ) : null}
                   </p>
-                  <p className="text-2xl font-medium tracking-tight">
-                    <span
-                      className={cn(
-                        highlightExpiring ? "text-amber-400" : "text-foreground/85"
-                      )}
-                    >
-                      {value}
-                    </span>
+                  <p className={cn(
+                    "text-3xl font-semibold tracking-tight",
+                    isWarning ? "text-amber-500" : "text-foreground"
+                  )}>
+                    {value}
                   </p>
                 </div>
-              </CardContent>
+                <Icon className="size-4 text-muted-foreground" />
+              </div>
             </Card>
           )
         })}
@@ -128,16 +120,15 @@ export default async function Home() {
 
         {tableKeys.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-12">
-            <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-border/70 bg-card/70 px-10 py-12 text-center shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground/70">
-                <LayoutDashboard className="size-12 text-muted-foreground/70" />
-              </div>
-              <p className="text-xl font-semibold tracking-tight">
+            <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl border border-border bg-card p-8 text-center shadow-lg">
+              <LayoutDashboard className="size-10 text-muted-foreground/40" />
+              <h1 className="mt-4 text-sm font-medium text-foreground">
                 No API keys yet
-              </p>
-              <p className="text-sm text-muted-foreground">
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Add your first key to get started
               </p>
+              <Button className="mt-4 text-sm">Add key</Button>
             </div>
           </div>
         ) : (

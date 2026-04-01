@@ -259,9 +259,9 @@ export function SettingsContent() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-6">
-          <Card>
+          <Card className="rounded-xl border border-border bg-card shadow-sm">
             <CardContent className="space-y-6 px-6 py-6">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <div className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-foreground">
                 <ShieldCheck className="size-4 text-muted-foreground" />
                 Security
               </div>
@@ -331,9 +331,9 @@ export function SettingsContent() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-xl border border-border bg-card shadow-sm">
             <CardContent className="space-y-4 px-6 py-6">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <div className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-foreground">
                 <Palette className="size-4 text-muted-foreground" />
                 Appearance
               </div>
@@ -343,9 +343,9 @@ export function SettingsContent() {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="rounded-xl border border-border bg-card shadow-sm">
             <CardContent className="space-y-4 px-6 py-6">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <div className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-foreground">
                 <Database className="size-4 text-muted-foreground" />
                 Data Management
               </div>
@@ -396,12 +396,10 @@ export function SettingsContent() {
             </CardContent>
           </Card>
 
-          <Card className="border border-destructive/60 bg-card/80">
+          <Card className="rounded-xl border border-red-200 bg-red-50/30">
             <CardContent className="space-y-4 px-6 py-6">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-destructive">
-                  Danger Zone
-                </p>
+              <div className="mb-5 border-b border-border pb-3 text-base font-semibold text-destructive">
+                Danger Zone
               </div>
               <p className="text-sm text-muted-foreground">
                 Permanently delete all keys, usage logs, and alerts.
@@ -452,9 +450,9 @@ export function SettingsContent() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="space-y-3 px-6 py-6">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Card className="rounded-xl border border-border bg-muted/40">
+            <CardContent className="space-y-3 px-5 py-5">
+              <div className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-foreground">
                 <Info className="size-4 text-muted-foreground" />
                 About
               </div>

@@ -41,31 +41,41 @@ export default function SetupPage() {
   const continueSetup = () => router.push("/")
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-16 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800"
-    >
-      <div className="w-full max-w-2xl space-y-8 text-slate-900 dark:text-slate-100">
-        <h1 className="text-4xl font-bold">🏛️ Welcome to Kosh</h1>
-        <p className="text-lg">
-          Your API treasury needs a master key to encrypt your API keys. This
-          key is stored in your <code>.env</code> file and never leaves your
-          machine.
-        </p>
+    <div className="min-h-screen bg-background px-4 py-12">
+      <div className="mx-auto flex w-full max-w-lg flex-col rounded-2xl bg-card p-8 shadow-xl">
+        <div className="space-y-3">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            🏛️ Welcome to Kosh
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Your API treasury needs a master key to encrypt your API keys. This
+            key is stored in your <code>.env</code> file and never leaves your
+            machine.
+          </p>
+        </div>
 
         <section className="space-y-3">
-          <label className="text-sm font-medium">Generate Master Key</label>
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">
+            Generate Master Key
+          </p>
           <div className="flex items-center gap-2">
-            <Input readOnly value={masterKey} className="flex-1" />
-            <Button variant="outline" size="sm" onClick={handleRegenerate}>
-              Regenerate
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleCopy}>
-              {copied ? "Copied!" : "Copy"}
-            </Button>
+            <Input
+              readOnly
+              value={masterKey}
+              className="flex-1 rounded-lg bg-muted px-4 py-2 text-sm font-mono text-muted-foreground"
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleRegenerate} className="text-sm">
+                Regenerate
+              </Button>
+              <Button variant="default" size="sm" onClick={handleCopy} className="text-sm">
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+            </div>
           </div>
         </section>
 
-        <div className="flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-400/10 p-4 text-amber-900">
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
           <AlertTriangle className="h-5 w-5 flex-shrink-0" />
           <p className="text-sm">
             Add this key to your <code>.env</code> file as <code>KOSH_MASTER_KEY</code>{" "}
@@ -73,7 +83,7 @@ export default function SetupPage() {
           </p>
         </div>
 
-        <ol className="list-decimal list-inside space-y-2 text-sm">
+        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
           <li>Copy the generated key above</li>
           <li>Open your <code>.env</code> file in the project root</li>
           <li>Add: <code>KOSH_MASTER_KEY=&quot;your-copied-key&quot;</code></li>
@@ -82,7 +92,10 @@ export default function SetupPage() {
         </ol>
 
         <div className="pt-4">
-          <Button onClick={continueSetup} className="w-full">
+          <Button
+            onClick={continueSetup}
+            className="w-full rounded-lg bg-primary text-white text-sm font-medium shadow-sm transition-colors hover:bg-primary/90"
+          >
             I&apos;ve set my master key →
           </Button>
         </div>

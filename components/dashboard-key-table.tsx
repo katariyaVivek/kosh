@@ -9,7 +9,7 @@ import {
   subDays,
 } from "date-fns"
 import { Bar, BarChart, ResponsiveContainer, Tooltip } from "recharts"
-import { AlertTriangle, Copy, X } from "lucide-react"
+import { Copy, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -341,25 +341,25 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Filter keys..."
-            className="h-10 rounded-xl border border-border/70 bg-card/60 shadow-sm"
+            className="h-12 w-full rounded-xl border border-border bg-background/70 px-4 shadow-sm"
           />
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-3xl bg-card/80 shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground/80">
+            <thead className="text-xs font-medium uppercase tracking-wider text-muted-foreground border-b border-border">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">Platform</th>
-                <th className="px-4 py-3 text-left font-semibold">Name</th>
-                <th className="px-4 py-3 text-left font-semibold">Environment</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-left font-semibold">Last Logged</th>
-                <th className="px-4 py-3 text-right font-semibold">Actions</th>
+                <th className="px-4 py-3 text-left">Platform</th>
+                <th className="px-4 py-3 text-left">Name</th>
+                <th className="px-4 py-3 text-left">Environment</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Last Logged</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <tbody className="divide-y divide-border/60">
               {filteredKeys.length === 0 ? (
                 <tr>
                   <td
@@ -388,7 +388,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                   return (
                     <tr
                       key={key.id}
-                      className="cursor-pointer transition-colors hover:bg-muted/40"
+                      className="cursor-pointer border-b border-border/60 bg-card text-sm text-foreground transition-colors hover:bg-muted/40"
                       onClick={() => openPanelForKey(key.id)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter") {
@@ -396,10 +396,10 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                         }
                       }}
                     >
-                      <td className="px-4 py-4 align-middle">
+                      <td className="px-4 py-3.5 align-middle">
                         <div className="flex items-center gap-3">
                           <div
-                            className="flex size-9 items-center justify-center rounded-full border text-sm font-semibold"
+                            className="flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-semibold"
                             style={{
                               color: accentColor,
                               backgroundColor: softColor,
@@ -413,32 +413,27 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 align-middle">
+                      <td className="px-4 py-3.5 align-middle">
                         <div className="space-y-1">
-                          <p className="flex items-center gap-2 text-base font-semibold text-foreground">
+                          <p className="text-sm font-medium text-foreground">
                             {key.name}
-                            {isExpiringWithinThirty ? (
-                              <AlertTriangle size={14} className="text-amber-400" />
-                            ) : null}
                           </p>
-                          <p className="text-xs text-muted-foreground">{maskedValue}</p>
+                          <p className="text-xs font-mono text-muted-foreground">
+                            {maskedValue}
+                          </p>
                         </div>
                       </td>
-                      <td className="px-4 py-4 align-middle">
-                        <Badge
-                          variant="outline"
-                          className="rounded-full border-border/80 bg-muted/40 px-3 text-[11px] font-medium text-muted-foreground"
-                        >
+                      <td className="px-4 py-3.5 align-middle">
+                        <span className="inline-flex items-center rounded-full border border-border/80 bg-secondary px-3 py-0.5 text-xs font-medium text-secondary-foreground">
                           {formatEnvironment(key.environment)}
-                        </Badge>
+                        </span>
                       </td>
-                      <td className="px-4 py-4 align-middle">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
-                          <span className="block h-2 w-2 rounded-full bg-emerald-500" />
+                      <td className="px-4 py-3.5 align-middle">
+                        <div className="text-xs font-semibold text-muted-foreground">
                           Active
                         </div>
                       </td>
-                      <td className="px-4 py-4 align-middle text-muted-foreground">
+                      <td className="px-4 py-3.5 align-middle text-muted-foreground">
                         {lastLogLabel}
                       </td>
                       <td className="px-4 py-4 align-middle text-right">
@@ -489,7 +484,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
 
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-[400px] transform flex-col overflow-y-auto border-l border-border/50 bg-card/95 shadow-2xl transition-transform duration-300",
+          "fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-[400px] transform flex-col overflow-y-auto border-l border-border bg-card shadow-lg transition-transform duration-300",
           selectedKeyId ? "translate-x-0" : "translate-x-full"
         )}
         onClick={(event) => event.stopPropagation()}
@@ -498,7 +493,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
         aria-label="Key details panel"
         aria-hidden={!selectedKeyId}
       >
-        <div className="flex items-center justify-between border-b border-border/70 px-6 py-5">
+        <div className="flex items-center justify-between border-b border-border px-6 pb-4 mb-4">
           <div className="flex items-center gap-4">
             <div
               className="flex size-10 items-center justify-center rounded-2xl border text-sm font-semibold"
@@ -538,11 +533,11 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
         ) : panelDetails ? (
           <div className="flex flex-1 flex-col gap-6 pb-6">
             <div className="px-6">
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-muted/40 p-4">
-                <code className="flex-1 rounded-xl border border-border/80 bg-background/60 px-3 py-2 text-xs tracking-wide text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-sm font-mono text-muted-foreground">
                   {`sk-${MASKED_SEGMENT}${panelDetails.key.id.slice(-4)}`}
-                </code>
-                <div className="relative inline-flex">
+                </div>
+                <div className="relative">
                   <span
                     className={cn(
                       "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border/80 bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground shadow-sm transition-all duration-200",
@@ -569,18 +564,17 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 {panelInfoItems.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3"
+                    className="rounded-lg border border-border bg-muted/40 p-3"
                   >
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+                    <p className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">
                       {item.label}
                     </p>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
                       {item.dotColor ? (
                         <span className={cn("h-2 w-2 rounded-full", item.dotColor)} />
                       ) : null}
                       <span
                         className={cn(
-                          "text-sm font-semibold",
                           item.valueClassName ?? "text-foreground"
                         )}
                       >
@@ -661,10 +655,10 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                   </div>
                 ) : (
                   panelDetails.usageLogs.map((log) => (
-                    <div
-                      key={log.id}
-                      className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-4 py-3 text-sm text-muted-foreground"
-                    >
+                   <div
+                     key={log.id}
+                     className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-4 py-2.5 border-b border-border/50 text-sm text-muted-foreground"
+                   >
                       <span className="text-foreground">
                         {(() => {
                           if (!log.date || typeof log.date !== "string") return "Invalid date"
