@@ -11,13 +11,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Plus,
-  Settings,
   LayoutDashboard,
   KeyRound,
   Activity,
   BellRing,
   Settings2,
-  Shield,
 } from "lucide-react"
 
 import { AddAlertDialog } from "@/components/add-alert-dialog"
@@ -73,13 +71,13 @@ export function KoshShell({
       value={{ openSidebarAction: () => setOpen(true) }}
     >
       <div className="min-h-screen bg-background text-foreground">
-        <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)]">
           <aside className="border-b border-sidebar-border bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
             <div className="flex h-full flex-col gap-6 p-4">
-              <div className="flex flex-row items-center gap-3 px-2 pt-1">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
-                  K
-                </div>
+              <div className="flex flex-row items-center gap-3 px-2 pt-1 pb-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white dark:bg-indigo-500">
+                K
+              </div>
                 <div className="flex flex-col leading-tight">
                   <p className="text-sm font-semibold text-sidebar-foreground">
                     Kosh
@@ -88,7 +86,7 @@ export function KoshShell({
                 </div>
               </div>
 
-              <nav className="space-y-1">
+              <nav className="space-y-0.5">
                 {NAV_ITEMS.map((item) => {
                   const isActive = pathname === item.href
                   const labelContent = (
@@ -105,10 +103,10 @@ export function KoshShell({
                       key={item.label}
                       href={item.href}
                       className={cn(
-                        "flex items-center rounded-xl px-3 py-2.5 text-sm transition-colors",
+                        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                         isActive
-                          ? "justify-between bg-sidebar-accent font-medium text-sidebar-foreground shadow-sm ring-1 ring-sidebar-border"
-                          : "gap-2 text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                          ? "bg-primary/8 border-l-2 border-primary text-primary font-medium"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                       )}
                     >
                       {labelContent}
@@ -119,7 +117,7 @@ export function KoshShell({
 
               <Button
                 onClick={() => setOpen(true)}
-                className="w-full justify-center gap-2 rounded-xl shadow-sm"
+                className="w-full justify-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
                 <Plus className="size-4" />
                 {actionLabel}
