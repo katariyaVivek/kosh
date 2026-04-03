@@ -93,23 +93,25 @@ KOSH_MASTER_KEY="your-generated-64-char-key"
 
 ## 📁 Project Structure
 
+```text
 kosh/
-├── app/                    # Next.js App Router pages
-│   ├── page.tsx            # Dashboard
-│   ├── vault/              # Vault page
-│   ├── pulse/              # Pulse page
-│   ├── alerts/             # Alerts page
-│   ├── settings/           # Settings page
-│   ├── setup/              # First-run setup
-│   └── api/                # API routes
-├── components/             # React components
+├── app/                   # Next.js App Router pages
+│   ├── page.tsx           # Dashboard
+│   ├── vault/             # Vault page
+│   ├── pulse/             # Pulse page
+│   ├── alerts/            # Alerts page
+│   ├── settings/          # Settings page
+│   ├── setup/             # First-run setup
+│   └── api/               # API routes
+├── components/            # React components
 ├── lib/
-│   ├── connectors/         # Platform connector system
-│   ├── encryption.ts       # AES-256 encryption
-│   ├── platform-config.ts  # Platform colors & initials
-│   └── db.ts               # Prisma client
+│   ├── connectors/        # Platform connector system
+│   ├── encryption.ts      # AES-256 encryption
+│   ├── platform-config.ts # Platform colors & initials
+│   └── db.ts              # Prisma client
 └── prisma/
-└── schema.prisma       # Database schema
+    └── schema.prisma      # Database schema
+```
 
 ## 🗺️ Roadmap
 
