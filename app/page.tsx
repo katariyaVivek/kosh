@@ -2,6 +2,7 @@ import { addDays, addMonths, startOfMonth } from "date-fns"
 import { BellRing, Clock, DollarSign, Key, LayoutDashboard } from "lucide-react"
 
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
+import { DashboardChart } from "@/components/dashboard-chart"
 import { KoshShell } from "@/components/kosh-shell"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -117,6 +118,8 @@ export default async function Home() {
           )
         })}
         </div>
+
+        <DashboardChart />
 
         {tableKeys.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-12">
