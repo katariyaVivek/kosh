@@ -7,7 +7,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { name, platform, projectTag, environment } = await req.json()
+  const { name, platform, projectTag, environment, notes } = await req.json()
 
   const existingKey = await db.apiKey.findUnique({
     where: { id },
@@ -25,6 +25,7 @@ export async function PATCH(
       platform,
       projectTag: projectTag || null,
       environment,
+      notes: notes || null,
     },
   })
 

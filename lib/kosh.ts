@@ -6,6 +6,7 @@ export type KoshKey = {
   environment: string
   expiresAt?: string | Date | null
   createdAt: string | Date
+  notes?: string | null
 }
 
 export type KoshUsageLog = {
