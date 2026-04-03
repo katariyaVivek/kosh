@@ -10,6 +10,7 @@ Kosh is a beautiful, secure, self-hosted API key manager built for developers. S
 
 - 🔐 **AES-256 encryption** — all keys encrypted at rest using your master key
 - 🏛️ **Vault** — add, edit, delete and organize API keys by platform and project
+- 📝 **Notes** — attach optional notes to any API key for context, visible in dialogs, vault cards, and dashboard
 - 📊 **Pulse** — track usage, costs, and API call history per key
 - 🔔 **Alerts** — set cost or call thresholds and get notified when crossed
 - 🔌 **Connector system** — validate and sync keys from OpenRouter, Groq, Gemini, NVIDIA NIM, Anthropic, OpenAI, and more
@@ -95,6 +96,9 @@ KOSH_MASTER_KEY="your-generated-64-char-key"
 ## 🔧 API Endpoints
 
 - `POST /api/health-check` — validate all API keys sequentially; returns each key’s id, name, platform, and valid status (true, false, or unknown).
+- `POST /api/keys` — create a new API key (supports optional `notes` field).
+- `PATCH /api/keys/[id]` — update an existing API key, including its `notes`.
+- `GET /api/keys/[id]/details` — retrieve key details with `notes`, usage logs, and aggregates.
 
 ## 📁 Project Structure
 
