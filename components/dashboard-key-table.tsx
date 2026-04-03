@@ -11,7 +11,6 @@ import {
 import { Bar, BarChart, ResponsiveContainer, Tooltip } from "recharts"
 import { Copy, X } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { formatEnvironment } from "@/lib/kosh"
@@ -377,12 +376,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                   const lastLogLabel = key.lastLog
                     ? `${formatDistanceToNow(new Date(key.lastLog))} ago`
                     : "Never"
-                  const now = new Date()
-                  const expiresAt = key.expiresAt ? new Date(key.expiresAt) : null
-                  const daysUntilExpiry =
-                    expiresAt !== null ? differenceInDays(expiresAt, now) : null
-                  const isExpiringWithinThirty =
-                    daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 30
                   const maskedValue = `sk-${MASKED_SEGMENT}${key.id.slice(-4)}`
 
                   return (
