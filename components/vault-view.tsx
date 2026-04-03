@@ -6,6 +6,7 @@ import {
   Copy,
   Eye,
   EyeOff,
+  FileText,
   FolderOpen,
   KeyRound,
   Layers,
@@ -323,9 +324,16 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-2">
-                          <p className="truncate text-base font-semibold tracking-tight">
-                            {key.name}
-                          </p>
+                           <div className="flex items-center gap-1.5">
+                             <p className="truncate text-base font-semibold tracking-tight">
+                               {key.name}
+                             </p>
+                             {key.notes ? (
+                               <span title={key.notes}>
+                                 <FileText className="h-3 w-3 text-muted-foreground" />
+                               </span>
+                             ) : null}
+                           </div>
                           {expiryBadge}
                         </div>
                         <Badge

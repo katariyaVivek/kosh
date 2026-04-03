@@ -22,6 +22,7 @@ export async function GET(
       projectTag: true,
       environment: true,
       createdAt: true,
+      notes: true,
     },
   })
 

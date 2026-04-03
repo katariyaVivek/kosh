@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   differenceInDays,
   eachDayOfInterval,
@@ -9,7 +9,7 @@ import {
   subDays,
 } from "date-fns"
 import { Bar, BarChart, ResponsiveContainer, Tooltip } from "recharts"
-import { Copy, X } from "lucide-react"
+import { Copy, X, ShieldCheck, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,6 +46,7 @@ type DashboardKeyDetails = {
     environment: string
     createdAt: string
     expiresAt: string | null
+    notes: string | null
   }
   usageLogs: UsageLogEntry[]
   totalCalls: number
@@ -110,6 +111,41 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const [panelDetails, setPanelDetails] = useState<DashboardKeyDetails | null>(null)
   const [panelError, setPanelError] = useState<string | null>(null)
   const [panelCopied, setPanelCopied] = useState(false)
+  type HealthCheckResult = { id: string; valid: boolean | null }
+  const [healthResults, setHealthResults] = useState<Record<string, HealthCheckResult>>({})
+  const [isChecking, setIsChecking] = useState(false)
+  const [healthSummary, setHealthSummary] = useState<string | null>(null)
+  const summaryTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (summaryTimer.current) clearTimeout(summaryTimer.current)
+    }
+  }, [])
+
+  const handleHealthCheck = useCallback(async () => {
+    setIsChecking(true)
+    try {
+      const res = await fetch("/api/health-check", { method: "POST" })
+      const data: HealthCheckResult[] = await res.json()
+      const map: Record<string, HealthCheckResult> = {}
+      data.forEach((r) => { map[r.id] = r })
+      setHealthResults(map)
+
+      const validCount = data.filter((r) => r.valid === true).length
+      const invalidCount = data.filter((r) => r.valid === false).length
+      const unknownCount = data.filter((r) => r.valid === null).length
+      const msg = `Health check complete — ${validCount} valid, ${invalidCount} invalid, ${unknownCount} unknown`
+      setHealthSummary(msg)
+      if (summaryTimer.current) clearTimeout(summaryTimer.current)
+      summaryTimer.current = window.setTimeout(() => setHealthSummary(null), 3000)
+    } catch (error) {
+      console.error(error)
+      setHealthSummary("Health check failed")
+    } finally {
+      setIsChecking(false)
+    }
+  }, [])
 
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -334,7 +370,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <Input
             value={query}
@@ -343,7 +379,26 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
             className="h-12 w-full rounded-xl border border-border bg-background/70 px-4 shadow-sm"
           />
         </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleHealthCheck}
+          disabled={isChecking}
+          className="flex items-center gap-2 text-sm"
+        >
+          {isChecking ? (
+            <Loader2 className="animate-spin size-4" />
+          ) : (
+            <ShieldCheck className="size-4" />
+          )}
+          {isChecking ? "Checking..." : "Health Check"}
+        </Button>
       </div>
+      {healthSummary ? (
+        <div className="rounded-lg border border-border bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400 shadow-sm">
+          {healthSummary}
+        </div>
+      ) : null}
 
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="overflow-x-auto">
@@ -422,8 +477,34 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                         </span>
                       </td>
                       <td className="px-4 py-3.5 align-middle">
-                        <div className="text-xs font-semibold text-muted-foreground">
-                          Active
+                        <div className="flex items-center gap-2 text-xs font-semibold">
+                          <span
+                            className={cn(
+                              "h-2 w-2 rounded-full",
+                              healthResults[key.id]?.valid === true
+                                ? "bg-emerald-500"
+                                : healthResults[key.id]?.valid === false
+                                ? "bg-destructive/70"
+                                : "bg-muted-foreground/60"
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              healthResults[key.id]?.valid === true
+                                ? "text-emerald-400"
+                                : healthResults[key.id]?.valid === false
+                                ? "text-destructive"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {healthResults[key.id]?.valid === true
+                              ? "Valid"
+                              : healthResults[key.id]?.valid === false
+                              ? "Invalid"
+                              : healthResults[key.id]?.valid === null
+                              ? "Unknown"
+                              : "Active"}
+                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-3.5 align-middle text-muted-foreground">
@@ -578,6 +659,17 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 ))}
               </div>
             </div>
+
+            {panelDetails.key.notes ? (
+              <div className="px-6">
+                <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+                  NOTES
+                </p>
+                <div className="bg-muted/40 rounded-lg p-3 text-sm text-muted-foreground">
+                  {panelDetails.key.notes}
+                </div>
+              </div>
+            ) : null}
 
             <div className="space-y-1 px-6">
               <div className="flex items-center justify-between text-sm text-muted-foreground">

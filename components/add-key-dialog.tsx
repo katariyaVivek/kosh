@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ type KeyDialogValues = {
   platform: string
   projectTag: string | null
   environment: string
+  notes?: string | null
 }
 
 type AddKeyDialogProps = {
@@ -46,6 +48,7 @@ function getInitialFormState(initialValues?: KeyDialogValues) {
     keyValue: "",
     projectTag: initialValues?.projectTag ?? "",
     environment: initialValues?.environment ?? "production",
+    notes: initialValues?.notes ?? "",
   }
 }
 
@@ -112,6 +115,7 @@ export function AddKeyDialog({
           platform: form.platform,
           projectTag: form.projectTag,
           environment: form.environment,
+          notes: form.notes || null,
         }
       : form
 
@@ -241,6 +245,18 @@ export function AddKeyDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Notes (optional)</Label>
+            <Textarea
+              rows={3}
+              placeholder="e.g. Used for project X, rate limit 100/min, expires when trial ends..."
+              value={form.notes}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, notes: event.target.value }))
+              }
+            />
           </div>
 
           <Button onClick={handleSubmit} disabled={loading} className="mt-2">

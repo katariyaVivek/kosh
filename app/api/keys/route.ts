@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { encrypt } from "@/lib/encryption"
 
 export async function POST(req: NextRequest) {
-  const { name, platform, keyValue, projectTag, environment } = await req.json()
+  const { name, platform, keyValue, projectTag, environment, notes } = await req.json()
 
   const key = await db.apiKey.create({
     data: {
@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
       keyEncrypted: encrypt(keyValue),
       projectTag: projectTag || null,
       environment,
+      notes: notes || null,
     }
   })
 
