@@ -13,6 +13,7 @@ Kosh is a beautiful, secure, self-hosted API key manager built for developers. S
 - 📊 **Pulse** — track usage, costs, and API call history per key
 - 🔔 **Alerts** — set cost or call thresholds and get notified when crossed
 - 🔌 **Connector system** — validate and sync keys from OpenRouter, Groq, Gemini, NVIDIA NIM, Anthropic, OpenAI, and more
+- 🩺 **Health Check** — validate all keys at once across supported platforms
 - 🎨 **Beautiful UI** — clean light/dark mode design inspired by Clerk and Resend
 - 🚀 **First-run setup** — guided setup generates your master key automatically
 - 📤 **Export/Import** — backup and restore your vault as encrypted JSON
@@ -38,7 +39,7 @@ Kosh is a beautiful, secure, self-hosted API key manager built for developers. S
 
 1. **Clone the repository**
 ```bash
-   git clone https://github.com/your-username/kosh.git
+   git clone https://github.com/katariyaVivek/kosh.git
    cd kosh
 ```
 
@@ -91,6 +92,10 @@ KOSH_MASTER_KEY="your-generated-64-char-key"
 | Stripe | ✅ | ✅ |
 | Any other | — | Manual |
 
+## 🔧 API Endpoints
+
+- `POST /api/health-check` — validate all API keys sequentially; returns each key’s id, name, platform, and valid status (true, false, or unknown).
+
 ## 📁 Project Structure
 
 ```text
@@ -102,7 +107,7 @@ kosh/
 │   ├── alerts/            # Alerts page
 │   ├── settings/          # Settings page
 │   ├── setup/             # First-run setup
-│   └── api/               # API routes
+│   └── api/               # API routes (health-check, sync, alerts, settings, etc.)
 ├── components/            # React components
 ├── lib/
 │   ├── connectors/        # Platform connector system
