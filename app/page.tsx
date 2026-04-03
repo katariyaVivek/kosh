@@ -89,7 +89,7 @@ export default async function Home() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon, hasWarning }) => {
+{stats.map(({ label, value, icon: Icon }) => {
           const isWarning = label === "Expiring Soon" && typeof value === "number" && value > 0
           return (
             <Card

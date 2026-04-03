@@ -57,11 +57,6 @@ const THEME_OPTIONS = [
 
 const AUTO_LOCK_OPTIONS = ["Never", "15 minutes", "30 minutes", "1 hour"]
 
-const ENVIRONMENT_COLORS: Record<string, string> = {
-  production: "bg-emerald-500",
-  development: "bg-amber-400",
-  staging: "bg-slate-500",
-}
 
 const MASTER_KEY_MASK = "••••••••••••••••"
 

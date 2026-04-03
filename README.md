@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏛️ Kosh
 
-## Getting Started
+**Your local-first API key treasury.**
 
-First, run the development server:
+Kosh is a beautiful, secure, self-hosted API key manager built for developers. Store, organize, and monitor all your API keys in one place — encrypted at rest, never leaving your machine.
 
+![Kosh Dashboard](./public/screenshots/dashboard.png)
+
+## ✨ Features
+
+- 🔐 **AES-256 encryption** — all keys encrypted at rest using your master key
+- 🏛️ **Vault** — add, edit, delete and organize API keys by platform and project
+- 📊 **Pulse** — track usage, costs, and API call history per key
+- 🔔 **Alerts** — set cost or call thresholds and get notified when crossed
+- 🔌 **Connector system** — validate and sync keys from OpenRouter, Groq, Gemini, NVIDIA NIM, Anthropic, OpenAI, and more
+- 🎨 **Beautiful UI** — clean light/dark mode design inspired by Clerk and Resend
+- 🚀 **First-run setup** — guided setup generates your master key automatically
+- 📤 **Export/Import** — backup and restore your vault as encrypted JSON
+- 🔒 **Local-first** — all data stays on your machine, zero telemetry
+
+## 🛠️ Tech Stack
+
+- **Framework** — Next.js 15 (App Router)
+- **Database** — SQLite via Prisma
+- **UI** — shadcn/ui + Tailwind CSS
+- **Encryption** — AES-256 via crypto-js
+- **Charts** — Recharts
+- **Icons** — Lucide React
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or pnpm
+
+### Installation
+
+1. **Clone the repository**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+   git clone https://github.com/your-username/kosh.git
+   cd kosh
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Install dependencies**
+```bash
+   npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Set up the database**
+```bash
+   npx prisma migrate dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Start the dev server**
+```bash
+   npm run dev
+```
 
-## Learn More
+5. **Open Kosh**
+   
+   Visit [http://localhost:3000](http://localhost:3000) — you'll be guided through first-run setup to generate your master key.
 
-To learn more about Next.js, take a look at the following resources:
+## 🔐 Security
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Kosh uses AES-256 encryption to protect all stored API keys. Your `KOSH_MASTER_KEY` is stored in your local `.env` file and never leaves your machine.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Important:**
+- Never commit your `.env` file to version control
+- Back up your `KOSH_MASTER_KEY` somewhere safe — losing it means losing access to your encrypted keys
+- The `.env` file is included in `.gitignore` by default
 
-## Deploy on Vercel
+## ⚙️ Configuration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+After first-run setup, your `.env` file will contain:
+```env
+DATABASE_URL="file:./prisma/kosh.db"
+KOSH_MASTER_KEY="your-generated-64-char-key"
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔌 Supported Platforms
+
+| Platform | Validate | Auto-sync |
+|---|---|---|
+| OpenRouter | ✅ | ✅ |
+| OpenAI | ✅ | ✅ |
+| Groq | ✅ | — |
+| Google Gemini | ✅ | — |
+| NVIDIA NIM | ✅ | — |
+| Anthropic | ✅ | — |
+| Stripe | ✅ | ✅ |
+| Any other | — | Manual |
+
+## 📁 Project Structure
+
+kosh/
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx            # Dashboard
+│   ├── vault/              # Vault page
+│   ├── pulse/              # Pulse page
+│   ├── alerts/             # Alerts page
+│   ├── settings/           # Settings page
+│   ├── setup/              # First-run setup
+│   └── api/                # API routes
+├── components/             # React components
+├── lib/
+│   ├── connectors/         # Platform connector system
+│   ├── encryption.ts       # AES-256 encryption
+│   ├── platform-config.ts  # Platform colors & initials
+│   └── db.ts               # Prisma client
+└── prisma/
+└── schema.prisma       # Database schema
+
+## 🗺️ Roadmap
+
+- [ ] Docker support for self-hosting
+- [ ] Auto-lock vault on inactivity
+- [ ] Key rotation reminders
+- [ ] More platform connectors (Replicate, Together AI, Mistral)
+- [ ] Kosh Cloud (optional cloud sync)
+
+## 📄 License
+
+MIT — free to use, modify, and self-host.
+
+---
+
+Built with ❤️ by a solo vibe coder. If Kosh saves you time, consider giving it a ⭐
