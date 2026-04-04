@@ -9,6 +9,7 @@ RUN apk add --no-cache libc6-compat openssl \
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
+RUN npm install -g prisma@5.22.0
 
 # Build the app
 FROM base AS builder
@@ -17,6 +18,8 @@ RUN apk add --no-cache openssl \
   && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/main" >> /etc/apk/repositories \
   && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/community" >> /etc/apk/repositories \
   && apk add --no-cache openssl1.1-compat
+# Install Prisma CLI globally to ensure it's in PATH
+RUN npm install -g prisma@5.22.0
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -43,6 +46,8 @@ RUN apk add --no-cache openssl \
   && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/main" >> /etc/apk/repositories \
   && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/community" >> /etc/apk/repositories \
   && apk add --no-cache openssl1.1-compat
+# Install Prisma CLI globally so CMD can find it
+RUN npm install -g prisma@5.22.0
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
