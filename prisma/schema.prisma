@@ -5,13 +5,12 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  adapter         = env("DATABASE_URL")
+  // previewFeatures and adapter removed for Prisma v5 compatibility
 }
 
 datasource db {
   provider = "sqlite"
-  // connection URL moved to prisma.config.ts for Prisma v7+
+  url = "file:./kosh.db"
 }
 
 model ApiKey {
