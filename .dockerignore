@@ -1,0 +1,9 @@
+.env
+.env.*
+node_modules
+.next
+prisma/kosh.db
+.git
+.gitignore
+README.md
+*.log
