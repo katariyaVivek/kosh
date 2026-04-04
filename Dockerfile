@@ -2,19 +2,31 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat openssl openssl1.1-compat
+RUN apk add --no-cache libc6-compat openssl \
+  && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/main" >> /etc/apk/repositories \
+  && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/community" >> /etc/apk/repositories \
+  && apk add --no-cache openssl1.1-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
 # Build the app
 FROM base AS builder
+# Install OpenSSL 1.1 for Prisma compatibility
+RUN apk add --no-cache openssl \
+  && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/main" >> /etc/apk/repositories \
+  && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/community" >> /etc/apk/repositories \
+  && apk add --no-cache openssl1.1-compat
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
+# Generate Prisma client
 RUN npx prisma generate
+
+# Apply database migrations so tables exist for build-time prerender
+RUN npx prisma migrate deploy --schema=./prisma/schema.prisma
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -27,8 +39,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Ensure OpenSSL 1.1 is available for Prisma
-RUN apk add --no-cache openssl1.1-compat
+### Ensure OpenSSL 1.1 is available for Prisma
+RUN apk add --no-cache openssl \
+  && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/main" >> /etc/apk/repositories \
+  && echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/community" >> /etc/apk/repositories \
+  && apk add --no-cache openssl1.1-compat
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
