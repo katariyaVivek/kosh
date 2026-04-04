@@ -23,8 +23,8 @@ COPY . .
 
 # Generate Prisma client and apply migrations for build-time prerender
 ENV DATABASE_URL="file:./prisma/kosh.db"
-RUN npx prisma@5.22.0 generate && \
-    npx prisma@5.22.0 migrate deploy --schema=./prisma/schema.prisma
+RUN ./node_modules/.bin/prisma generate && \
+    ./node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -65,4 +65,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run migrations then start
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=./prisma/schema.prisma && node server.js"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma && node server.js"]
