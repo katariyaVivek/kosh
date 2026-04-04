@@ -9,7 +9,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  // url is configured in prisma.config.ts for Prisma v7+ compatibility
 }
 
 model ApiKey {
