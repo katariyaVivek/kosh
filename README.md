@@ -62,7 +62,54 @@ Kosh is a beautiful, secure, self-hosted API key manager built for developers. S
 
 5. **Open Kosh**
    
-   Visit [http://localhost:3000](http://localhost:3000) — you'll be guided through first-run setup to generate your master key.
+Visit [http://localhost:3000](http://localhost:3000) — you'll be guided through first-run setup to generate your master key.
+
+## 🐳 Docker
+
+The easiest way to self-host Kosh.
+
+### Using Docker Compose (recommended)
+
+1. Clone the repo and copy the env file:
+   ```bash
+   git clone https://github.com/your-username/kosh.git
+   cd kosh
+   cp .env.example .env
+   ```
+
+2. Set your master key in .env:
+   ```
+   KOSH_MASTER_KEY="your-random-64-char-key"
+   ```
+
+3. Run with Docker Compose:
+   ```bash
+   docker compose up -d
+   ```
+
+4. Open http://localhost:3000
+
+Your data is persisted in a Docker volume — it survives container restarts and updates.
+
+### Updating Kosh
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+### Using plain Docker
+
+```bash
+docker build -t kosh .
+docker run -d \
+  -p 3000:3000 \
+  -e KOSH_MASTER_KEY="your-key-here" \
+  -e DATABASE_URL="file:/app/data/kosh.db" \
+  -v kosh_data:/app/data \
+  --name kosh \
+  kosh
+```  
 
 ## 🔐 Security
 

@@ -21,12 +21,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
-# Generate Prisma client
-RUN npx prisma generate
-
-# Apply database migrations so tables exist for build-time prerender
-RUN npx prisma migrate deploy --schema=./prisma/schema.prisma
+# Generate Prisma client and apply migrations for build-time prerender
+ENV DATABASE_URL="file:./prisma/kosh.db"
+RUN npx prisma@5.22.0 generate && \
+    npx prisma@5.22.0 migrate deploy --schema=./prisma/schema.prisma
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
