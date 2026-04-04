@@ -8,7 +8,7 @@ RUN apk add --no-cache libc6-compat openssl \
   && apk add --no-cache openssl1.1-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # Build the app
 FROM base AS builder
@@ -23,8 +23,8 @@ COPY . .
 
 # Generate Prisma client and apply migrations for build-time prerender
 ENV DATABASE_URL="file:./prisma/kosh.db"
-RUN npm exec prisma -- generate && \
-    npm exec prisma -- migrate deploy --schema=./prisma/schema.prisma
+RUN npx --yes prisma@5.22.0 generate && \
+    npx --yes prisma@5.22.0 migrate deploy --schema=./prisma/schema.prisma
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -65,4 +65,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run migrations then start
-CMD ["sh", "-c", "npm exec prisma -- migrate deploy --schema=./prisma/schema.prisma && node server.js"]
+CMD ["sh", "-c", "npx --yes prisma@5.22.0 migrate deploy --schema=./prisma/schema.prisma && node server.js"]
