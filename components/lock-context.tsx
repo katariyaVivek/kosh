@@ -55,13 +55,9 @@ function hashKey(key: string): string {
 
 export function LockProvider({ children }: { children: React.ReactNode }) {
   const [isLocked, setIsLocked] = useState(false)
-  const [timeout, setTimeoutState] = useState<AutoLockTimeout>("never")
+  const [timeout, setTimeoutState] = useState<AutoLockTimeout>(() => getStoredTimeout())
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const storedKeyRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    setTimeoutState(getStoredTimeout())
-  }, [])
 
   useEffect(() => {
     const savedHash = localStorage.getItem(LOCK_KEY)
@@ -126,21 +122,21 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
       return false
     }
     
+    const trimmedKey = masterKey.trim()
+    
     try {
       const res = await fetch("/api/settings/unlock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ masterKey }),
+        body: JSON.stringify({ masterKey: trimmedKey }),
       })
       
       const data = await res.json()
       
       if (!res.ok || !data.valid) {
-        console.log("Invalid master key")
         return false
       }
-    } catch (e) {
-      console.log("Unlock validation failed:", e)
+    } catch (_e) {
       return false
     }
     
