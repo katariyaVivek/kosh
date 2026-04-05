@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 
 export function LockScreen() {
-  const { unlock } = useLock()
+  const { isLocked, unlock } = useLock()
   const [masterKey, setMasterKey] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -39,6 +39,8 @@ export function LockScreen() {
       handleUnlock()
     }
   }
+
+  if (!isLocked) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur">

@@ -40,6 +40,7 @@ export default function RootLayout({
         >
           <LockProvider>
             {children}
+            <LockScreen />
           </LockProvider>
         </ThemeProvider>
       </body>
