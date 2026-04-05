@@ -33,6 +33,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { ChangeMasterKeyDialog } from "@/components/change-master-key-dialog"
+import { useLock } from "@/components/lock-context"
 
 const THEME_OPTIONS = [
   {
@@ -64,6 +66,7 @@ export function SettingsContent() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { theme, setTheme } = useTheme()
+  const { getTimeout, setTimeout: setLockTimeout } = useLock()
   const [mounted, setMounted] = useState(false)
   const [masterKey, setMasterKey] = useState<string | null>(null)
   const [isRevealed, setIsRevealed] = useState(false)
@@ -75,6 +78,7 @@ export function SettingsContent() {
   const [isPurgeOpen, setIsPurgeOpen] = useState(false)
   const [purgeInput, setPurgeInput] = useState("")
   const [isPurging, setIsPurging] = useState(false)
+  const [isChangeKeyOpen, setIsChangeKeyOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -266,18 +270,27 @@ export function SettingsContent() {
                   <code className="flex-1 overflow-x-auto whitespace-nowrap text-sm font-mono tracking-[0.2em] text-foreground">
                     {isRevealed && masterKey ? masterKey : MASTER_KEY_MASK}
                   </code>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRevealToggle}
-                    disabled={isFetchingMaster}
-                  >
-                    {isFetchingMaster
-                      ? "Loading..."
-                      : isRevealed
-                      ? "Hide"
-                      : "Reveal"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsChangeKeyOpen(true)}
+                    >
+                      Change
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRevealToggle}
+                      disabled={isFetchingMaster}
+                    >
+                      {isFetchingMaster
+                        ? "Loading..."
+                        : isRevealed
+                        ? "Hide"
+                        : "Reveal"}
+                    </Button>
+                  </div>
                 </div>
                 {masterError ? (
                   <p className="text-xs text-destructive">{masterError}</p>
@@ -298,9 +311,6 @@ export function SettingsContent() {
                     >
                       {isStrongKey ? "✓ Strong" : "⚠ Weak"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      To change your master key, all stored keys must be re-encrypted. Coming soon.
-                    </p>
                   </div>
               </div>
 
@@ -309,19 +319,16 @@ export function SettingsContent() {
                   Auto-lock Timeout
                 </label>
                 <select
-                  value={autoLock}
-                  onChange={(event) => setAutoLock(event.target.value)}
+                  value={getTimeout()}
+                  onChange={(event) => setLockTimeout(event.target.value as "never" | "15" | "30" | "60" | "120")}
                   className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm text-foreground"
                 >
-                  {AUTO_LOCK_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
+                  <option value="never">Never</option>
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="120">2 hours</option>
                 </select>
-                <p className="text-xs text-muted-foreground">
-                  Coming soon — vault locking on inactivity
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -442,6 +449,10 @@ export function SettingsContent() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+              <ChangeMasterKeyDialog
+                open={isChangeKeyOpen}
+                onOpenChange={setIsChangeKeyOpen}
+              />
             </CardContent>
           </Card>
 

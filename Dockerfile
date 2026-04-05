@@ -25,9 +25,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client and apply migrations for build-time prerender
-ENV DATABASE_URL="file:./prisma/kosh.db"
+ENV DATABASE_URL="file:./data/kosh.db"
 ENV PATH="/app/node_modules/.bin:$PATH"
-RUN prisma generate && \
+RUN mkdir -p /app/data && \
+    addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs && \
+    chown -R nextjs:nodejs /app/data && \
+    prisma generate && \
     prisma migrate deploy --schema=./prisma/schema.prisma
 
 # Build Next.js
@@ -40,6 +44,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL="file:./data/kosh.db"
 
 ### Ensure OpenSSL 1.1 is available for Prisma
 RUN apk add --no-cache openssl \
@@ -60,9 +65,16 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/crypto-js ./node_modules/crypto-js
 
 # Create data directory for SQLite
-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+RUN mkdir -p /app/data && \
+    chown -R nextjs:nodejs /app/data && \
+    chmod -R 777 /app/data
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 USER nextjs
 

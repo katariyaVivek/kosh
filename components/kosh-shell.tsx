@@ -16,6 +16,7 @@ import {
   Activity,
   BellRing,
   Settings2,
+  Lock,
 } from "lucide-react"
 
 import { AddAlertDialog } from "@/components/add-alert-dialog"
@@ -23,6 +24,7 @@ import { AddKeyDialog } from "@/components/add-key-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useLock } from "@/components/lock-context"
 
 type NavItem = {
   label: string
@@ -62,6 +64,7 @@ export function KoshShell({
 }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const { lock } = useLock()
 
   const actionLabel =
     sidebarAction.kind === "alert" ? "Add alert" : "Add key"
@@ -123,7 +126,16 @@ export function KoshShell({
                 {actionLabel}
               </Button>
 
-              <div className="mt-auto">
+              <div className="mt-auto space-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => lock()}
+                  className="w-full justify-center gap-2"
+                >
+                  <Lock className="size-4" />
+                  Lock Now
+                </Button>
                 <ThemeToggle />
               </div>
             </div>
