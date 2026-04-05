@@ -1,13 +1,15 @@
 import { addDays, addMonths, startOfMonth } from "date-fns"
-import { BellRing, Clock, DollarSign, Key, LayoutDashboard } from "lucide-react"
+import { BellRing, Clock, DollarSign, Key } from "lucide-react"
 
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
 import { DashboardChart } from "@/components/dashboard-chart"
 import { KoshShell } from "@/components/kosh-shell"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { db } from "@/lib/db"
+import { EmptyState } from "@/components/empty-state"
+
+export const dynamic = "force-dynamic"
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -122,18 +124,7 @@ export default async function Home() {
         <DashboardChart />
 
         {tableKeys.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-12">
-            <div className="mx-auto flex max-w-sm flex-col items-center rounded-2xl border border-border bg-card p-8 text-center shadow-lg">
-              <LayoutDashboard className="size-10 text-muted-foreground/40" />
-              <h1 className="mt-4 text-sm font-medium text-foreground">
-                No API keys yet
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Add your first key to get started
-              </p>
-              <Button className="mt-4 text-sm">Add key</Button>
-            </div>
-          </div>
+          <EmptyState />
         ) : (
           <DashboardKeyTable keys={tableKeys} />
         )}

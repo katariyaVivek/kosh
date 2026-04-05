@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  kosh:
+    build: .
+    container_name: kosh
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/data/kosh.db
+      - KOSH_MASTER_KEY=${KOSH_MASTER_KEY}
+    volumes:
+      - kosh_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  kosh_data:
+    driver: local

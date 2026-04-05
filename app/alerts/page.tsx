@@ -2,6 +2,8 @@ import { AlertsView } from "@/components/alerts-view"
 import { KoshShell } from "@/components/kosh-shell"
 import { db } from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 async function syncTriggeredAlerts() {
   const alerts = await db.alert.findMany({
     where: { triggered: false },

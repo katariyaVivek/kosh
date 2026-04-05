@@ -2,6 +2,8 @@ import { VaultView } from "@/components/vault-view"
 import { KoshShell } from "@/components/kosh-shell"
 import { db } from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 export default async function VaultPage() {
   const keys = await db.apiKey.findMany({
     orderBy: { createdAt: "desc" },
