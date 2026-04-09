@@ -5,6 +5,9 @@ export type KoshKey = {
   projectTag: string | null
   environment: string
   expiresAt?: string | Date | null
+  rotationIntervalDays?: number | null
+  rotationReminderDays?: number
+  lastRotatedAt?: string | Date | null
   createdAt: string | Date
   notes?: string | null
 }

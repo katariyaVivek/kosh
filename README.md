@@ -124,7 +124,7 @@ Kosh uses AES-256 encryption to protect all stored API keys. Your `KOSH_MASTER_K
 
 After first-run setup, your `.env` file will contain:
 ```env
-DATABASE_URL="file:./prisma/kosh.db"
+DATABASE_URL="file:./kosh.db"
 KOSH_MASTER_KEY="your-generated-master-key"
 ```
 
@@ -178,7 +178,7 @@ kosh/
 - [x] Docker support for self-hosting
 - [x] Master key rotation (re-encrypt all keys)
 - [x] Auto-lock vault on inactivity
-- [ ] Key rotation reminders
+- [x] Key rotation reminders
 - [ ] More platform connectors (Replicate, Together AI, Mistral)
 - [ ] Kosh Cloud (optional cloud sync)
 

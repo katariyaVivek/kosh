@@ -22,7 +22,11 @@ export async function GET(
       projectTag: true,
       environment: true,
       createdAt: true,
+      expiresAt: true,
       notes: true,
+      rotationIntervalDays: true,
+      rotationReminderDays: true,
+      lastRotatedAt: true,
     },
   })
 

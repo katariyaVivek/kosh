@@ -14,18 +14,21 @@ datasource db {
 }
 
 model ApiKey {
-  id          String   @id @default(cuid())
-  name        String
-  platform    String
-  keyEncrypted String
-  projectTag  String?
-  environment String   @default("production")
-  notes       String?
-  expiresAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  usageLogs   UsageLog[]
-  alerts      Alert[]
+  id                   String    @id @default(cuid())
+  name                 String
+  platform             String
+  keyEncrypted         String
+  projectTag           String?
+  environment          String    @default("production")
+  notes                String?
+  expiresAt            DateTime?
+  rotationIntervalDays Int?
+  rotationReminderDays Int       @default(7)
+  lastRotatedAt        DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  usageLogs            UsageLog[]
+  alerts               Alert[]
 }
 
 model UsageLog {

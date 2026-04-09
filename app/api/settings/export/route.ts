@@ -13,6 +13,9 @@ export async function GET() {
         projectTag: true,
         environment: true,
         expiresAt: true,
+        rotationIntervalDays: true,
+        rotationReminderDays: true,
+        lastRotatedAt: true,
         createdAt: true,
         notes: true,
       },
@@ -41,10 +44,11 @@ export async function GET() {
 
   const payload = {
     exportedAt: new Date().toISOString(),
-    version: "1.0",
+    version: "1.1",
     keys: keys.map((key) => ({
       ...key,
       expiresAt: key.expiresAt?.toISOString() ?? null,
+      lastRotatedAt: key.lastRotatedAt?.toISOString() ?? null,
       createdAt: key.createdAt.toISOString(),
     })),
     usageLogs: usageLogs.map((log) => ({

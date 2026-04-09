@@ -11,6 +11,7 @@ import {
   KeyRound,
   Layers,
   Pencil,
+  RefreshCw,
   Search,
   Trash2,
 } from "lucide-react"
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { formatEnvironment, KoshKey } from "@/lib/kosh"
+import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import {
   getPlatformColor,
   getPlatformColorWithAlpha,
@@ -49,6 +51,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [editingKey, setEditingKey] = useState<KoshKey | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [rotationLoadingId, setRotationLoadingId] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
@@ -106,6 +109,22 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
       return next
     })
     setCopiedId((current) => (current === deleteId ? null : current))
+    router.refresh()
+  }
+
+  const handleMarkRotated = async (id: string) => {
+    setRotationLoadingId(id)
+
+    const res = await fetch(`/api/keys/${id}/rotation`, {
+      method: "POST",
+    })
+
+    setRotationLoadingId((current) => (current === id ? null : current))
+
+    if (!res.ok) {
+      return
+    }
+
     router.refresh()
   }
 
@@ -258,51 +277,82 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
           filteredKeys.map((key) => {
             const accentColor = getPlatformColor(key.platform)
             const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
-          const initial = getPlatformInitial(key.platform)
-          const expiresAt = key.expiresAt ? new Date(key.expiresAt) : null
-          const daysUntilExpiry =
-            expiresAt !== null ? differenceInDays(expiresAt, now) : null
-          const expiryBadge =
-            expiresAt !== null && daysUntilExpiry !== null
-              ? (() => {
-                  if (daysUntilExpiry < 0) {
-                    return (
+            const initial = getPlatformInitial(key.platform)
+            const expiresAt = key.expiresAt ? new Date(key.expiresAt) : null
+            const daysUntilExpiry =
+              expiresAt !== null ? differenceInDays(expiresAt, now) : null
+            const expiryBadge =
+              expiresAt !== null && daysUntilExpiry !== null
+                ? (() => {
+                    if (daysUntilExpiry < 0) {
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                        >
+                          Expired
+                        </Badge>
+                      )
+                    }
+
+                    if (daysUntilExpiry <= 7) {
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                        >
+                          Expiring soon
+                        </Badge>
+                      )
+                    }
+
+                    if (daysUntilExpiry <= 30) {
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="h-5 rounded-full border border-amber-400/70 bg-amber-400/10 px-2.5 text-[11px] font-medium text-amber-400"
+                        >
+                          Expires in {daysUntilExpiry} days
+                        </Badge>
+                      )
+                    }
+
+                    return null
+                  })()
+                : null
+            const rotation = getRotationStatus(key, now)
+            const isRotationDue = needsRotationAttention(rotation.state)
+            const rotationBadge =
+              rotation.state === "overdue"
+                ? (
+                    <Badge
+                      variant="outline"
+                      className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                    >
+                      Overdue by {Math.abs(rotation.daysUntilDue ?? 0)} days
+                    </Badge>
+                  )
+                : rotation.state === "due_today"
+                  ? (
                       <Badge
                         variant="outline"
                         className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
                       >
-                        Expired
+                        Rotate today
                       </Badge>
                     )
-                  }
+                  : rotation.state === "due_soon"
+                    ? (
+                        <Badge
+                          variant="outline"
+                          className="h-5 rounded-full border border-amber-400/70 bg-amber-400/10 px-2.5 text-[11px] font-medium text-amber-400"
+                        >
+                          Rotate in {rotation.daysUntilDue} days
+                        </Badge>
+                      )
+                    : null
 
-                  if (daysUntilExpiry <= 7) {
-                    return (
-                      <Badge
-                        variant="outline"
-                        className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
-                      >
-                        Expiring soon
-                      </Badge>
-                    )
-                  }
-
-                  if (daysUntilExpiry <= 30) {
-                    return (
-                      <Badge
-                        variant="outline"
-                        className="h-5 rounded-full border border-amber-400/70 bg-amber-400/10 px-2.5 text-[11px] font-medium text-amber-400"
-                      >
-                        Expires in {daysUntilExpiry} days
-                      </Badge>
-                    )
-                  }
-
-                  return null
-                })()
-              : null
-
-          return (
+            return (
               <Card
                 key={key.id}
                 className="border-l-4 bg-card/85 shadow-sm ring-border/80 transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-accent/40 hover:shadow-md"
@@ -333,9 +383,10 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                                  <FileText className="h-3 w-3 text-muted-foreground" />
                                </span>
                              ) : null}
-                           </div>
-                          {expiryBadge}
-                        </div>
+                             </div>
+                            {expiryBadge}
+                            {rotationBadge}
+                          </div>
                         <Badge
                           variant="outline"
                           className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
@@ -401,20 +452,42 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                         </Button>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => setEditingKey(key)}
-                        className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
-                        aria-label="Edit key"
-                        title="Edit key"
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setEditingKey(key)}
+                          className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                          aria-label="Edit key"
+                          title="Edit key"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
+                        {key.rotationIntervalDays ? (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleMarkRotated(key.id)}
+                            disabled={rotationLoadingId === key.id}
+                            className={cn(
+                              "rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground",
+                              isRotationDue && "text-amber-500 hover:text-amber-500"
+                            )}
+                            aria-label="Mark rotated"
+                            title="Mark rotated now"
+                          >
+                            <RefreshCw
+                              className={cn(
+                                "size-4",
+                                rotationLoadingId === key.id && "animate-spin"
+                              )}
+                            />
+                          </Button>
+                        ) : null}
+
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                         onClick={() => setDeleteId(key.id)}
                         className="rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         aria-label="Delete key"

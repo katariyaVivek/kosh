@@ -9,6 +9,27 @@ type ImportedApiKey = {
   environment?: string
   notes?: string
   expiresAt?: string
+  rotationIntervalDays?: number
+  rotationReminderDays?: number
+  lastRotatedAt?: string
+}
+
+function parseOptionalDate(value: string | undefined) {
+  if (!value) return null
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function parseRotationIntervalDays(value: number | undefined) {
+  if (value === undefined || value === null) return null
+  if (!Number.isInteger(value) || value < 1 || value > 3650) return null
+  return value
+}
+
+function parseRotationReminderDays(value: number | undefined) {
+  if (value === undefined || value === null) return 7
+  if (!Number.isInteger(value) || value < 0 || value > 365) return 7
+  return value
 }
 
 export async function POST(request: Request) {
@@ -47,6 +68,14 @@ export async function POST(request: Request) {
       continue
     }
 
+    const rotationIntervalDays = parseRotationIntervalDays(
+      rawKey.rotationIntervalDays
+    )
+    const rotationReminderDays = parseRotationReminderDays(
+      rawKey.rotationReminderDays
+    )
+    const lastRotatedAt = parseOptionalDate(rawKey.lastRotatedAt)
+
     await db.apiKey.create({
       data: {
         name: rawKey.name,
@@ -54,7 +83,10 @@ export async function POST(request: Request) {
         projectTag: rawKey.projectTag ?? null,
         environment: rawKey.environment ?? "production",
         notes: rawKey.notes ?? null,
-        expiresAt: rawKey.expiresAt ? new Date(rawKey.expiresAt) : null,
+        expiresAt: parseOptionalDate(rawKey.expiresAt),
+        rotationIntervalDays,
+        rotationReminderDays,
+        lastRotatedAt: rotationIntervalDays ? lastRotatedAt : null,
         keyEncrypted: "",
       },
     })
