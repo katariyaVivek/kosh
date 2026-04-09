@@ -24,6 +24,19 @@ import type { ConnectorInfo } from "@/lib/connectors/types"
 
 const ENVIRONMENTS = ["production", "development", "staging"]
 const MASKED_EDIT_VALUE = "****************"
+const ROTATION_INTERVAL_OPTIONS = [
+  { value: "none", label: "No rotation reminder" },
+  { value: "30", label: "Every 30 days" },
+  { value: "60", label: "Every 60 days" },
+  { value: "90", label: "Every 90 days" },
+  { value: "180", label: "Every 180 days" },
+]
+const ROTATION_REMINDER_OPTIONS = [
+  { value: "1", label: "1 day before" },
+  { value: "3", label: "3 days before" },
+  { value: "7", label: "7 days before" },
+  { value: "14", label: "14 days before" },
+]
 
 type KeyDialogValues = {
   id?: string
@@ -32,6 +45,8 @@ type KeyDialogValues = {
   projectTag: string | null
   environment: string
   notes?: string | null
+  rotationIntervalDays?: number | null
+  rotationReminderDays?: number
 }
 
 type AddKeyDialogProps = {
@@ -49,6 +64,10 @@ function getInitialFormState(initialValues?: KeyDialogValues) {
     projectTag: initialValues?.projectTag ?? "",
     environment: initialValues?.environment ?? "production",
     notes: initialValues?.notes ?? "",
+    rotationIntervalDays: initialValues?.rotationIntervalDays
+      ? String(initialValues.rotationIntervalDays)
+      : "none",
+    rotationReminderDays: String(initialValues?.rotationReminderDays ?? 7),
   }
 }
 
@@ -107,6 +126,12 @@ export function AddKeyDialog({
       return
     }
 
+    const rotationIntervalDays =
+      form.rotationIntervalDays === "none"
+        ? null
+        : Number(form.rotationIntervalDays)
+    const rotationReminderDays = Number(form.rotationReminderDays)
+
     setLoading(true)
 
     const payload = isEditMode
@@ -116,8 +141,14 @@ export function AddKeyDialog({
           projectTag: form.projectTag,
           environment: form.environment,
           notes: form.notes || null,
+          rotationIntervalDays,
+          rotationReminderDays,
         }
-      : form
+      : {
+          ...form,
+          rotationIntervalDays,
+          rotationReminderDays,
+        }
 
     const response = await fetch(
       isEditMode ? `/api/keys/${initialValues?.id}` : "/api/keys",
@@ -246,6 +277,50 @@ export function AddKeyDialog({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Rotation cadence</Label>
+            <Select
+              value={form.rotationIntervalDays}
+              onValueChange={(value) =>
+                setForm((prev) => ({ ...prev, rotationIntervalDays: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROTATION_INTERVAL_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {form.rotationIntervalDays !== "none" ? (
+            <div className="flex flex-col gap-1.5">
+              <Label>Reminder lead time</Label>
+              <Select
+                value={form.rotationReminderDays}
+                onValueChange={(value) =>
+                  setForm((prev) => ({ ...prev, rotationReminderDays: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROTATION_REMINDER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <Label>Notes (optional)</Label>

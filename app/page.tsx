@@ -1,10 +1,11 @@
-import { addDays, addMonths, startOfMonth } from "date-fns"
+import { addMonths, startOfMonth } from "date-fns"
 import { BellRing, Clock, DollarSign, Key } from "lucide-react"
 
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
 import { DashboardChart } from "@/components/dashboard-chart"
 import { KoshShell } from "@/components/kosh-shell"
 import { Card } from "@/components/ui/card"
+import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import { cn } from "@/lib/utils"
 import { db } from "@/lib/db"
 import { EmptyState } from "@/components/empty-state"
@@ -21,9 +22,8 @@ export default async function Home() {
   const now = new Date()
   const windowStart = startOfMonth(now)
   const nextMonthStart = addMonths(windowStart, 1)
-  const nextWeek = addDays(now, 7)
 
-  const [keys, monthlySpendAggregate, activeAlerts, expiringSoon] =
+  const [keys, monthlySpendAggregate, activeAlerts] =
     await Promise.all([
       db.apiKey.findMany({
         orderBy: { createdAt: "desc" },
@@ -34,15 +34,10 @@ export default async function Home() {
         where: { date: { gte: windowStart, lt: nextMonthStart } },
       }),
       db.alert.count({ where: { triggered: true } }),
-      db.apiKey.count({
-        where: {
-          expiresAt: {
-            gte: now,
-            lte: nextWeek,
-          },
-        },
-      }),
     ])
+  const rotationDue = keys.filter((key) =>
+    needsRotationAttention(getRotationStatus(key, now).state)
+  ).length
 
   const totalKeys = keys.length
   const monthlySpend = monthlySpendAggregate._sum.cost ?? 0
@@ -64,8 +59,8 @@ export default async function Home() {
       hasWarning: activeAlerts > 0,
     },
     {
-      label: "Expiring Soon",
-      value: expiringSoon,
+      label: "Rotation Due",
+      value: rotationDue,
       icon: Clock,
     },
   ]
@@ -77,6 +72,10 @@ export default async function Home() {
     environment: key.environment,
     lastLog: key.usageLogs[0]?.date?.toISOString() ?? null,
     expiresAt: key.expiresAt ? key.expiresAt.toISOString() : null,
+    createdAt: key.createdAt.toISOString(),
+    rotationIntervalDays: key.rotationIntervalDays,
+    rotationReminderDays: key.rotationReminderDays,
+    lastRotatedAt: key.lastRotatedAt ? key.lastRotatedAt.toISOString() : null,
   }))
 
   return (
@@ -93,7 +92,7 @@ export default async function Home() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 {stats.map(({ label, value, icon: Icon }) => {
-          const isWarning = label === "Expiring Soon" && typeof value === "number" && value > 0
+          const isWarning = label === "Rotation Due" && typeof value === "number" && value > 0
           return (
             <Card
               key={label}

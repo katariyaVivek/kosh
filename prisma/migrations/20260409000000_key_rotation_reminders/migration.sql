@@ -1,0 +1,3 @@
+ALTER TABLE "ApiKey" ADD COLUMN "rotationIntervalDays" INTEGER;
+ALTER TABLE "ApiKey" ADD COLUMN "rotationReminderDays" INTEGER NOT NULL DEFAULT 7;
+ALTER TABLE "ApiKey" ADD COLUMN "lastRotatedAt" DATETIME;

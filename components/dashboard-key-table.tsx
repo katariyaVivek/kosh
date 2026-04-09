@@ -14,6 +14,7 @@ import { Copy, X, ShieldCheck, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { formatEnvironment } from "@/lib/kosh"
+import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import {
   getPlatformColor,
   getPlatformColorWithAlpha,
@@ -26,7 +27,11 @@ export type DashboardKeyRow = {
   name: string
   platform: string
   environment: string
+  createdAt: string
   expiresAt: string | null
+  rotationIntervalDays: number | null
+  rotationReminderDays: number
+  lastRotatedAt: string | null
   lastLog: string | null
 }
 
@@ -47,6 +52,9 @@ type DashboardKeyDetails = {
     createdAt: string
     expiresAt: string | null
     notes: string | null
+    rotationIntervalDays: number | null
+    rotationReminderDays: number
+    lastRotatedAt: string | null
   }
   usageLogs: UsageLogEntry[]
   totalCalls: number
@@ -158,11 +166,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     })
   }, [keys, normalizedQuery])
 
-  const keyExpiryMap = useMemo(
-    () => new Map(keys.map((key) => [key.id, key.expiresAt])),
-    [keys]
-  )
-
   const handleCopy = async (id: string) => {
     try {
       const res = await fetch("/api/keys/reveal", {
@@ -233,14 +236,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
         return res.json()
       })
       .then((data: DashboardKeyDetails) => {
-        const expiresAt = keyExpiryMap.get(data.key.id) ?? null
-        setPanelDetails({
-          ...data,
-          key: {
-            ...data.key,
-            expiresAt,
-          },
-        })
+        setPanelDetails(data)
       })
       .catch((error) => {
         if (controller.signal.aborted) return
@@ -250,7 +246,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     return () => {
       controller.abort()
     }
-  }, [selectedKeyId, keyExpiryMap])
+  }, [selectedKeyId])
 
   useEffect(() => {
     if (!selectedKeyId) return
@@ -319,6 +315,17 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     : null
   const panelExpiresInDays =
     panelExpiresAt !== null ? differenceInDays(panelExpiresAt, new Date()) : null
+  const panelRotationStatus = panelDetails
+    ? getRotationStatus(
+        {
+          rotationIntervalDays: panelDetails.key.rotationIntervalDays,
+          rotationReminderDays: panelDetails.key.rotationReminderDays,
+          lastRotatedAt: panelDetails.key.lastRotatedAt,
+          createdAt: panelDetails.key.createdAt,
+        },
+        new Date()
+      )
+    : null
   const panelInfoItems = panelDetails
     ? [
         {
@@ -345,13 +352,42 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
               })()
             : "Never",
         },
-        {
-          label: "Created",
-          value: format(new Date(panelDetails.key.createdAt), "MMM d, yyyy"),
-        },
-        ...(panelExpiresAt
-          ? [
-              {
+          {
+            label: "Created",
+            value: format(new Date(panelDetails.key.createdAt), "MMM d, yyyy"),
+          },
+          ...(panelDetails.key.rotationIntervalDays
+            ? [
+                {
+                  label: "Rotation",
+                  value: (() => {
+                    if (!panelRotationStatus) return "Configured"
+                    if (panelRotationStatus.state === "overdue") {
+                      return `Overdue by ${Math.abs(panelRotationStatus.daysUntilDue ?? 0)} days`
+                    }
+                    if (panelRotationStatus.state === "due_today") {
+                      return "Due today"
+                    }
+                    if (panelRotationStatus.state === "due_soon") {
+                      return `Due in ${panelRotationStatus.daysUntilDue} days`
+                    }
+                    return panelRotationStatus.dueAt
+                      ? `Due ${format(panelRotationStatus.dueAt, "MMM d, yyyy")}`
+                      : "Configured"
+                  })(),
+                  valueClassName:
+                    panelRotationStatus?.state === "overdue" ||
+                    panelRotationStatus?.state === "due_today"
+                      ? "text-destructive"
+                      : panelRotationStatus?.state === "due_soon"
+                        ? "text-amber-400"
+                        : "text-foreground",
+                },
+              ]
+            : []),
+          ...(panelExpiresAt
+            ? [
+                {
                 label: "Expires",
                 value: format(panelExpiresAt, "MMM d, yyyy"),
                 valueClassName:
@@ -424,16 +460,53 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                   </td>
                 </tr>
               ) : (
-                filteredKeys.map((key) => {
-                  const accentColor = getPlatformColor(key.platform)
-                  const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
-                  const initial = getPlatformInitial(key.platform)
-                  const lastLogLabel = key.lastLog
-                    ? `${formatDistanceToNow(new Date(key.lastLog))} ago`
-                    : "Never"
-                  const maskedValue = `sk-${MASKED_SEGMENT}${key.id.slice(-4)}`
+                  filteredKeys.map((key) => {
+                    const accentColor = getPlatformColor(key.platform)
+                    const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
+                    const initial = getPlatformInitial(key.platform)
+                    const lastLogLabel = key.lastLog
+                      ? `${formatDistanceToNow(new Date(key.lastLog))} ago`
+                      : "Never"
+                    const maskedValue = `sk-${MASKED_SEGMENT}${key.id.slice(-4)}`
+                    const healthResult = healthResults[key.id]
+                    const rotationStatus = getRotationStatus(key)
+                    const hasRotationAttention = needsRotationAttention(rotationStatus.state)
+                    const statusLabel =
+                      healthResult?.valid === true
+                        ? "Valid"
+                        : healthResult?.valid === false
+                          ? "Invalid"
+                          : healthResult?.valid === null
+                            ? "Unknown"
+                            : rotationStatus.state === "overdue"
+                              ? `Overdue by ${Math.abs(rotationStatus.daysUntilDue ?? 0)} days`
+                              : rotationStatus.state === "due_today"
+                                ? "Rotate today"
+                                : rotationStatus.state === "due_soon"
+                                  ? `Rotate in ${rotationStatus.daysUntilDue} days`
+                                  : "Active"
+                    const statusTone =
+                      healthResult?.valid === true
+                        ? "text-emerald-400"
+                        : healthResult?.valid === false
+                          ? "text-destructive"
+                          : healthResult?.valid === null
+                            ? "text-muted-foreground"
+                            : hasRotationAttention
+                              ? "text-amber-500"
+                              : "text-muted-foreground"
+                    const statusDot =
+                      healthResult?.valid === true
+                        ? "bg-emerald-500"
+                        : healthResult?.valid === false
+                          ? "bg-destructive/70"
+                          : healthResult?.valid === null
+                            ? "bg-muted-foreground/60"
+                            : hasRotationAttention
+                              ? "bg-amber-500"
+                              : "bg-muted-foreground/60"
 
-                  return (
+                    return (
                     <tr
                       key={key.id}
                       className="cursor-pointer border-b border-border/60 bg-card text-sm text-foreground transition-colors hover:bg-muted/40"
@@ -481,29 +554,13 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                           <span
                             className={cn(
                               "h-2 w-2 rounded-full",
-                              healthResults[key.id]?.valid === true
-                                ? "bg-emerald-500"
-                                : healthResults[key.id]?.valid === false
-                                ? "bg-destructive/70"
-                                : "bg-muted-foreground/60"
+                              statusDot
                             )}
                           />
                           <span
-                            className={cn(
-                              healthResults[key.id]?.valid === true
-                                ? "text-emerald-400"
-                                : healthResults[key.id]?.valid === false
-                                ? "text-destructive"
-                                : "text-muted-foreground"
-                            )}
+                            className={cn(statusTone)}
                           >
-                            {healthResults[key.id]?.valid === true
-                              ? "Valid"
-                              : healthResults[key.id]?.valid === false
-                              ? "Invalid"
-                              : healthResults[key.id]?.valid === null
-                              ? "Unknown"
-                              : "Active"}
+                            {statusLabel}
                           </span>
                         </div>
                       </td>
