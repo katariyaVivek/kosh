@@ -14,8 +14,11 @@ Kosh is a beautiful, secure, self-hosted API key manager built for developers. S
 - 📊 **Pulse** — track usage, costs, and API call history per key
 - 📈 **Spend Over Time** — visualize daily costs and API call volume over the last 30 days
 - 🔔 **Alerts** — set cost or call thresholds and get notified when crossed
-- 🔌 **Connector system** — validate and sync keys from OpenRouter, Groq, Gemini, NVIDIA NIM, Anthropic, OpenAI, and more
-- 🩺 **Health Check** — validate all keys at once across supported platforms
+- 🔌 **Connector system** — validate and sync keys from OpenRouter, Groq, Gemini, NVIDIA NIM, Anthropic, OpenAI, Replicate, Together AI, Mistral, and more
+- 🩺 **Health Check** — validate all keys at once with real-time progress
+- 🔘 **Bulk operations** — select multiple keys to validate or delete in one click
+- ⌨️ **Keyboard shortcuts** — `N` new key, `/` search, `H` health check, `L` lock vault
+- 🔔 **Toast notifications** — instant feedback for every action (copy, delete, sync, etc.)
 - 🎨 **Beautiful UI** — clean light/dark mode design inspired by Clerk and Resend
 - 🚀 **First-run setup** — guided setup generates your master key automatically
 - 📤 **Export/Import** — backup and restore your vault as encrypted JSON
