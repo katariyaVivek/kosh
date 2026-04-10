@@ -141,6 +141,9 @@ KOSH_MASTER_KEY="your-generated-master-key"
 | NVIDIA NIM | ✅ | — |
 | Anthropic | ✅ | — |
 | Stripe | ✅ | ✅ |
+| Replicate | ✅ | ✅ |
+| Together AI | ✅ | ✅ |
+| Mistral | ✅ | — |
 | Any other | — | Manual |
 
 ## 🔧 API Endpoints
@@ -179,7 +182,7 @@ kosh/
 - [x] Master key rotation (re-encrypt all keys)
 - [x] Auto-lock vault on inactivity
 - [x] Key rotation reminders
-- [ ] More platform connectors (Replicate, Together AI, Mistral)
+- [x] More platform connectors (Replicate, Together AI, Mistral)
 - [ ] Kosh Cloud (optional cloud sync)
 
 ## 📄 License

@@ -12,14 +12,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -68,10 +61,6 @@ export function SettingsContent() {
   const { theme, setTheme } = useTheme()
   const { getTimeout, setTimeout: setLockTimeout } = useLock()
   const [mounted, setMounted] = useState(false)
-  const [masterKey, setMasterKey] = useState<string | null>(null)
-  const [isRevealed, setIsRevealed] = useState(false)
-  const [isFetchingMaster, setIsFetchingMaster] = useState(false)
-  const [masterError, setMasterError] = useState<string | null>(null)
   const [autoLock, setAutoLock] = useState(AUTO_LOCK_OPTIONS[0])
   const [exportLoading, setExportLoading] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
@@ -89,37 +78,6 @@ export function SettingsContent() {
     const timeout = setTimeout(() => setImportMessage(null), 4000)
     return () => clearTimeout(timeout)
   }, [importMessage])
-
-  const handleRevealToggle = useCallback(async () => {
-    if (isRevealed) {
-      setIsRevealed(false)
-      return
-    }
-
-    if (masterKey) {
-      setIsRevealed(true)
-      return
-    }
-
-    setIsFetchingMaster(true)
-    setMasterError(null)
-
-    try {
-      const res = await fetch("/api/settings/master-key")
-      if (!res.ok) {
-        throw new Error("Unable to fetch master key")
-      }
-      const data = await res.json()
-      setMasterKey(data.value ?? "")
-      setIsRevealed(true)
-    } catch (error) {
-      setMasterError(
-        error instanceof Error ? error.message : "Unable to fetch master key"
-      )
-    } finally {
-      setIsFetchingMaster(false)
-    }
-  }, [isRevealed, masterKey])
 
   const handleExport = useCallback(async () => {
     setExportLoading(true)
@@ -154,7 +112,7 @@ export function SettingsContent() {
   }, [])
 
   const handleImportFile = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0]
       if (!file) return
 
@@ -210,8 +168,6 @@ export function SettingsContent() {
   }, [router])
 
   const activeTheme = mounted && (theme ?? "system")
-  const keyLength = masterKey?.length ?? 0
-  const isStrongKey = keyLength >= 32 && Boolean(masterKey)
 
   const themeCards = useMemo(
     () =>
@@ -267,51 +223,24 @@ export function SettingsContent() {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-muted/40 px-4 py-3">
-                  <code className="flex-1 overflow-x-auto whitespace-nowrap text-sm font-mono tracking-[0.2em] text-foreground">
-                    {isRevealed && masterKey ? masterKey : MASTER_KEY_MASK}
+                  <code className="flex-1 text-sm font-mono tracking-[0.2em] text-muted-foreground">
+                    {MASTER_KEY_MASK}
                   </code>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setIsChangeKeyOpen(true)}
-                    >
-                      Change
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleRevealToggle}
-                      disabled={isFetchingMaster}
-                    >
-                      {isFetchingMaster
-                        ? "Loading..."
-                        : isRevealed
-                        ? "Hide"
-                        : "Reveal"}
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsChangeKeyOpen(true)}
+                  >
+                    Change
+                  </Button>
                 </div>
-                {masterError ? (
-                  <p className="text-xs text-destructive">{masterError}</p>
-                ) : null}
                 <div className="flex items-start gap-2 rounded-2xl border border-amber-400/50 bg-amber-400/10 px-4 py-3 text-xs text-amber-400">
                   <AlertTriangle className="size-4" />
                   <p>
                     This key encrypts all your API keys. Never share it. Back it
                     up somewhere safe.
-                    </p>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <p
-                      className={cn(
-                        "font-medium",
-                        isStrongKey ? "text-emerald-400" : "text-destructive"
-                      )}
-                    >
-                      {isStrongKey ? "✓ Strong" : "⚠ Weak"}
-                    </p>
-                  </div>
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2 text-sm">

@@ -68,9 +68,7 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/crypto-js ./node_modules/crypto-js
 
 # Create data directory for SQLite
-RUN mkdir -p /app/data && \
-    chown -R nextjs:nodejs /app/data && \
-    chmod -R 777 /app/data
+RUN mkdir -p /app/data
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
@@ -82,5 +80,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run migrations then start
-CMD ["sh", "-c", "prisma migrate deploy --schema=./prisma/schema.prisma && node server.js"]
+CMD ["node", "server.js"]

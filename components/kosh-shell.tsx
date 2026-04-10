@@ -25,6 +25,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLock } from "@/components/lock-context"
+import { useKeyboardShortcuts } from "@/components/keyboard-shortcuts"
 
 type NavItem = {
   label: string
@@ -65,6 +66,11 @@ export function KoshShell({
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { lock } = useLock()
+
+  useKeyboardShortcuts([
+    { key: "n", handler: () => setOpen(true), preventDefault: true },
+    { key: "l", handler: () => lock(), preventDefault: true },
+  ])
 
   const actionLabel =
     sidebarAction.kind === "alert" ? "Add alert" : "Add key"

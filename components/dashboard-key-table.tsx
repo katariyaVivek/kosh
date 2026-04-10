@@ -13,6 +13,8 @@ import { Copy, X, ShieldCheck, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/toast"
+import { useKeyboardShortcuts } from "@/components/keyboard-shortcuts"
 import { formatEnvironment } from "@/lib/kosh"
 import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import {
@@ -115,6 +117,7 @@ function PanelSkeleton() {
 export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const [query, setQuery] = useState("")
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const { success, error: toastError, info } = useToast()
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [panelDetails, setPanelDetails] = useState<DashboardKeyDetails | null>(null)
   const [panelError, setPanelError] = useState<string | null>(null)
@@ -122,38 +125,76 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   type HealthCheckResult = { id: string; valid: boolean | null }
   const [healthResults, setHealthResults] = useState<Record<string, HealthCheckResult>>({})
   const [isChecking, setIsChecking] = useState(false)
-  const [healthSummary, setHealthSummary] = useState<string | null>(null)
-  const summaryTimer = useRef<number | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (summaryTimer.current) clearTimeout(summaryTimer.current)
-    }
-  }, [])
+  const [checkedCount, setCheckedCount] = useState(0)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const handleHealthCheck = useCallback(async () => {
     setIsChecking(true)
-    try {
-      const res = await fetch("/api/health-check", { method: "POST" })
-      const data: HealthCheckResult[] = await res.json()
-      const map: Record<string, HealthCheckResult> = {}
-      data.forEach((r) => { map[r.id] = r })
-      setHealthResults(map)
+    setHealthResults({})
+    setCheckedCount(0)
+    const validCountRef = { current: 0 }
+    const invalidCountRef = { current: 0 }
+    const unknownCountRef = { current: 0 }
+    let checked = 0
 
-      const validCount = data.filter((r) => r.valid === true).length
-      const invalidCount = data.filter((r) => r.valid === false).length
-      const unknownCount = data.filter((r) => r.valid === null).length
-      const msg = `Health check complete — ${validCount} valid, ${invalidCount} invalid, ${unknownCount} unknown`
-      setHealthSummary(msg)
-      if (summaryTimer.current) clearTimeout(summaryTimer.current)
-      summaryTimer.current = window.setTimeout(() => setHealthSummary(null), 3000)
-    } catch (error) {
-      console.error(error)
-      setHealthSummary("Health check failed")
-    } finally {
-      setIsChecking(false)
+    for (const key of keys) {
+      const connector = await fetch("/api/connectors").then((r) => r.json())
+      const platformConnector = connector.find(
+        (c: any) => c.platform === key.platform
+      )
+
+      if (!platformConnector?.canValidate) {
+        unknownCountRef.current++
+        checked++
+        setCheckedCount(checked)
+        setHealthResults((prev) => ({
+          ...prev,
+          [key.id]: { id: key.id, valid: null },
+        }))
+        continue
+      }
+
+      try {
+        const res = await fetch(`/api/sync/${key.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "validate" }),
+        })
+        const data = await res.json()
+        const isValid = data.valid ?? false
+        if (isValid) validCountRef.current++
+        else invalidCountRef.current++
+        checked++
+        setCheckedCount(checked)
+        setHealthResults((prev) => ({
+          ...prev,
+          [key.id]: { id: key.id, valid: isValid },
+        }))
+      } catch {
+        unknownCountRef.current++
+        checked++
+        setCheckedCount(checked)
+        setHealthResults((prev) => ({
+          ...prev,
+          [key.id]: { id: key.id, valid: null },
+        }))
+      }
     }
-  }, [])
+
+    setIsChecking(false)
+    setCheckedCount(0)
+    const msg = `${validCountRef.current} valid, ${invalidCountRef.current} invalid, ${unknownCountRef.current} unknown`
+    if (invalidCountRef.current > 0) {
+      toastError("Health check complete", `${invalidCountRef.current} key(s) are invalid`)
+    } else {
+      success("Health check complete", msg)
+    }
+  }, [keys, success, toastError])
+
+  useKeyboardShortcuts([
+    { key: "/", handler: () => searchInputRef.current?.focus(), preventDefault: true },
+    { key: "h", handler: () => { if (!isChecking) handleHealthCheck() }, preventDefault: true },
+  ])
 
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -174,16 +215,20 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
         body: JSON.stringify({ id }),
       })
 
-      if (!res.ok) return
+      if (!res.ok) {
+        toastError("Copy failed", "Unable to reveal and copy the key")
+        return
+      }
 
       const { value } = await res.json()
       await navigator.clipboard.writeText(value)
       setCopiedId(id)
+      success("Key copied to clipboard")
       setTimeout(() => {
         setCopiedId((current) => (current === id ? null : current))
       }, 1400)
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      toastError("Copy failed")
     }
   }
 
@@ -198,14 +243,18 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
         body: JSON.stringify({ id: panelDetails.key.id }),
       })
 
-      if (!res.ok) return
+      if (!res.ok) {
+        toastError("Copy failed", "Unable to reveal and copy the key")
+        return
+      }
 
       const { value } = await res.json()
       await navigator.clipboard.writeText(value)
       setPanelCopied(true)
+      success("Key copied to clipboard")
       setTimeout(() => setPanelCopied(false), 2000)
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      toastError("Copy failed")
     }
   }
 
@@ -409,6 +458,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <Input
+            ref={searchInputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Filter keys..."
@@ -427,14 +477,9 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
           ) : (
             <ShieldCheck className="size-4" />
           )}
-          {isChecking ? "Checking..." : "Health Check"}
+          {isChecking ? `Checking ${checkedCount}/${keys.length}...` : "Health Check"}
         </Button>
       </div>
-      {healthSummary ? (
-        <div className="rounded-lg border border-border bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400 shadow-sm">
-          {healthSummary}
-        </div>
-      ) : null}
 
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="overflow-x-auto">

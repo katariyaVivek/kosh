@@ -8,6 +8,9 @@ export const PLATFORM_INITIALS: Record<string, string> = {
   Stripe: "ST",
   Twilio: "TW",
   xAI: "xA",
+  Replicate: "RP",
+  "Together AI": "TA",
+  Mistral: "MS",
   Other: "?",
 }
 
@@ -21,6 +24,9 @@ export const PLATFORM_COLORS: Record<string, string> = {
   Stripe: "#635bff",
   Twilio: "#f22f46",
   xAI: "#000000",
+  Replicate: "#ff6a00",
+  "Together AI": "#ff007a",
+  Mistral: "#ff6600",
   Other: "#6b7280",
 }
 
