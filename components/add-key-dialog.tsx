@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/toast"
 import {
   Dialog,
   DialogContent,
@@ -90,6 +91,7 @@ export function AddKeyDialog({
   initialValues,
 }: AddKeyDialogProps) {
   const router = useRouter()
+  const { success, error: toastError } = useToast()
   const isEditMode = mode === "edit"
   const [loading, setLoading] = useState(false)
   const [platforms, setPlatforms] = useState<ConnectorInfo[]>([])
@@ -162,9 +164,18 @@ export function AddKeyDialog({
     setLoading(false)
 
     if (!response.ok) {
+      const data = await response.json().catch(() => null)
+      toastError(
+        isEditMode ? "Update failed" : "Create failed",
+        data?.message ?? "Something went wrong"
+      )
       return
     }
 
+    success(
+      isEditMode ? "Key updated" : "Key created",
+      isEditMode ? "The key has been updated" : "The key has been added"
+    )
     onOpenChange(false)
     setForm(getInitialFormState())
     router.refresh()

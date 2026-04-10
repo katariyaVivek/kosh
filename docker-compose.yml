@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=file:/app/data/kosh.db
+      - DATABASE_URL=file:./data/kosh.db
       - KOSH_MASTER_KEY=${KOSH_MASTER_KEY}
     volumes:
       - kosh_data:/app/data

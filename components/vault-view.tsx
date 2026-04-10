@@ -1,6 +1,6 @@
 "use client"
 
-import { useDeferredValue, useState } from "react"
+import { useDeferredValue, useRef, useState } from "react"
 import { differenceInDays, formatDistanceToNow } from "date-fns"
 import {
   Copy,
@@ -13,12 +13,19 @@ import {
   Pencil,
   RefreshCw,
   Search,
+  ShieldCheck,
   Trash2,
+  X,
+  Loader2,
+  Check,
+  ChevronDown,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { AddKeyDialog } from "@/components/add-key-dialog"
 import { useKoshShell } from "@/components/kosh-shell"
+import { useToast } from "@/components/toast"
+import { useKeyboardShortcuts } from "@/components/keyboard-shortcuts"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -45,6 +52,7 @@ const MASKED_KEY = "sk-********************"
 export function VaultView({ keys }: { keys: KoshKey[] }) {
   const router = useRouter()
   const { openSidebarAction } = useKoshShell()
+  const { success, error: toastError, info } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
   const [activePlatform, setActivePlatform] = useState("All")
   const [revealed, setRevealed] = useState<Record<string, string | false>>({})
@@ -53,7 +61,15 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [rotationLoadingId, setRotationLoadingId] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const deferredSearchQuery = useDeferredValue(searchQuery)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const [visibleCount, setVisibleCount] = useState(20)
+
+  useKeyboardShortcuts([
+    { key: "/", handler: () => searchInputRef.current?.focus(), preventDefault: true },
+  ])
 
   const toggleReveal = async (id: string) => {
     if (revealed[id]) {
@@ -79,12 +95,97 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     })
+    if (!res.ok) {
+      toastError("Copy failed", "Unable to reveal and copy the key")
+      return
+    }
     const { value } = await res.json()
     await navigator.clipboard.writeText(value)
     setCopiedId(id)
+    success("Key copied to clipboard")
     setTimeout(() => {
       setCopiedId((current) => (current === id ? null : current))
     }, 1400)
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const selectAll = () => {
+    if (selectedIds.size === filteredKeys.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredKeys.map((k) => k.id)))
+    }
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const bulkDelete = async () => {
+    if (selectedIds.size === 0) return
+    setBulkActionLoading(true)
+    let deleted = 0
+    let failed = 0
+    for (const id of selectedIds) {
+      const res = await fetch(`/api/keys/${id}`, { method: "DELETE" })
+      if (res.ok) deleted++
+      else failed++
+    }
+    setBulkActionLoading(false)
+    if (deleted > 0) {
+      success("Bulk delete complete", `${deleted} key(s) deleted`)
+    }
+    if (failed > 0) {
+      toastError("Bulk delete partial", `${failed} key(s) failed to delete`)
+    }
+    setSelectedIds(new Set())
+    router.refresh()
+  }
+
+  const bulkValidate = async () => {
+    if (selectedIds.size === 0) return
+    setBulkActionLoading(true)
+    let valid = 0
+    let invalid = 0
+    for (const id of selectedIds) {
+      const res = await fetch("/api/keys/reveal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+      if (res.ok) {
+        const { value } = await res.json()
+        const key = filteredKeys.find((k) => k.id === id)
+        if (key) {
+          const connector = await fetch("/api/connectors").then((r) => r.json())
+          const platform = key.platform
+          const platformConnector = connector.find(
+            (c: any) => c.platform === platform
+          )
+          if (platformConnector?.canValidate) {
+            const syncRes = await fetch(`/api/sync/${id}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "validate" }),
+            })
+            const data = await syncRes.json()
+            if (data.valid) valid++
+            else invalid++
+          }
+        }
+      }
+    }
+    setBulkActionLoading(false)
+    info("Validation complete", `${valid} valid, ${invalid} invalid`)
   }
 
   const handleDelete = async () => {
@@ -99,9 +200,11 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
     setDeleteLoading(false)
 
     if (!res.ok) {
+      toastError("Delete failed", "Unable to delete the key")
       return
     }
 
+    success("Key deleted", "The key has been permanently removed")
     setDeleteId(null)
     setRevealed((prev) => {
       const next = { ...prev }
@@ -122,9 +225,11 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
     setRotationLoadingId((current) => (current === id ? null : current))
 
     if (!res.ok) {
+      toastError("Rotation update failed")
       return
     }
 
+    success("Marked as rotated", "Key rotation status updated")
     router.refresh()
   }
 
@@ -229,10 +334,56 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
 
       <div className="mb-6 h-px bg-border/70" />
 
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-3">
+          <span className="flex-1 text-sm font-medium text-indigo-400">
+            {selectedIds.size} key{selectedIds.size > 1 ? "s" : ""} selected
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={bulkValidate}
+            disabled={bulkActionLoading}
+            className="gap-1.5 text-xs"
+          >
+            {bulkActionLoading ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <ShieldCheck className="size-3" />
+            )}
+            Validate
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={bulkDelete}
+            disabled={bulkActionLoading}
+            className="gap-1.5 text-xs"
+          >
+            {bulkActionLoading ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <Trash2 className="size-3" />
+            )}
+            Delete
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={clearSelection}
+            disabled={bulkActionLoading}
+            className="text-muted-foreground"
+          >
+            <X className="size-3" />
+          </Button>
+        </div>
+      )}
+
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search keys..."
@@ -240,6 +391,15 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
           />
         </div>
         <div className="flex flex-wrap gap-2 lg:justify-end">
+          <Button
+            size="sm"
+            variant={selectedIds.size > 0 ? "secondary" : "outline"}
+            onClick={selectAll}
+            className="rounded-full px-3"
+          >
+            <Check className="mr-1.5 size-3" />
+            {selectedIds.size === filteredKeys.length ? "Deselect all" : "Select all"}
+          </Button>
           {["All", ...platforms].map((platform) => {
             const isActive = platform === effectivePlatform
 
@@ -274,7 +434,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
             No keys match your search
           </div>
         ) : (
-          filteredKeys.map((key) => {
+          filteredKeys.slice(0, visibleCount).map((key) => {
             const accentColor = getPlatformColor(key.platform)
             const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
             const initial = getPlatformInitial(key.platform)
@@ -359,7 +519,20 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                 style={{ borderLeftColor: accentColor }}
               >
                 <CardContent className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleSelect(key.id)}
+                      className={cn(
+                        "flex size-5 shrink-0 items-center justify-center rounded border transition-colors",
+                        selectedIds.has(key.id)
+                          ? "border-indigo-500 bg-indigo-500 text-white"
+                          : "border-border/70 bg-muted/30 text-transparent hover:border-border"
+                      )}
+                      aria-label={selectedIds.has(key.id) ? "Deselect key" : "Select key"}
+                    >
+                      <Check className="size-3" />
+                    </button>
                     <div
                       className="flex size-10 shrink-0 items-center justify-center rounded-full border text-sm font-semibold"
                       style={{
@@ -503,6 +676,19 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
           })
         )}
       </div>
+
+      {visibleCount < filteredKeys.length && (
+        <div className="flex justify-center py-6">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((c) => c + 20)}
+            className="gap-2"
+          >
+            <ChevronDown className="size-4" />
+            Show more ({filteredKeys.length - visibleCount} remaining)
+          </Button>
+        </div>
+      )}
 
       {editingKey ? (
         <AddKeyDialog
