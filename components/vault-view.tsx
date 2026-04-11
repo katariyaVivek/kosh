@@ -436,7 +436,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
         ) : (
           filteredKeys.slice(0, visibleCount).map((key) => {
             const accentColor = getPlatformColor(key.platform)
-            const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
+            const softColor = getPlatformColorWithAlpha(key.platform, 0.08)
             const expiresAt = key.expiresAt ? new Date(key.expiresAt) : null
             const daysUntilExpiry =
               expiresAt !== null ? differenceInDays(expiresAt, now) : null

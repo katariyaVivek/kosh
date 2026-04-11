@@ -351,8 +351,8 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     ? getPlatformColor(panelDetails.key.platform)
     : getPlatformColor("Other")
   const panelSoftColor = panelDetails
-    ? getPlatformColorWithAlpha(panelDetails.key.platform, 0.16)
-    : getPlatformColorWithAlpha("Other", 0.16)
+    ? getPlatformColorWithAlpha(panelDetails.key.platform, 0.08)
+    : getPlatformColorWithAlpha("Other", 0.08)
   const isPanelLoading = Boolean(
     selectedKeyId && panelDetails === null && panelError === null
   )
@@ -506,7 +506,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
               ) : (
                   filteredKeys.map((key) => {
                     const accentColor = getPlatformColor(key.platform)
-                    const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
+                    const softColor = getPlatformColorWithAlpha(key.platform, 0.08)
                     const lastLogLabel = key.lastLog
                       ? `${formatDistanceToNow(new Date(key.lastLog))} ago`
                       : "Never"
