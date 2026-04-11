@@ -26,6 +26,7 @@ import { AddKeyDialog } from "@/components/add-key-dialog"
 import { useKoshShell } from "@/components/kosh-shell"
 import { useToast } from "@/components/toast"
 import { useKeyboardShortcuts } from "@/components/keyboard-shortcuts"
+import { EmptyStateIllustration } from "@/components/empty-state-illustration"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -269,9 +270,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="mx-auto flex max-w-md flex-col items-center rounded-3xl border border-border/70 bg-card/80 px-8 py-12 text-center shadow-sm backdrop-blur">
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-3xl bg-muted text-muted-foreground/80 shadow-inner">
-            <KeyRound className="size-12 text-muted-foreground/70" />
-          </div>
+          <EmptyStateIllustration variant="vault" className="mb-6" />
           <h1 className="text-2xl font-semibold tracking-tight">
             Your treasury is empty
           </h1>
@@ -430,8 +429,12 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
 
       <div className="flex flex-col gap-3">
         {filteredKeys.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center text-sm text-muted-foreground">
-            No keys match your search
+          <div className="flex flex-col items-center rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-12 text-center text-sm text-muted-foreground">
+            <EmptyStateIllustration variant="no-results" className="mb-4" />
+            <p className="font-medium">No keys match your search</p>
+            <p className="mt-1 text-xs text-muted-foreground/70">
+              Try adjusting your search or platform filters
+            </p>
           </div>
         ) : (
           filteredKeys.slice(0, visibleCount).map((key) => {
