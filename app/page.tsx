@@ -104,16 +104,22 @@ export default async function Home() {
 
   return (
     <KoshShell>
-      <div data-tour="dashboard" className="relative flex flex-col gap-8">
-        <HeroBackground />
-        <div className="relative z-10 space-y-1 border-b border-border pb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Dashboard
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Real-time overview of your API keys and usage.
-          </p>
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-primary/[0.01] to-transparent dark:from-primary/[0.06] dark:via-primary/[0.02]" />
+          <div className="absolute top-0 left-1/4 h-40 w-80 rounded-full bg-primary/[0.06] blur-3xl dark:bg-primary/[0.08]" />
+          <div className="absolute top-4 right-1/3 h-32 w-64 rounded-full bg-chart-2/[0.05] blur-3xl dark:bg-chart-2/[0.07]" />
+          <div className="absolute top-8 left-1/2 h-28 w-56 rounded-full bg-chart-3/[0.04] blur-3xl dark:bg-chart-3/[0.06]" />
         </div>
+        <div data-tour="dashboard" className="relative z-10 flex flex-col gap-8">
+          <div className="space-y-1 border-b border-border pb-6">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              Dashboard
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Real-time overview of your API keys and usage.
+            </p>
+          </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 {stats.map(({ label, value, icon: Icon, sparkline }) => {
@@ -157,6 +163,7 @@ export default async function Home() {
         ) : (
           <DashboardKeyTable keys={tableKeys} />
         )}
+        </div>
       </div>
       <div data-tour="shortcuts" className="sr-only" />
       <OnboardingTour />
