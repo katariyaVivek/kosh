@@ -4,6 +4,7 @@ import { BellRing, Clock, DollarSign, Key } from "lucide-react"
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
 import { DashboardChart } from "@/components/dashboard-chart"
 import { KoshShell } from "@/components/kosh-shell"
+import { OnboardingTour } from "@/components/onboarding-tour"
 import { Card } from "@/components/ui/card"
 import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import { cn } from "@/lib/utils"
@@ -80,7 +81,7 @@ export default async function Home() {
 
   return (
     <KoshShell>
-      <div className="flex flex-col gap-8">
+      <div data-tour="dashboard" className="flex flex-col gap-8">
         <div className="space-y-1 border-b border-border pb-6">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Dashboard
@@ -128,6 +129,8 @@ export default async function Home() {
           <DashboardKeyTable keys={tableKeys} />
         )}
       </div>
+      <div data-tour="shortcuts" className="sr-only" />
+      <OnboardingTour />
     </KoshShell>
   )
 }

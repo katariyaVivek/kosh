@@ -454,11 +454,12 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     : []
 
   return (
-    <div className="space-y-5">
+    <div data-tour="key-table" className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <Input
             ref={searchInputRef}
+            data-tour="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Filter keys..."
@@ -466,6 +467,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
           />
         </div>
         <Button
+          data-tour="health-check"
           size="sm"
           variant="outline"
           onClick={handleHealthCheck}
