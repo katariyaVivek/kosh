@@ -9,15 +9,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setIsTransitioning(true)
-    const timer = setTimeout(() => setIsTransitioning(false), 200)
+    const timer = setTimeout(() => setIsTransitioning(false), 300)
     return () => clearTimeout(timer)
   }, [pathname])
 
   return (
     <div
-      className={`transition-opacity duration-200 ${
-        isTransitioning ? "opacity-0" : "opacity-100"
-      }`}
+      className="transition-opacity ease-out"
+      style={{ transitionDuration: "300ms", opacity: isTransitioning ? 0 : 1 }}
     >
       {children}
     </div>
