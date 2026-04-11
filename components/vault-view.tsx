@@ -43,8 +43,8 @@ import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import {
   getPlatformColor,
   getPlatformColorWithAlpha,
-  getPlatformInitial,
 } from "@/lib/platform-config"
+import { getPlatformIcon } from "@/components/platform-icons"
 import { cn } from "@/lib/utils"
 
 const MASKED_KEY = "sk-********************"
@@ -437,7 +437,6 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
           filteredKeys.slice(0, visibleCount).map((key) => {
             const accentColor = getPlatformColor(key.platform)
             const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
-            const initial = getPlatformInitial(key.platform)
             const expiresAt = key.expiresAt ? new Date(key.expiresAt) : null
             const daysUntilExpiry =
               expiresAt !== null ? differenceInDays(expiresAt, now) : null
@@ -534,14 +533,17 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                       <Check className="size-3" />
                     </button>
                     <div
-                      className="flex size-10 shrink-0 items-center justify-center rounded-full border text-sm font-semibold"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full border"
                       style={{
                         color: accentColor,
                         backgroundColor: softColor,
                         borderColor: softColor,
                       }}
                     >
-                      {initial}
+                      {(() => {
+                        const Icon = getPlatformIcon(key.platform)
+                        return <Icon className="size-5" />
+                      })()}
                     </div>
 
                     <div className="min-w-0">
