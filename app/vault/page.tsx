@@ -11,7 +11,7 @@ export default async function VaultPage() {
   })
 
   return (
-    <KoshShell>
+    <KoshShell sidebarAction={{ kind: "key", hasKeys: keys.length > 0 }}>
       <VaultView keys={keys} />
     </KoshShell>
   )

@@ -42,7 +42,7 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 type SidebarAction =
-  | { kind: "key" }
+  | { kind: "key"; hasKeys?: boolean }
   | {
       kind: "alert"
       keys: { id: string; name: string }[]
@@ -126,7 +126,12 @@ export function KoshShell({
 
               <Button
                 data-tour="add-key"
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                  if (sidebarAction.kind === "key" && !sidebarAction.hasKeys) {
+                    sessionStorage.setItem("kosh_celebration", "first_key")
+                  }
+                  setOpen(true)
+                }}
                 className="w-full justify-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
                 <Plus className="size-4" />
