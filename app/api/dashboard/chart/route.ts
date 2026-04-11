@@ -19,13 +19,14 @@ export async function GET() {
     return logDate >= windowStart && logDate < windowEnd
   })
 
-  const toKey = (date: Date) => date.toISOString().split("T")[0]
+  const toKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
   const toLabel = (date: Date) =>
     date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 
   const grouped = new Map<string, { cost: number; calls: number }>()
   for (const log of usageLogs) {
-    const key = toKey(log.date)
+    const logDate = new Date(log.date)
+    const key = toKey(logDate)
     const existing = grouped.get(key)
     grouped.set(key, {
       cost: (existing?.cost ?? 0) + Number(log.cost ?? 0),
