@@ -517,10 +517,10 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
             return (
               <Card
                 key={key.id}
-                className="group/card border-l-4 bg-card/85 shadow-sm ring-border/80 transition-[background-color,box-shadow,transform] duration-300 ease-out hover:-translate-y-1 hover:bg-accent/40 hover:shadow-lg hover:ring-1 hover:ring-primary/10 active:translate-y-0 active:scale-[0.99]"
+                className="group/card border-l-4 bg-card/85 shadow-sm ring-border/80 transition-[background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent/25 hover:shadow-md active:translate-y-0 active:scale-[0.995]"
                 style={{ borderLeftColor: accentColor }}
               >
-                <CardContent className={`flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between transition-transform duration-300 ${revealed[key.id] ? "scale-[1.02]" : ""}`}>
+                <CardContent className={`flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between transition-transform duration-200 ease-out ${revealed[key.id] ? "scale-[1.005]" : ""}`}>
                   <div className="flex min-w-0 items-center gap-3">
                     <button
                       type="button"

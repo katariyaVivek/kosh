@@ -122,7 +122,7 @@ export default async function Home() {
             <Card
               key={label}
               className={cn(
-                "bg-card border border-border shadow-sm rounded-xl p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-1 hover:ring-primary/5 active:scale-[0.99]",
+                "bg-card border border-border shadow-sm rounded-xl p-6 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:scale-[0.995]",
                 isWarning && "ring-1 ring-amber-200"
               )}
             >

@@ -51,12 +51,12 @@ export function RippleButton({
       {ripples.map((ripple) => (
         <span
           key={ripple.id}
-          className="pointer-events-none absolute rounded-full bg-current opacity-20 animate-ping"
+          className="pointer-events-none absolute rounded-full bg-current opacity-10 animate-ping"
           style={{
-            left: ripple.x - 10,
-            top: ripple.y - 10,
-            width: 20,
-            height: 20,
+            left: ripple.x - 8,
+            top: ripple.y - 8,
+            width: 16,
+            height: 16,
           }}
         />
       ))}
