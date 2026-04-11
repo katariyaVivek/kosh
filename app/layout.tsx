@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { LockProvider } from "@/components/lock-context";
 import { LockScreen } from "@/components/lock-screen";
 import { ToastProvider } from "@/components/toast";
+import { PageTransition } from "@/components/page-transition";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,7 +33,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-foreground">
+      <body className="min-h-full bg-background text-foreground" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -41,8 +42,10 @@ export default function RootLayout({
         >
           <LockProvider>
             <ToastProvider>
-              {children}
-              <LockScreen />
+              <PageTransition>
+                {children}
+                <LockScreen />
+              </PageTransition>
             </ToastProvider>
           </LockProvider>
         </ThemeProvider>

@@ -26,12 +26,11 @@ export default async function Home() {
   const windowStart = startOfMonth(now)
   const nextMonthStart = addMonths(windowStart, 1)
 
-  // Last 7 days for sparkline
-  const last7Days = eachDayOfInterval({
+  const sparklineDateObjects = eachDayOfInterval({
     start: subDays(now, 6),
     end: now,
   })
-  const sparklineDates = last7Days.map((d) => format(d, "yyyy-MM-dd"))
+  const sparklineDateStrings = sparklineDateObjects.map((d) => format(d, "yyyy-MM-dd"))
 
   const [keys, monthlySpendAggregate, activeAlerts, dailyCosts] =
     await Promise.all([
@@ -47,7 +46,7 @@ export default async function Home() {
       db.usageLog.groupBy({
         by: ["date"],
         _sum: { cost: true },
-        where: { date: { in: sparklineDates } },
+        where: { date: { in: sparklineDateObjects } },
       }),
     ])
   const rotationDue = keys.filter((key) =>
@@ -63,7 +62,7 @@ export default async function Home() {
     const dateKey = format(entry.date, "yyyy-MM-dd")
     costByDate.set(dateKey, entry._sum.cost ?? 0)
   }
-  const spendSparkline = sparklineDates.map((d) => costByDate.get(d) ?? 0)
+  const spendSparkline = sparklineDateStrings.map((d) => costByDate.get(d) ?? 0)
 
   const stats = [
     {
@@ -123,7 +122,7 @@ export default async function Home() {
             <Card
               key={label}
               className={cn(
-                "bg-card border border-border shadow-sm rounded-xl p-6",
+                "bg-card border border-border shadow-sm rounded-xl p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-1 hover:ring-primary/5 active:scale-[0.99]",
                 isWarning && "ring-1 ring-amber-200"
               )}
             >
