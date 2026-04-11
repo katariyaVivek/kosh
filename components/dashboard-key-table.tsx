@@ -20,8 +20,8 @@ import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import {
   getPlatformColor,
   getPlatformColorWithAlpha,
-  getPlatformInitial,
 } from "@/lib/platform-config"
+import { getPlatformIcon } from "@/components/platform-icons"
 import { cn } from "@/lib/utils"
 
 export type DashboardKeyRow = {
@@ -353,9 +353,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const panelSoftColor = panelDetails
     ? getPlatformColorWithAlpha(panelDetails.key.platform, 0.16)
     : getPlatformColorWithAlpha("Other", 0.16)
-  const panelInitial = panelDetails
-    ? getPlatformInitial(panelDetails.key.platform)
-    : getPlatformInitial("Other")
   const isPanelLoading = Boolean(
     selectedKeyId && panelDetails === null && panelError === null
   )
@@ -510,7 +507,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                   filteredKeys.map((key) => {
                     const accentColor = getPlatformColor(key.platform)
                     const softColor = getPlatformColorWithAlpha(key.platform, 0.16)
-                    const initial = getPlatformInitial(key.platform)
                     const lastLogLabel = key.lastLog
                       ? `${formatDistanceToNow(new Date(key.lastLog))} ago`
                       : "Never"
@@ -574,7 +570,10 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                               borderColor: softColor,
                             }}
                           >
-                            {initial}
+                            {(() => {
+                              const Icon = getPlatformIcon(key.platform)
+                              return <Icon className="size-5" />
+                            })()}
                           </div>
                           <span className="font-medium text-foreground">
                             {key.platform}
@@ -681,7 +680,10 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 borderColor: panelSoftColor,
               }}
             >
-              {panelInitial}
+              {panelDetails ? (() => {
+                const Icon = getPlatformIcon(panelDetails.key.platform)
+                return <Icon className="size-5" />
+              })() : null}
             </div>
             <div>
               <p className="text-lg font-semibold text-foreground">
