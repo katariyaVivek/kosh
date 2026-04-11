@@ -1,4 +1,4 @@
-import { addMonths, startOfMonth } from "date-fns"
+import { addMonths, eachDayOfInterval, format, startOfMonth, subDays } from "date-fns"
 import { BellRing, Clock, DollarSign, Key } from "lucide-react"
 
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
@@ -7,6 +7,7 @@ import { KoshShell } from "@/components/kosh-shell"
 import { HeroBackground } from "@/components/hero-background"
 import { OnboardingTour } from "@/components/onboarding-tour"
 import { Card } from "@/components/ui/card"
+import { Sparkline } from "@/components/sparkline"
 import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import { cn } from "@/lib/utils"
 import { db } from "@/lib/db"
@@ -25,7 +26,14 @@ export default async function Home() {
   const windowStart = startOfMonth(now)
   const nextMonthStart = addMonths(windowStart, 1)
 
-  const [keys, monthlySpendAggregate, activeAlerts] =
+  // Last 7 days for sparkline
+  const last7Days = eachDayOfInterval({
+    start: subDays(now, 6),
+    end: now,
+  })
+  const sparklineDates = last7Days.map((d) => format(d, "yyyy-MM-dd"))
+
+  const [keys, monthlySpendAggregate, activeAlerts, dailyCosts] =
     await Promise.all([
       db.apiKey.findMany({
         orderBy: { createdAt: "desc" },
@@ -36,6 +44,11 @@ export default async function Home() {
         where: { date: { gte: windowStart, lt: nextMonthStart } },
       }),
       db.alert.count({ where: { triggered: true } }),
+      db.usageLog.groupBy({
+        by: ["date"],
+        _sum: { cost: true },
+        where: { date: { in: sparklineDates } },
+      }),
     ])
   const rotationDue = keys.filter((key) =>
     needsRotationAttention(getRotationStatus(key, now).state)
@@ -43,6 +56,15 @@ export default async function Home() {
 
   const totalKeys = keys.length
   const monthlySpend = monthlySpendAggregate._sum.cost ?? 0
+
+  // Build daily cost map for sparkline
+  const costByDate = new Map<string, number>()
+  for (const entry of dailyCosts) {
+    const dateKey = format(entry.date, "yyyy-MM-dd")
+    costByDate.set(dateKey, entry._sum.cost ?? 0)
+  }
+  const spendSparkline = sparklineDates.map((d) => costByDate.get(d) ?? 0)
+
   const stats = [
     {
       label: "Total Keys",
@@ -53,6 +75,7 @@ export default async function Home() {
       label: "Monthly Spend",
       value: currencyFormatter.format(monthlySpend),
       icon: DollarSign,
+      sparkline: spendSparkline,
     },
     {
       label: "Active Alerts",
@@ -94,7 +117,7 @@ export default async function Home() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-{stats.map(({ label, value, icon: Icon }) => {
+{stats.map(({ label, value, icon: Icon, sparkline }) => {
           const isWarning = label === "Rotation Due" && typeof value === "number" && value > 0
           return (
             <Card
@@ -118,6 +141,11 @@ export default async function Home() {
                 </div>
                 <Icon className="size-4 text-muted-foreground" />
               </div>
+              {sparkline && sparkline.length > 0 && (
+                <div className="mt-3">
+                  <Sparkline data={sparkline} color="hsl(var(--chart-2))" />
+                </div>
+              )}
             </Card>
           )
         })}
