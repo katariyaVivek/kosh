@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/toast"
 import { useKeyboardShortcuts } from "@/components/keyboard-shortcuts"
-import { Confetti } from "@/components/confetti"
 import { formatEnvironment } from "@/lib/kosh"
 import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
 import {
@@ -128,7 +127,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const [isChecking, setIsChecking] = useState(false)
   const [checkedCount, setCheckedCount] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const [showConfetti, setShowConfetti] = useState(false)
 
   const handleHealthCheck = useCallback(async () => {
     setIsChecking(true)
@@ -190,9 +188,9 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
       toastError("Health check complete", `${invalidCountRef.current} key(s) are invalid`)
     } else {
       success("Health check complete", msg)
-      // If all keys are valid and there are keys, trigger confetti
+      // Trigger celebration if all keys are valid
       if (keys.length > 0 && invalidCountRef.current === 0) {
-        setShowConfetti(true)
+        window.dispatchEvent(new CustomEvent("kosh:celebrate"))
       }
     }
   }, [keys, success, toastError])
@@ -879,7 +877,6 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
           </div>
         ) : null}
       </div>
-      <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
     </div>
   )
 }

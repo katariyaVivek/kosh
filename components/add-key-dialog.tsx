@@ -176,6 +176,12 @@ export function AddKeyDialog({
       isEditMode ? "Key updated" : "Key created",
       isEditMode ? "The key has been updated" : "The key has been added"
     )
+
+    // Trigger celebration for first key
+    if (!isEditMode) {
+      window.dispatchEvent(new CustomEvent("kosh:celebrate"))
+    }
+
     onOpenChange(false)
     setForm(getInitialFormState())
     router.refresh()
