@@ -9,7 +9,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts"
-import { BarChart2 } from "lucide-react"
+import { EmptyStateIllustration } from "@/components/empty-state-illustration"
 import { cn } from "@/lib/utils"
 
 interface ChartPoint {
@@ -84,8 +84,8 @@ export function DashboardChart() {
         {isLoading && <div className="h-48 animate-pulse rounded-xl bg-muted" />}
         {!isLoading && showEmpty && (
           <div className="flex h-[180px] flex-col items-center justify-center space-y-2">
-            <BarChart2 className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No usage data yet</p>
+            <EmptyStateIllustration variant="no-usage" className="mb-2" />
+            <p className="text-sm text-muted-foreground">No usage data this month</p>
           </div>
         )}
         {!isLoading && !showEmpty && (
