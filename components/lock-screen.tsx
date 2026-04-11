@@ -16,7 +16,7 @@ export function LockScreen() {
   const [isVisible, setIsVisible] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Handle mount animation
+  // Handle mount/unmount animation
   useEffect(() => {
     if (isLocked) {
       setIsVisible(true)
@@ -27,9 +27,14 @@ export function LockScreen() {
       // Focus input after animation starts
       setTimeout(() => inputRef.current?.focus(), 300)
     } else {
+      // If unlocked via success animation, keep visible until animation finishes
+      if (success) {
+        const timer = setTimeout(() => setIsVisible(false), 800)
+        return () => clearTimeout(timer)
+      }
       setIsVisible(false)
     }
-  }, [isLocked])
+  }, [isLocked, success])
 
   // Trigger shake on error
   useEffect(() => {
