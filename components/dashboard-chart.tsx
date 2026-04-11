@@ -91,37 +91,60 @@ export function DashboardChart() {
         {!isLoading && !showEmpty && (
           <div className="h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
+              <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <XAxis
                   dataKey="date"
                   axisLine={false}
                   tickLine={false}
-                  interval={4}
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                  interval="preserveStartEnd"
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  tickMargin={10}
                 />
-                <YAxis hide />
+                <YAxis hide domain={["auto", "auto"]} />
                 <Tooltip
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload?.length) return null
-                    const pt = payload[0].payload
-                    return (
-                      <div className="rounded border border-border bg-card p-2 text-sm">
-                        <p className="font-medium">{label}</p>
-                        <p>{`Cost: $${pt.cost.toFixed(2)}`}</p>
-                        <p>{`Calls: ${pt.calls}`}</p>
-                      </div>
-                    )
+                  contentStyle={{
+                    backgroundColor: "var(--popover)",
+                    borderColor: "var(--border)",
+                    borderRadius: "0.75rem",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                    fontSize: "0.875rem",
+                    color: "var(--popover-foreground)",
                   }}
-                  cursor={false}
+                  labelStyle={{ fontWeight: 600, marginBottom: "0.25rem" }}
+                  formatter={(value, name) => {
+                    const n = name as string
+                    return [
+                      typeof value === "number"
+                        ? metric === "cost"
+                          ? `$${value.toFixed(2)}`
+                          : value.toLocaleString()
+                        : value,
+                      n === "cost" ? "Cost" : n === "calls" ? "Calls" : n,
+                    ]
+                  }}
+                  cursor={{ stroke: "var(--border)", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
                 <Area
                   type="monotone"
                   dataKey={metric}
-                  stroke="#6366f1"
-                  fill="#6366f1"
-                  fillOpacity={0.15}
+                  stroke="var(--primary)"
+                  strokeWidth={2}
+                  fill="url(#colorGradient)"
                   dot={false}
-                  activeDot={{ r: 4 }}
+                  activeDot={{
+                    r: 5,
+                    strokeWidth: 0,
+                    fill: "var(--primary)",
+                    filter: "drop-shadow(0 0 4px var(--primary))",
+                  }}
+                  animationDuration={1000}
+                  animationEasing="ease-out"
                 />
               </AreaChart>
             </ResponsiveContainer>
