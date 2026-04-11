@@ -81,7 +81,7 @@ export function KoshShell({
     >
       <div className="min-h-screen bg-background text-foreground">
         <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)]">
-          <aside className="border-b border-sidebar-border bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
+          <aside data-tour="sidebar" className="border-b border-sidebar-border bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
             <div className="flex h-full flex-col gap-6 p-4">
               <div className="flex flex-row items-center gap-3 px-2 pt-1 pb-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white dark:bg-indigo-500">
@@ -125,6 +125,7 @@ export function KoshShell({
               </nav>
 
               <Button
+                data-tour="add-key"
                 onClick={() => setOpen(true)}
                 className="w-full justify-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow-sm transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
