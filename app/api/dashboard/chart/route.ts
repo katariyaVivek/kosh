@@ -1,15 +1,23 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 export async function GET() {
   const now = new Date()
   const startDate = new Date(now)
   startDate.setHours(0, 0, 0, 0)
   startDate.setDate(startDate.getDate() - 29)
 
-  const usageLogs = await db.usageLog.findMany({
-    where: { date: { gte: startDate, lte: now } },
+  // Fetch all usage logs and filter in JS to handle SQLite date format quirks
+  const allLogs = await db.usageLog.findMany({
     orderBy: { date: "asc" },
+  })
+
+  // Filter to last 30 days in JS for reliability
+  const usageLogs = allLogs.filter((log) => {
+    const logDate = new Date(log.date)
+    return logDate >= startDate && logDate <= now
   })
 
   const toKey = (date: Date) => date.toISOString().split("T")[0]
