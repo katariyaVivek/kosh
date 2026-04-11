@@ -74,7 +74,8 @@ RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-USER nextjs
+# Run as root to ensure volume write access
+# (Self-hosted, single-user app; no multi-tenant security concerns)
 
 EXPOSE 3000
 ENV PORT=3000
