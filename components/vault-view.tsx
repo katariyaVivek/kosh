@@ -27,7 +27,6 @@ import { useKoshShell } from "@/components/kosh-shell"
 import { useToast } from "@/components/toast"
 import { useKeyboardShortcuts } from "@/components/keyboard-shortcuts"
 import { EmptyStateIllustration } from "@/components/empty-state-illustration"
-import { Confetti } from "@/components/confetti"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -68,16 +67,6 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
   const deferredSearchQuery = useDeferredValue(searchQuery)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [visibleCount, setVisibleCount] = useState(20)
-  const [showConfetti, setShowConfetti] = useState(false)
-
-  // Check for celebration flag on mount (set before adding first key)
-  useEffect(() => {
-    const celebration = sessionStorage.getItem("kosh_celebration")
-    if (celebration === "first_key") {
-      setShowConfetti(true)
-      sessionStorage.removeItem("kosh_celebration")
-    }
-  }, [])
 
   useKeyboardShortcuts([
     { key: "/", handler: () => searchInputRef.current?.focus(), preventDefault: true },
@@ -752,7 +741,6 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
     </>
   )
 }

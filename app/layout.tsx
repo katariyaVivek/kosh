@@ -5,6 +5,7 @@ import { LockProvider } from "@/components/lock-context";
 import { LockScreen } from "@/components/lock-screen";
 import { ToastProvider } from "@/components/toast";
 import { PageTransition } from "@/components/page-transition";
+import { CelebrationListener } from "@/components/celebration-listener";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,6 +46,7 @@ export default function RootLayout({
               <PageTransition>
                 {children}
                 <LockScreen />
+                <CelebrationListener />
               </PageTransition>
             </ToastProvider>
           </LockProvider>
