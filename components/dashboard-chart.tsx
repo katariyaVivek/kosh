@@ -89,7 +89,7 @@ export function DashboardChart() {
           </div>
         )}
         {!isLoading && !showEmpty && (
-          <div className="h-[180px]">
+          <div className="h-[180px] outline-none [&_svg]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
@@ -102,7 +102,7 @@ export function DashboardChart() {
                   dataKey="date"
                   axisLine={false}
                   tickLine={false}
-                  interval="preserveStartEnd"
+                  interval={3}
                   tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                   tickMargin={10}
                 />
@@ -128,7 +128,6 @@ export function DashboardChart() {
                       n === "cost" ? "Cost" : n === "calls" ? "Calls" : n,
                     ]
                   }}
-                  cursor={{ stroke: "var(--border)", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
                 <Area
                   type="monotone"
