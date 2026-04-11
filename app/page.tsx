@@ -4,6 +4,7 @@ import { BellRing, Clock, DollarSign, Key } from "lucide-react"
 import { DashboardKeyRow, DashboardKeyTable } from "@/components/dashboard-key-table"
 import { DashboardChart } from "@/components/dashboard-chart"
 import { KoshShell } from "@/components/kosh-shell"
+import { HeroBackground } from "@/components/hero-background"
 import { OnboardingTour } from "@/components/onboarding-tour"
 import { Card } from "@/components/ui/card"
 import { getRotationStatus, needsRotationAttention } from "@/lib/rotation"
@@ -81,8 +82,9 @@ export default async function Home() {
 
   return (
     <KoshShell>
-      <div data-tour="dashboard" className="flex flex-col gap-8">
-        <div className="space-y-1 border-b border-border pb-6">
+      <div data-tour="dashboard" className="relative flex flex-col gap-8">
+        <HeroBackground />
+        <div className="relative z-10 space-y-1 border-b border-border pb-6">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Dashboard
           </h1>
