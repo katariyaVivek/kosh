@@ -56,12 +56,12 @@ const TOUR_STEPS: TourStep[] = [
     target: "[data-tour='shortcuts']",
     title: "Keyboard shortcuts",
     description: (
-      <span className="space-y-1">
-        <p><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">N</kbd> New key</p>
-        <p><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">/</kbd> Focus search</p>
-        <p><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">H</kbd> Health check</p>
-        <p><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">L</kbd> Lock vault</p>
-      </span>
+      <div className="space-y-1">
+        <div><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">N</kbd> New key</div>
+        <div><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">/</kbd> Focus search</div>
+        <div><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">H</kbd> Health check</div>
+        <div><kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">L</kbd> Lock vault</div>
+      </div>
     ),
     placement: "top",
   },
