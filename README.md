@@ -40,68 +40,59 @@ Kosh is a beautiful, secure, self-hosted API key manager built for developers. S
 - Node.js 18+
 - npm or pnpm
 
-### Installation
+### Local Development
 
-1. **Clone the repository**
-```bash
+1. **Clone and install**
+   ```bash
    git clone https://github.com/katariyaVivek/kosh.git
    cd kosh
-```
-
-2. **Install dependencies**
-```bash
    npm install
-```
+   ```
 
-3. **Set up the database**
-```bash
+2. **Set up environment**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and set a strong `KOSH_MASTER_KEY` (at least 12 chars, 64+ recommended).  
+   Generate one with: `openssl rand -hex 32`
+
+3. **Initialize the database**
+   ```bash
    npx prisma migrate dev
-```
+   ```
 
 4. **Start the dev server**
-```bash
+   ```bash
    npm run dev
-```
+   ```
 
 5. **Open Kosh**
-   
-Visit [http://localhost:3000](http://localhost:3000) — you'll be guided through first-run setup to generate your master key.
+   Visit [http://localhost:3000](http://localhost:3000) — your keys will be encrypted with the master key from `.env`.
 
-## 🐳 Docker
+### 🐳 Docker (Recommended for Self-Hosting)
 
-The easiest way to self-host Kosh.
+**Option A: Docker Compose (easiest)**
 
-### Using Docker Compose (recommended)
-
-1. Clone the repo and copy the env file:
+1. Clone and set up env:
    ```bash
-   git clone https://github.com/your-username/kosh.git
+   git clone https://github.com/katariyaVivek/kosh.git
    cd kosh
    cp .env.example .env
    ```
 
-2. Set your master key in .env:
-   ```
-   KOSH_MASTER_KEY="your-random-64-char-key"
+2. Edit `.env` and set `KOSH_MASTER_KEY`:
+   ```env
+   KOSH_MASTER_KEY=your-64-char-random-key
    ```
 
-3. Run with Docker Compose:
+3. Build and run:
    ```bash
-   docker compose up -d
+   docker compose up --build -d
    ```
 
-4. Open http://localhost:3000
+4. Open [http://localhost:3000](http://localhost:3000)
 
-Your data is persisted in a Docker volume — it survives container restarts and updates.
-
-### Updating Kosh
-
-```bash
-git pull
-docker compose up -d --build
-```
-
-### Using plain Docker
+**Option B: Plain Docker**
 
 ```bash
 docker build -t kosh .
@@ -112,7 +103,23 @@ docker run -d \
   -v kosh_data:/app/data \
   --name kosh \
   kosh
-```  
+```
+
+**Updating (Docker Compose)**
+
+```bash
+git pull
+docker compose down
+docker compose up --build -d
+```
+
+**Troubleshooting**
+- **Readonly database error**: Your Docker volume has wrong permissions. Remove it and rebuild:
+  ```bash
+  docker compose down -v
+  docker compose up --build -d
+  ```
+  *(Warning: this deletes your data. Back up first if needed.)*
 
 ## 🔐 Security
 
