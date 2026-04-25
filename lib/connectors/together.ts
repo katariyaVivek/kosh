@@ -1,5 +1,6 @@
 import type { Connector, UsageData } from "./types"
 import { eachDay, formatDate, toNumber, fetchWithRetry } from "./utils"
+import { providerAggregateCapabilities } from "./capabilities"
 
 type TogetherUsagePayload = {
   data?: Array<{
@@ -14,6 +15,7 @@ export const togetherConnector: Connector = {
   platform: "Together AI",
   canSync: true,
   canValidate: true,
+  capabilities: providerAggregateCapabilities,
 
   async fetchUsage(apiKey, days) {
     const usage: UsageData[] = []

@@ -46,6 +46,21 @@ type PulseKey = KoshKey & {
   usageLogs: KoshUsageLog[]
 }
 
+type PulseUsageSource = {
+  id: string
+  name: string
+  provider: string | null
+  collectionMethod: string
+  accuracy: string
+  usageDailyRollups: Array<{
+    id: string
+    calls: number
+    cost: number
+    totalTokens: number | null
+    rollupDate: string | Date
+  }>
+}
+
 type SparklinePoint = {
   date: string
   label: string
@@ -68,7 +83,13 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
-export function PulseView({ keys }: { keys: PulseKey[] }) {
+export function PulseView({
+  keys,
+  usageSources = [],
+}: {
+  keys: PulseKey[]
+  usageSources?: PulseUsageSource[]
+}) {
   const router = useRouter()
   const mounted = useSyncExternalStore(subscribe, () => true, () => false)
   const [loggingKey, setLoggingKey] = useState<PulseKey | null>(null)
@@ -142,7 +163,17 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
   }, [])
 
   const stats = useMemo(() => {
-    const allLogs = keys.flatMap((key) => key.usageLogs)
+    const sourceLogs = usageSources.flatMap((source) =>
+      source.usageDailyRollups.map((rollup) => ({
+        id: rollup.id,
+        apiKeyId: source.id,
+        calls: rollup.calls,
+        cost: rollup.cost,
+        tokens: rollup.totalTokens,
+        date: rollup.rollupDate,
+      }))
+    )
+    const allLogs = [...keys.flatMap((key) => key.usageLogs), ...sourceLogs]
     const todayLogs = allLogs.filter((log) => isToday(new Date(log.date)))
     const sevenDaysAgo = subDays(new Date(), 7)
 
@@ -164,7 +195,7 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
       mostActiveKey:
         mostActive && mostActive.calls > 0 ? mostActive.name : "No data yet",
     }
-  }, [keys])
+  }, [keys, usageSources])
 
   const platforms = useMemo(
     () => Array.from(new Set(keys.map((key) => key.platform))),
@@ -453,6 +484,112 @@ export function PulseView({ keys }: { keys: PulseKey[] }) {
       </div>
 
       <div className="mb-6 h-px bg-border/70" />
+
+      {usageSources.length > 0 ? (
+        <div className="mb-6 grid gap-3 lg:grid-cols-2">
+          {usageSources.map((source) => {
+            const logs = source.usageDailyRollups
+            const totalCalls = logs.reduce((sum, log) => sum + log.calls, 0)
+            const totalCost = logs.reduce((sum, log) => sum + log.cost, 0)
+            const totalTokens = logs.reduce(
+              (sum, log) => sum + (log.totalTokens ?? 0),
+              0
+            )
+            const latestLog = logs[0]
+            const sparklineData = buildSparklineData(
+              logs.map((log) => ({
+                id: log.id,
+                apiKeyId: source.id,
+                calls: log.calls,
+                cost: log.cost,
+                tokens: log.totalTokens,
+                date: log.rollupDate,
+              }))
+            )
+            const hasSparklineData = sparklineData.some((point) => point.calls > 0)
+
+            return (
+              <Card
+                key={source.id}
+                className="border-l-4 border-l-primary bg-card/85 shadow-sm ring-border/80"
+              >
+                <CardContent className="flex flex-col gap-4 px-5 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                        Local source
+                      </p>
+                      <h2 className="mt-1 text-base font-semibold tracking-tight">
+                        {source.provider ?? source.name}
+                      </h2>
+                      <p className="mt-1 text-xs capitalize text-muted-foreground">
+                        {source.collectionMethod.replaceAll("_", " ")} / {source.accuracy}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
+                    >
+                      Live
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase text-muted-foreground">
+                        Tokens
+                      </p>
+                      <p className="mt-1 font-semibold tabular-nums">
+                        {totalTokens.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase text-muted-foreground">
+                        Spend
+                      </p>
+                      <p className="mt-1 font-semibold tabular-nums">
+                        {formatCurrency(totalCost)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase text-muted-foreground">
+                        Calls
+                      </p>
+                      <p className="mt-1 font-semibold tabular-nums">
+                        {totalCalls.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {latestLog ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      Last logged {formatDistanceToNow(new Date(latestLog.rollupDate))} ago
+                    </p>
+                  ) : null}
+
+                  {mounted && hasSparklineData ? (
+                    <div className="h-12 w-full min-w-0 overflow-visible rounded-xl border border-border/60 bg-muted/20 px-2 py-1">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                        <AreaChart data={sparklineData}>
+                          <Area
+                            type="monotone"
+                            dataKey="calls"
+                            stroke="var(--primary)"
+                            strokeWidth={2}
+                            fill="var(--primary)"
+                            fillOpacity={0.12}
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      ) : null}
 
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative flex-1">

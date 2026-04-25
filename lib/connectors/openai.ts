@@ -1,5 +1,6 @@
 import type { Connector, UsageData } from "./types"
 import { eachDay, formatDate, toNumber } from "./utils"
+import { providerAggregateCapabilities } from "./capabilities"
 
 type OpenAIUsagePayload = {
   data?: Array<{
@@ -13,6 +14,7 @@ export const openaiConnector: Connector = {
   platform: "OpenAI",
   canSync: true,
   canValidate: true,
+  capabilities: providerAggregateCapabilities,
   async fetchUsage(apiKey, days) {
     const usage: UsageData[] = []
     const daysToSync = eachDay(days)

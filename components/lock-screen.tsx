@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Lock, Check, KeyRound, AlertCircle } from "lucide-react"
+import Image from "next/image"
+import { Check, AlertCircle } from "lucide-react"
 import { useLock } from "@/components/lock-context"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -113,7 +114,15 @@ export function LockScreen() {
                 {error ? (
                   <AlertCircle className="size-10 text-destructive" />
                 ) : (
-                  <KeyRound className="size-10 text-primary animate-pulse" />
+                  <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-white/95 shadow-sm">
+                    <Image
+                      src="/branding/kosh-mark.png"
+                      alt="Kosh logo"
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
                 )}
               </div>
             )}
@@ -177,4 +186,3 @@ export function LockScreen() {
     </div>
   )
 }
-

@@ -21,6 +21,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Kosh",
   description: "A premium vault for developer API keys",
+  icons: {
+    icon: "/branding/kosh-mark.png",
+    apple: "/branding/kosh-mark.png",
+  },
 };
 
 export default function RootLayout({

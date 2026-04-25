@@ -6,6 +6,7 @@ import {
   eachDayOfInterval,
   format,
   formatDistanceToNow,
+  startOfDay,
   subDays,
 } from "date-fns"
 import { Bar, BarChart, ResponsiveContainer, Tooltip } from "recharts"
@@ -317,7 +318,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const chartData = useMemo(() => {
     if (!panelDetails) return []
 
-    const today = new Date()
+    const today = startOfDay(new Date())
     const start = subDays(today, 6)
     const range = eachDayOfInterval({ start, end: today })
     const callsByDay = new Map<string, number>()

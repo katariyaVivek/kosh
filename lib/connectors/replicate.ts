@@ -1,5 +1,6 @@
 import type { Connector, UsageData } from "./types"
 import { eachDay, formatDate, toNumber, fetchWithRetry } from "./utils"
+import { providerAggregateCapabilities } from "./capabilities"
 
 type ReplicateUsagePayload = {
   results?: Array<{
@@ -14,6 +15,11 @@ export const replicateConnector: Connector = {
   platform: "Replicate",
   canSync: true,
   canValidate: true,
+  capabilities: {
+    ...providerAggregateCapabilities,
+    supportsTokens: false,
+    supportsModels: false,
+  },
 
   async fetchUsage(apiKey, days) {
     const usage: UsageData[] = []

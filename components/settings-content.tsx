@@ -25,6 +25,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { ChangeMasterKeyDialog } from "@/components/change-master-key-dialog"
 import { useLock } from "@/components/lock-context"
@@ -247,33 +254,27 @@ export function SettingsContent() {
                 <label className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
                   Auto-lock Timeout
                 </label>
-                <select
+                <Select
                   value={getTimeout()}
-                  onChange={(event) => setLockTimeout(event.target.value as "never" | "15" | "30" | "60" | "120")}
-                  className="h-10 w-full rounded-xl border border-border/70 bg-background px-3 text-sm text-foreground"
+                  onValueChange={(value: "never" | "15" | "30" | "60" | "120") =>
+                    setLockTimeout(value)
+                  }
                 >
-                  <option value="never">Never</option>
-                  <option value="15">15 minutes</option>
-                  <option value="30">30 minutes</option>
-                  <option value="60">1 hour</option>
-                  <option value="120">2 hours</option>
-                </select>
+                  <SelectTrigger className="h-10 w-full rounded-xl border-border/70 bg-background/80 px-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="rounded-xl">
+                    <SelectItem value="never">Never</SelectItem>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="120">2 hours</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-xl border border-border bg-card shadow-sm">
-            <CardContent className="space-y-4 px-6 py-6">
-              <div className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-foreground">
-                <Palette className="size-4 text-muted-foreground" />
-                Appearance
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">{themeCards}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
           <Card className="rounded-xl border border-border bg-card shadow-sm">
             <CardContent className="space-y-4 px-6 py-6">
               <div className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-foreground">
@@ -326,62 +327,16 @@ export function SettingsContent() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          <Card className="rounded-xl border border-red-200 bg-red-50/30">
+        <div className="space-y-6">
+          <Card className="rounded-xl border border-border bg-card shadow-sm">
             <CardContent className="space-y-4 px-6 py-6">
-              <div className="mb-5 border-b border-border pb-3 text-base font-semibold text-destructive">
-                Danger Zone
+              <div className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-semibold text-foreground">
+                <Palette className="size-4 text-muted-foreground" />
+                Appearance
               </div>
-              <p className="text-sm text-muted-foreground">
-                Permanently delete all keys, usage logs, and alerts.
-              </p>
-              <Button
-                variant="destructive"
-                onClick={() => setIsPurgeOpen(true)}
-                className="w-full"
-              >
-                Purge All Data
-              </Button>
-              <Dialog open={isPurgeOpen} onOpenChange={setIsPurgeOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Purge All Data</DialogTitle>
-                    <DialogDescription>
-                      This will permanently delete all keys, usage logs, and
-                      alerts. Type PURGE to confirm.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-3">
-                    <Input
-                      placeholder="Type PURGE to confirm"
-                      value={purgeInput}
-                      onChange={(event) => setPurgeInput(event.target.value)}
-                      autoComplete="off"
-                      className="bg-muted/60"
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsPurgeOpen(false)}
-                      disabled={isPurging}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      disabled={purgeInput !== "PURGE" || isPurging}
-                      onClick={handlePurge}
-                    >
-                      {isPurging ? "Purging..." : "Purge All Data"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              <ChangeMasterKeyDialog
-                open={isChangeKeyOpen}
-                onOpenChange={setIsChangeKeyOpen}
-              />
+              <div className="grid gap-4 sm:grid-cols-3">{themeCards}</div>
             </CardContent>
           </Card>
 
@@ -416,6 +371,66 @@ export function SettingsContent() {
           </Card>
         </div>
       </div>
+
+      <Card className="rounded-xl border border-red-200 bg-red-50/30 dark:border-red-500/40 dark:bg-red-500/10">
+        <CardContent className="space-y-4 px-6 py-6">
+          <div className="mb-5 border-b border-border pb-3 text-base font-semibold text-destructive">
+            Danger Zone
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Permanently delete all keys, usage logs, and alerts.
+            </p>
+            <Button
+              variant="destructive"
+              onClick={() => setIsPurgeOpen(true)}
+              className="sm:w-auto"
+            >
+              Purge All Data
+            </Button>
+          </div>
+          <Dialog open={isPurgeOpen} onOpenChange={setIsPurgeOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Purge All Data</DialogTitle>
+                <DialogDescription>
+                  This will permanently delete all keys, usage logs, and
+                  alerts. Type PURGE to confirm.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <Input
+                  placeholder="Type PURGE to confirm"
+                  value={purgeInput}
+                  onChange={(event) => setPurgeInput(event.target.value)}
+                  autoComplete="off"
+                  className="bg-muted/60"
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPurgeOpen(false)}
+                  disabled={isPurging}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={purgeInput !== "PURGE" || isPurging}
+                  onClick={handlePurge}
+                >
+                  {isPurging ? "Purging..." : "Purge All Data"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <ChangeMasterKeyDialog
+            open={isChangeKeyOpen}
+            onOpenChange={setIsChangeKeyOpen}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

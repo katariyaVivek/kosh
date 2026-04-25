@@ -26,6 +26,7 @@ function formatCurrency(value: number) {
 
 function formatAlertType(type: KoshAlertWithKey["type"]) {
   if (type === "rate_limit") return "Rate Limit"
+  if (type === "tokens") return "Tokens"
   if (type === "calls") return "Calls"
   return "Cost"
 }
@@ -35,7 +36,31 @@ function formatThreshold(alert: KoshAlertWithKey) {
     return formatCurrency(alert.threshold)
   }
 
-  return `${alert.threshold} calls`
+  if (alert.type === "tokens") {
+    return `${alert.threshold.toLocaleString()} tokens`
+  }
+
+  return `${alert.threshold.toLocaleString()} calls`
+}
+
+function getAlertTarget(alert: KoshAlertWithKey) {
+  if (alert.apiKey) {
+    return {
+      name: alert.apiKey.name,
+      platform: alert.apiKey.platform,
+      environment: formatEnvironment(alert.apiKey.environment),
+      projectTag: alert.apiKey.projectTag,
+      targetKind: "API key",
+    }
+  }
+
+  return {
+    name: alert.usageSource?.provider ?? alert.usageSource?.name ?? "Local source",
+    platform: alert.usageSource?.provider ?? "Local source",
+    environment: "Local",
+    projectTag: alert.usageSource?.collectionMethod ?? null,
+    targetKind: "Local source",
+  }
 }
 
 export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
@@ -47,7 +72,9 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
     return {
       totalAlerts: alerts.length,
       activeAlerts: alerts.filter((alert) => alert.triggered).length,
-      keysMonitored: new Set(alerts.map((alert) => alert.apiKeyId)).size,
+      keysMonitored: new Set(
+        alerts.map((alert) => alert.apiKeyId ?? alert.usageSourceId)
+      ).size,
     }
   }, [alerts])
 
@@ -86,7 +113,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
             No alerts configured
           </h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Add an alert to monitor your API keys
+            Add an alert to monitor API keys or local AI tools.
           </p>
           <Button
             onClick={openSidebarAction}
@@ -114,7 +141,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
             Alerts
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Get notified when keys cross your thresholds.
+            Get notified when keys or local AI tools cross your thresholds.
           </p>
         </div>
       </div>
@@ -123,7 +150,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
         {[
           { label: "Total alerts configured", value: stats.totalAlerts, icon: Layers },
           { label: "Active alerts", value: stats.activeAlerts, icon: BellOff },
-          { label: "Keys monitored", value: stats.keysMonitored, icon: FolderOpen },
+          { label: "Targets monitored", value: stats.keysMonitored, icon: FolderOpen },
         ].map(({ label, value, icon: Icon }) => (
           <Card
             key={label}
@@ -151,9 +178,10 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
 
       <div className="flex flex-col gap-3">
         {alerts.map((alert) => {
-          const accentColor = getPlatformColor(alert.apiKey.platform)
-          const softColor = getPlatformColorWithAlpha(alert.apiKey.platform, 0.16)
-          const initial = getPlatformInitial(alert.apiKey.platform)
+          const target = getAlertTarget(alert)
+          const accentColor = getPlatformColor(target.platform)
+          const softColor = getPlatformColorWithAlpha(target.platform, 0.16)
+          const initial = getPlatformInitial(target.platform)
           const isPending = pendingId === alert.id
 
           return (
@@ -178,21 +206,23 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-base font-semibold tracking-tight">
-                        {alert.apiKey.name}
+                        {target.name}
                       </p>
                       <Badge
                         variant="outline"
                         className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
                       >
-                        {formatEnvironment(alert.apiKey.environment)}
+                        {target.environment}
                       </Badge>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>{alert.apiKey.platform}</span>
-                      {alert.apiKey.projectTag ? (
+                      <span>{target.platform}</span>
+                      <span className="text-muted-foreground/50">/</span>
+                      <span>{target.targetKind}</span>
+                      {target.projectTag ? (
                         <>
                           <span className="text-muted-foreground/50">/</span>
-                          <span>{alert.apiKey.projectTag}</span>
+                          <span>{target.projectTag}</span>
                         </>
                       ) : null}
                     </div>

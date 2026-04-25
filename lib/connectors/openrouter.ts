@@ -1,6 +1,7 @@
 import { startOfDay } from "date-fns"
 
 import type { Connector, UsageData, UsageFetchResult } from "./types"
+import { providerAggregateCapabilities } from "./capabilities"
 
 type OpenRouterKeyPayload = {
   data?: {
@@ -26,6 +27,11 @@ export const openrouterConnector: Connector = {
   platform: "OpenRouter",
   canSync: true,
   canValidate: true,
+  capabilities: {
+    ...providerAggregateCapabilities,
+    supportsTokens: false,
+    privacyNote: "Fetches key-level OpenRouter usage without storing prompts or responses.",
+  },
   async fetchUsage(apiKey, _days) {
     void _days
     const response = await fetch("https://openrouter.ai/api/v1/key", {

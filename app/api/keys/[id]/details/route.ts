@@ -34,13 +34,13 @@ export async function GET(
     return NextResponse.json({ error: "Key not found" }, { status: 404 })
   }
 
-  const usageLogs = await db.usageLog.findMany({
+  const usageLogs = await db.usageDailyRollup.findMany({
     where: { apiKeyId: id },
-    orderBy: { date: "desc" },
+    orderBy: { rollupDate: "desc" },
     take: 7,
   })
 
-  const totalAggregate = await db.usageLog.aggregate({
+  const totalAggregate = await db.usageDailyRollup.aggregate({
     _sum: { calls: true, cost: true },
     where: { apiKeyId: id },
   })
@@ -53,21 +53,21 @@ export async function GET(
   const lastWeekEnd = subDays(today, 6)
 
   const [thisWeekAggregate, lastWeekAggregate] = await Promise.all([
-    db.usageLog.aggregate({
+    db.usageDailyRollup.aggregate({
       _sum: { calls: true },
       where: {
         apiKeyId: id,
-        date: {
+        rollupDate: {
           gte: thisWeekStart,
           lt: tomorrow,
         },
       },
     }),
-    db.usageLog.aggregate({
+    db.usageDailyRollup.aggregate({
       _sum: { calls: true },
       where: {
         apiKeyId: id,
-        date: {
+        rollupDate: {
           gte: lastWeekStart,
           lt: lastWeekEnd,
         },
@@ -81,7 +81,7 @@ export async function GET(
       id: log.id,
       calls: log.calls,
       cost: log.cost,
-      date: format(log.date, "yyyy-MM-dd"),
+      date: format(log.rollupDate, "yyyy-MM-dd"),
     })),
     totalCalls: totalAggregate._sum.calls ?? 0,
     totalCost: totalAggregate._sum.cost ?? 0,

@@ -23,15 +23,26 @@ export type KoshUsageLog = {
 
 export type KoshAlert = {
   id: string
-  apiKeyId: string
+  apiKeyId: string | null
+  usageSourceId: string | null
   type: string
   threshold: number
   triggered: boolean
   createdAt: string | Date
 }
 
+export type KoshUsageSource = {
+  id: string
+  name: string
+  provider: string | null
+  sourceType: string
+  collectionMethod: string
+  accuracy: string
+}
+
 export type KoshAlertWithKey = KoshAlert & {
-  apiKey: KoshKey
+  apiKey: KoshKey | null
+  usageSource: KoshUsageSource | null
 }
 
 export function formatEnvironment(environment: string) {

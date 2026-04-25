@@ -74,11 +74,13 @@ function getInitialFormState(initialValues?: KeyDialogValues) {
 
 function getPlatformIndicator(platform: ConnectorInfo) {
   if (platform.canSync) {
-    return "↻ Auto-sync"
+    return platform.capabilities.accuracy === "provider_aggregate"
+      ? "Provider aggregate"
+      : "Usage sync"
   }
 
   if (platform.canValidate) {
-    return "✓ Validation"
+    return "Validation only"
   }
 
   return "Manual"

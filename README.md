@@ -1,98 +1,99 @@
-# 🏛️ Kosh
+# Kosh
 
-**Your local-first API key treasury.**
+Local-first API key treasury and AI usage monitor for developers.
 
-Kosh is a beautiful, secure, self-hosted API key manager built for developers. Store, organize, and monitor all your API keys in one place — encrypted at rest, never leaving your machine.
+Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage where APIs allow it, and imports local Codex and Claude Code usage without storing prompts or responses.
 
-![Kosh Dashboard](./public/screenshots/dashboard.png)
+![Kosh dashboard without sample data](./public/screenshots/dashboard.png)
 
-## ✨ Features
+## What Kosh Does
 
-- 🔐 **AES-256 encryption** — all keys encrypted at rest using your master key
-- 🏛️ **Vault** — add, edit, delete and organize API keys by platform and project
-- 📝 **Notes** — attach optional notes to any API key for context, visible in dialogs, vault cards, and dashboard
-- 📊 **Pulse** — track usage, costs, and API call history per key
-- 📈 **Spend Over Time** — visualize daily costs and API call volume over the last 30 days
-- 🔔 **Alerts** — set cost or call thresholds and get notified when crossed
-- 🔌 **Connector system** — validate and sync keys from OpenRouter, Groq, Gemini, NVIDIA NIM, Anthropic, OpenAI, Replicate, Together AI, Mistral, and more
-- 🩺 **Health Check** — validate all keys at once with real-time progress
-- 🔘 **Bulk operations** — select multiple keys to validate or delete in one click
-- ⌨️ **Keyboard shortcuts** — `N` new key, `/` search, `H` health check, `L` lock vault
-- 🔔 **Toast notifications** — instant feedback for every action (copy, delete, sync, etc.)
-- 🎨 **Beautiful UI** — clean light/dark mode design inspired by Clerk and Resend
-- 🚀 **First-run setup** — guided setup generates your master key automatically
-- 📤 **Export/Import** — backup and restore your vault as encrypted JSON
-- 🔒 **Local-first** — all data stays on your machine, zero telemetry
+- Encrypted API key vault with platform, environment, notes, rotation metadata, and copy/reveal controls.
+- Usage dashboard for cost, calls, and token trends across API keys and local AI tools.
+- Local Codex and Claude Code imports from JSONL usage metadata.
+- Codex rate limit snapshots from local auth or CLI status, shown separately from estimated spend.
+- Connector capability model so each provider clearly reports whether validation, sync, billing, or manual entry is supported.
+- Alerts for cost, calls, and token thresholds across API keys or local AI usage sources.
+- Pulse view for day-to-day usage and spend scanning.
+- Export/import backup flow for vault metadata and usage history.
+- Auto-lock, light/dark/system appearance, and a setup screen for generating the master key.
 
-## 🛠️ Tech Stack
+## Data Model
 
-- **Framework** — Next.js 15 (App Router)
-- **Database** — SQLite via Prisma
-- **UI** — shadcn/ui + Tailwind CSS
-- **Encryption** — AES-256 via crypto-js
-- **Charts** — Recharts
-- **Icons** — Lucide React
+Kosh separates three kinds of telemetry:
 
-## 🚀 Getting Started
+- API key records: encrypted credentials, metadata, rotation state, and provider validation status.
+- Usage history: `UsageEvent` and `UsageDailyRollup` records for cost, calls, and tokens.
+- Quota snapshots: `UsageQuotaSnapshot` records for live Codex rate-limit windows.
+
+Local Codex and Claude Code imports store token and cost metadata only. Kosh does not store prompts, responses, or transcript content.
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19
+- Prisma 5 with SQLite
+- Tailwind CSS and shadcn-style components
+- Recharts
+- Lucide React
+- crypto-js AES encryption
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or pnpm
+- Node.js 20+
+- npm
 
 ### Local Development
 
-1. **Clone and install**
-   ```bash
-   git clone https://github.com/katariyaVivek/kosh.git
-   cd kosh
-   npm install
-   ```
+1. Install dependencies.
 
-2. **Set up environment**
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and set a strong `KOSH_MASTER_KEY` (at least 12 chars, 64+ recommended).  
-   Generate one with: `openssl rand -hex 32`
+```bash
+npm install
+```
 
-3. **Initialize the database**
-   ```bash
-   npx prisma migrate dev
-   ```
+2. Create an environment file.
 
-4. **Start the dev server**
-   ```bash
-   npm run dev
-   ```
+```bash
+cp .env.example .env
+```
 
-5. **Open Kosh**
-   Visit [http://localhost:3000](http://localhost:3000) — your keys will be encrypted with the master key from `.env`.
+3. Set a strong master key.
 
-### 🐳 Docker (Recommended for Self-Hosting)
+```env
+DATABASE_URL="file:./kosh.db"
+KOSH_MASTER_KEY="replace-with-a-long-random-secret"
+```
 
-**Option A: Docker Compose (easiest)**
+Generate a strong key with:
 
-1. Clone and set up env:
-   ```bash
-   git clone https://github.com/katariyaVivek/kosh.git
-   cd kosh
-   cp .env.example .env
-   ```
+```bash
+openssl rand -hex 32
+```
 
-2. Edit `.env` and set `KOSH_MASTER_KEY`:
-   ```env
-   KOSH_MASTER_KEY=your-64-char-random-key
-   ```
+4. Apply database migrations and generate Prisma client.
 
-3. Build and run:
-   ```bash
-   docker compose up --build -d
-   ```
+```bash
+npm run db:deploy
+npm run db:generate
+```
 
-4. Open [http://localhost:3000](http://localhost:3000)
+5. Start the app.
 
-**Option B: Plain Docker**
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Docker
+
+```bash
+docker compose up --build -d
+```
+
+For plain Docker:
 
 ```bash
 docker build -t kosh .
@@ -105,100 +106,70 @@ docker run -d \
   kosh
 ```
 
-**Updating (Docker Compose)**
+## Supported Providers
 
-```bash
-git pull
-docker compose down
-docker compose up --build -d
-```
+| Provider | Validate | Usage sync | Notes |
+| --- | --- | --- | --- |
+| OpenAI | Yes | Yes | Usage support depends on key/account capabilities. |
+| Anthropic | Yes | Partial | Local Claude Code import is separate from API key usage. |
+| OpenRouter | Yes | Yes | Supports usage and rate-limit metadata where available. |
+| Groq | Yes | Manual | Validation supported; usage is manual unless provider APIs expose it. |
+| Google Gemini | Yes | Manual | Validation supported. |
+| NVIDIA NIM | Yes | Manual | Usage data is not exposed consistently. |
+| Stripe | Yes | Yes | Billing-oriented connector. |
+| Replicate | Yes | Yes | Usage sync where account APIs allow it. |
+| Together AI | Yes | Yes | Usage sync where account APIs allow it. |
+| Mistral | Yes | Manual | Validation supported. |
+| Other | Manual | Manual | Store and track manually. |
+| Codex | Local auth/logs | Local import + quota | Reads local metadata and optional quota snapshots. |
+| Claude Code | Local logs | Local import | Reads local usage metadata. |
 
-**Troubleshooting**
-- **Readonly database error**: Your Docker volume has wrong permissions. Remove it and rebuild:
-  ```bash
-  docker compose down -v
-  docker compose up --build -d
-  ```
-  *(Warning: this deletes your data. Back up first if needed.)*
+## Local AI Usage
 
-## 🔐 Security
+Kosh can import local AI usage from:
 
-Kosh uses AES-256 encryption to protect all stored API keys. Your `KOSH_MASTER_KEY` is stored in your local `.env` file and never leaves your machine.
+- `~/.codex/**/*.jsonl`
+- `~/.claude/projects/**/*.jsonl`
 
-**Important:**
-- Never commit your `.env` file to version control
-- Back up your `KOSH_MASTER_KEY` somewhere safe — losing it means losing access to your encrypted keys
-- The `.env` file is included in `.gitignore` by default
+For Codex quota, Kosh has a separate quota refresh path. It can use local Codex auth or CLI status. OAuth quota refresh sends the local Codex bearer token to OpenAI to read rate-limit windows; the UI labels this explicitly before use.
 
-## ⚙️ Configuration
+## API Routes
 
-After first-run setup, your `.env` file will contain:
-```env
-DATABASE_URL="file:./kosh.db"
-KOSH_MASTER_KEY="your-generated-master-key"
-```
+- `POST /api/keys`
+- `PATCH /api/keys/[id]`
+- `GET /api/keys/[id]/details`
+- `POST /api/sync/[id]`
+- `POST /api/usage`
+- `GET /api/dashboard/chart`
+- `POST /api/usage-sources/local/refresh`
+- `GET /api/usage-sources/local/[provider]/details`
+- `POST /api/usage-sources/codex/quota`
+- `POST /api/alerts`
+- `PATCH /api/alerts/[id]/reset`
+- `DELETE /api/alerts/[id]`
+- `GET /api/settings/export`
+- `POST /api/settings/import`
 
-**With Docker**, the database is stored in a volume at `/app/data/kosh.db`. The master key can also be stored in `data/master.key` for automatic rotation support.
-
-## 🔌 Supported Platforms
-
-| Platform | Validate | Auto-sync |
-|---|---|---|
-| OpenRouter | ✅ | ✅ |
-| OpenAI | ✅ | ✅ |
-| Groq | ✅ | — |
-| Google Gemini | ✅ | — |
-| NVIDIA NIM | ✅ | — |
-| Anthropic | ✅ | — |
-| Stripe | ✅ | ✅ |
-| Replicate | ✅ | ✅ |
-| Together AI | ✅ | ✅ |
-| Mistral | ✅ | — |
-| Any other | — | Manual |
-
-## 🔧 API Endpoints
-
-- `POST /api/health-check` — validate all API keys sequentially; returns each key’s id, name, platform, and valid status (true, false, or unknown).
-- `POST /api/keys` — create a new API key (supports optional `notes` field).
-- `PATCH /api/keys/[id]` — update an existing API key, including its `notes`.
-- `GET /api/keys/[id]/details` — retrieve key details with `notes`, usage logs, and aggregates.
-- `GET /api/dashboard/chart` — fetch 30-day grouped cost and call metrics for the dashboard chart.
-
-## 📁 Project Structure
+## Project Structure
 
 ```text
 kosh/
-├── app/                   # Next.js App Router pages
-│   ├── page.tsx           # Dashboard
-│   ├── vault/             # Vault page
-│   ├── pulse/             # Pulse page
-│   ├── alerts/            # Alerts page
-│   ├── settings/          # Settings page
-│   ├── setup/             # First-run setup
-│   └── api/               # API routes (health-check, dashboard/chart, sync, alerts, settings, etc.)
-├── components/            # React components
-├── lib/
-│   ├── connectors/        # Platform connector system
-│   ├── encryption.ts      # AES-256 encryption
-│   ├── platform-config.ts # Platform colors & initials
-│   └── db.ts              # Prisma client
-└── prisma/
-    └── schema.prisma      # Database schema
+  app/                    Next.js routes and API handlers
+  components/             UI and workflow components
+  lib/connectors/         Provider connectors and capability metadata
+  lib/usage/              Usage import, rollups, and quota helpers
+  prisma/                 Schema and migrations
+  public/branding/        Kosh logo assets
+  public/screenshots/     README screenshots
 ```
 
-## 🗺️ Roadmap
+## Security Notes
 
-- [x] Docker support for self-hosting
-- [x] Master key rotation (re-encrypt all keys)
-- [x] Auto-lock vault on inactivity
-- [x] Key rotation reminders
-- [x] More platform connectors (Replicate, Together AI, Mistral)
-- [ ] Kosh Cloud (optional cloud sync)
+- Never commit `.env`.
+- Back up `KOSH_MASTER_KEY`; losing it means losing access to encrypted keys.
+- Local usage imports store token/cost metadata, not prompt or response content.
+- Exported backups exclude decrypted key values.
 
-## 📄 License
+## License
 
-MIT — free to use, modify, and self-host.
-
----
-
-Built with ❤️ by a solo vibe coder. If Kosh saves you time, consider giving it a ⭐
+MIT
