@@ -28,6 +28,9 @@ model ApiKey {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
   usageLogs            UsageLog[]
+  usageSources         UsageSource[]
+  usageEvents          UsageEvent[]
+  usageDailyRollups    UsageDailyRollup[]
   alerts               Alert[]
 }
 
@@ -41,12 +44,121 @@ model UsageLog {
   date      DateTime @default(now())
 }
 
+model UsageSource {
+  id                 String             @id @default(cuid())
+  apiKeyId           String?
+  apiKey             ApiKey?            @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  name               String
+  sourceType         String
+  provider           String?
+  collectionMethod   String
+  accuracy           String
+  requiresAdminKey   Boolean            @default(false)
+  privacyNote        String?
+  cursor             String?
+  metadataJson       String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  usageEvents        UsageEvent[]
+  usageDailyRollups  UsageDailyRollup[]
+  quotaSnapshots     UsageQuotaSnapshot[]
+  alerts             Alert[]
+
+  @@index([apiKeyId])
+  @@index([sourceType, provider])
+}
+
+model UsageEvent {
+  id               String       @id @default(cuid())
+  usageSourceId    String
+  usageSource      UsageSource  @relation(fields: [usageSourceId], references: [id], onDelete: Cascade)
+  apiKeyId         String?
+  apiKey           ApiKey?      @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  externalId       String?
+  sourceType       String
+  provider         String?
+  model            String?
+  currency         String       @default("USD")
+  calls            Int          @default(0)
+  inputTokens      Int?
+  outputTokens     Int?
+  totalTokens      Int?
+  cost             Float        @default(0)
+  accuracy         String
+  periodStart      DateTime
+  periodEnd        DateTime
+  capturedAt       DateTime     @default(now())
+  metadataJson     String?
+  createdAt        DateTime     @default(now())
+
+  @@unique([usageSourceId, externalId])
+  @@index([apiKeyId, periodStart])
+  @@index([sourceType, provider])
+}
+
+model UsageDailyRollup {
+  id              String       @id @default(cuid())
+  usageSourceId   String
+  usageSource     UsageSource  @relation(fields: [usageSourceId], references: [id], onDelete: Cascade)
+  apiKeyId        String?
+  apiKey          ApiKey?      @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  provider        String?
+  currency        String       @default("USD")
+  calls           Int          @default(0)
+  inputTokens     Int?
+  outputTokens    Int?
+  totalTokens     Int?
+  cost            Float        @default(0)
+  accuracy        String
+  rollupDate      DateTime
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([usageSourceId, rollupDate])
+  @@index([apiKeyId, rollupDate])
+  @@index([provider])
+}
+
+model UsageQuotaSnapshot {
+  id                        String      @id @default(cuid())
+  usageSourceId             String
+  usageSource               UsageSource @relation(fields: [usageSourceId], references: [id], onDelete: Cascade)
+  provider                  String?
+  sourceLabel               String
+  status                    String      @default("unknown")
+  accountEmail              String?
+  accountPlan               String?
+  primaryUsedPercent        Float?
+  primaryWindowMinutes      Int?
+  primaryResetsAt           DateTime?
+  primaryResetDescription   String?
+  secondaryUsedPercent      Float?
+  secondaryWindowMinutes    Int?
+  secondaryResetsAt         DateTime?
+  secondaryResetDescription String?
+  creditsRemaining          Float?
+  hasCredits                Boolean?
+  unlimited                 Boolean?
+  error                     String?
+  metadataJson              String?
+  fetchedAt                 DateTime    @default(now())
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
+
+  @@index([usageSourceId, fetchedAt])
+  @@index([provider])
+}
+
 model Alert {
   id         String   @id @default(cuid())
-  apiKeyId   String
-  apiKey     ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  apiKeyId   String?
+  apiKey     ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  usageSourceId String?
+  usageSource UsageSource? @relation(fields: [usageSourceId], references: [id], onDelete: Cascade)
   type       String
   threshold  Float
   triggered  Boolean  @default(false)
   createdAt  DateTime @default(now())
+
+  @@index([apiKeyId])
+  @@index([usageSourceId])
 }

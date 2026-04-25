@@ -4,61 +4,7 @@ import { getConnector } from "@/lib/connectors"
 import type { ConnectorResult, UsageData, UsageFetchResult } from "@/lib/connectors/types"
 import { db } from "@/lib/db"
 import { decrypt } from "@/lib/encryption"
-
-function getUtcDayBounds(date: Date) {
-  const year = date.getUTCFullYear()
-  const month = date.getUTCMonth()
-  const day = date.getUTCDate()
-
-  return {
-    start: new Date(Date.UTC(year, month, day, 0, 0, 0, 0)),
-    noon: new Date(Date.UTC(year, month, day, 12, 0, 0, 0)),
-    end: new Date(Date.UTC(year, month, day + 1, 0, 0, 0, 0)),
-  }
-}
-
-async function upsertUsageLog(apiKeyId: string, usage: UsageData) {
-  const { start, noon, end } = getUtcDayBounds(usage.date)
-  const now = new Date()
-  const todayBounds = getUtcDayBounds(now)
-  const logDate =
-    usage.date >= todayBounds.start && usage.date < todayBounds.end ? now : noon
-
-  const existingLog = await db.usageLog.findFirst({
-    where: {
-      apiKeyId,
-      date: {
-        gte: start,
-        lt: end,
-      },
-    },
-    select: { id: true },
-  })
-
-  if (existingLog) {
-    await db.usageLog.update({
-      where: { id: existingLog.id },
-      data: {
-        calls: usage.calls,
-        cost: usage.cost,
-        tokens: usage.tokens ?? null,
-        date: logDate,
-      },
-    })
-
-    return
-  }
-
-  await db.usageLog.create({
-    data: {
-      apiKeyId,
-      calls: usage.calls,
-      cost: usage.cost,
-      tokens: usage.tokens ?? null,
-      date: logDate,
-    },
-  })
-}
+import { ingestUsage } from "@/lib/usage/ingest"
 
 function normalizeUsageResult(
   result: UsageData[] | UsageFetchResult
@@ -125,9 +71,30 @@ export async function POST(
         await connector.fetchUsage(decryptedKey, 7)
       )
 
-      for (const usage of result.usage) {
-        await upsertUsageLog(apiKey.id, usage)
-      }
+      await ingestUsage({
+        source: {
+          apiKeyId: apiKey.id,
+          name: `${apiKey.platform} provider sync`,
+          sourceType: "api_key_provider",
+          provider: apiKey.platform,
+          collectionMethod: connector.capabilities.collectionMethod,
+          accuracy: connector.capabilities.accuracy,
+          requiresAdminKey: connector.capabilities.requiresAdminKey,
+          privacyNote: connector.capabilities.privacyNote,
+          metadata: {
+            granularity: connector.capabilities.granularity,
+            supportsCost: connector.capabilities.supportsCost,
+            supportsTokens: connector.capabilities.supportsTokens,
+            supportsModels: connector.capabilities.supportsModels,
+          },
+        },
+        samples: result.usage.map((usage) => ({
+          ...usage,
+          externalId: `${apiKey.platform}:${apiKey.id}:${usage.date.toISOString().slice(0, 10)}`,
+          metadata: result.meta,
+        })),
+        legacyUsageMode: "upsert",
+      })
 
       return NextResponse.json({
         success: true,

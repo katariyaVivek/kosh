@@ -25,19 +25,28 @@ type AlertDialogKey = {
   name: string
 }
 
+type AlertDialogUsageSource = {
+  id: string
+  name: string
+  provider: string | null
+}
+
 type AddAlertDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   keys: AlertDialogKey[]
+  usageSources: AlertDialogUsageSource[]
 }
 
 const ALERT_TYPES = [
   { value: "cost", label: "cost" },
   { value: "calls", label: "calls" },
-  { value: "rate_limit", label: "rate_limit" },
+  { value: "tokens", label: "tokens" },
 ] as const
 
-function getThresholdCopy(type: "cost" | "calls" | "rate_limit") {
+type AlertType = "cost" | "calls" | "tokens"
+
+function getThresholdCopy(type: AlertType) {
   if (type === "cost") {
     return {
       label: "Cost threshold (USD)",
@@ -54,9 +63,17 @@ function getThresholdCopy(type: "cost" | "calls" | "rate_limit") {
     }
   }
 
+  if (type === "tokens") {
+    return {
+      label: "Token threshold",
+      placeholder: "1000000",
+      step: "1",
+    }
+  }
+
   return {
-    label: "Rate limit threshold",
-    placeholder: "100",
+    label: "Calls threshold",
+    placeholder: "1000",
     step: "1",
   }
 }
@@ -65,12 +82,13 @@ export function AddAlertDialog({
   open,
   onOpenChange,
   keys,
+  usageSources,
 }: AddAlertDialogProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    apiKeyId: "",
-    type: "cost" as "cost" | "calls" | "rate_limit",
+    targetId: "",
+    type: "cost" as AlertType,
     threshold: "",
   })
 
@@ -78,24 +96,26 @@ export function AddAlertDialog({
 
   const resetForm = () => {
     setForm({
-      apiKeyId: "",
+      targetId: "",
       type: "cost",
       threshold: "",
     })
   }
 
   const handleSubmit = async () => {
-    if (!form.apiKeyId || !form.threshold) {
+    if (!form.targetId || !form.threshold) {
       return
     }
 
     setLoading(true)
+    const [targetKind, targetId] = form.targetId.split(":")
 
     const res = await fetch("/api/alerts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        apiKeyId: form.apiKeyId,
+        apiKeyId: targetKind === "key" ? targetId : null,
+        usageSourceId: targetKind === "source" ? targetId : null,
         type: form.type,
         threshold: Number(form.threshold),
       }),
@@ -128,20 +148,25 @@ export function AddAlertDialog({
         </DialogHeader>
         <div className="mt-2 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label>API Key</Label>
+            <Label>Target</Label>
             <Select
-              value={form.apiKeyId}
+              value={form.targetId}
               onValueChange={(value) =>
-                setForm((prev) => ({ ...prev, apiKeyId: value }))
+                setForm((prev) => ({ ...prev, targetId: value }))
               }
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select API key" />
+              <SelectTrigger className="h-10 w-full rounded-xl border-border/70 bg-background/80 px-3">
+                <SelectValue placeholder="Select target" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="rounded-xl">
                 {keys.map((key) => (
-                  <SelectItem key={key.id} value={key.id}>
-                    {key.name}
+                  <SelectItem key={key.id} value={`key:${key.id}`}>
+                    API key: {key.name}
+                  </SelectItem>
+                ))}
+                {usageSources.map((source) => (
+                  <SelectItem key={source.id} value={`source:${source.id}`}>
+                    Local source: {source.provider ?? source.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -152,14 +177,14 @@ export function AddAlertDialog({
             <Label>Alert type</Label>
             <Select
               value={form.type}
-              onValueChange={(value: "cost" | "calls" | "rate_limit") =>
+              onValueChange={(value: AlertType) =>
                 setForm((prev) => ({ ...prev, type: value }))
               }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="h-10 w-full rounded-xl border-border/70 bg-background/80 px-3">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="rounded-xl">
                 {ALERT_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
@@ -188,7 +213,7 @@ export function AddAlertDialog({
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || keys.length === 0}
+            disabled={loading || (keys.length === 0 && usageSources.length === 0)}
             className="mt-2"
           >
             {loading ? "Saving..." : "Save alert"}

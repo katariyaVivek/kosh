@@ -1,6 +1,7 @@
 import { eachDayOfInterval, format, startOfDay, subDays } from "date-fns"
 
 import type { Connector, UsageData } from "./types"
+import { providerAggregateCapabilities } from "./capabilities"
 
 type StripeChargesPayload = {
   data?: Array<{
@@ -23,6 +24,11 @@ export const stripeConnector: Connector = {
   platform: "Stripe",
   canSync: true,
   canValidate: true,
+  capabilities: {
+    ...providerAggregateCapabilities,
+    supportsTokens: false,
+    privacyNote: "Fetches charge totals from Stripe without storing customer payloads.",
+  },
   async fetchUsage(apiKey, days) {
     const response = await fetch("https://api.stripe.com/v1/charges?limit=100", {
       headers: {

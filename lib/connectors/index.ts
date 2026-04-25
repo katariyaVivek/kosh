@@ -11,17 +11,20 @@ import { stripeConnector } from "./stripe"
 import { togetherConnector } from "./together"
 import { xaiConnector } from "./xai"
 import type { Connector } from "./types"
+import { manualCapabilities } from "./capabilities"
 
 const googleConnector: Connector = {
   platform: "Google",
   canSync: false,
   canValidate: false,
+  capabilities: manualCapabilities,
 }
 
 const twilioConnector: Connector = {
   platform: "Twilio",
   canSync: false,
   canValidate: false,
+  capabilities: manualCapabilities,
 }
 
 const connectors: Connector[] = [

@@ -29,6 +29,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.codex-devserver.*.log
 
 # env files (can opt-in for committing if needed)
 .env
@@ -43,6 +44,7 @@ yarn-error.log*
 AGENTS.md
 CLAUDE.md
 .continue/
+.qwen/
 
 # typescript
 *.tsbuildinfo
@@ -52,3 +54,10 @@ next-env.d.ts
 
 # local SQLite database (never commit)
 prisma/kosh.db
+prisma/*.db
+prisma/*.db-journal
+prisma/*.sqlite
+prisma/*.sqlite-journal
+
+# local screenshot/test databases
+.tmp/

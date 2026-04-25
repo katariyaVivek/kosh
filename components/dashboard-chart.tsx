@@ -25,6 +25,7 @@ export function DashboardChart() {
 
   useEffect(() => {
     let isMounted = true
+
     async function fetchData() {
       try {
         const res = await fetch("/api/dashboard/chart", { cache: "no-store" })
@@ -37,9 +38,13 @@ export function DashboardChart() {
         if (isMounted) setIsLoading(false)
       }
     }
+
     fetchData()
+    window.addEventListener("kosh:usage-refreshed", fetchData)
+
     return () => {
       isMounted = false
+      window.removeEventListener("kosh:usage-refreshed", fetchData)
     }
   }, [])
 
@@ -56,21 +61,24 @@ export function DashboardChart() {
   ] as const
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-sm w-full">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-foreground">Spend over time</p>
-        <div className="flex flex-col items-end space-y-1">
-          <p className="text-xs text-muted-foreground">Last 30 days</p>
-          <div className="inline-flex items-center rounded-full border border-border bg-muted p-1">
+    <div className="w-full overflow-hidden rounded-lg border border-border/80 bg-card/82 shadow-[0_18px_60px_hsl(222_34%_6%_/_0.08)]">
+      <div className="flex flex-col gap-4 border-b border-border/70 bg-[linear-gradient(180deg,hsl(188_95%_43%_/_0.07),transparent)] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-foreground">Spend telemetry</p>
+          <p className="mt-1 text-xs text-muted-foreground">Last 30 days</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center rounded-lg border border-border bg-background/80 p-1">
             {toggleOptions.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setMetric(opt.value)}
+                aria-pressed={metric === opt.value}
                 className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   metric === opt.value
-                    ? "bg-foreground text-card"
+                    ? "bg-foreground text-card shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -80,21 +88,21 @@ export function DashboardChart() {
           </div>
         </div>
       </div>
-      <div className="mt-5">
-        {isLoading && <div className="h-48 animate-pulse rounded-xl bg-muted" />}
+      <div className="p-5">
+        {isLoading && <div className="h-56 animate-pulse rounded-lg bg-muted" />}
         {!isLoading && showEmpty && (
-          <div className="flex h-[180px] flex-col items-center justify-center space-y-2">
+          <div className="flex h-[220px] flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-background/45">
             <EmptyStateIllustration variant="no-usage" className="mb-2" />
-            <p className="text-sm text-muted-foreground">No usage data this month</p>
+            <p className="text-sm text-muted-foreground">No usage data in the last 30 days</p>
           </div>
         )}
         {!isLoading && !showEmpty && (
-          <div className="h-[180px] outline-none [&_svg]:outline-none">
+          <div className="h-[220px] outline-none [&_svg]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.42} />
                     <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
@@ -111,8 +119,8 @@ export function DashboardChart() {
                   contentStyle={{
                     backgroundColor: "var(--popover)",
                     borderColor: "var(--border)",
-                    borderRadius: "0.75rem",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                    borderRadius: "0.5rem",
+                    boxShadow: "0 18px 60px rgb(0 0 0 / 0.16)",
                     fontSize: "0.875rem",
                     color: "var(--popover-foreground)",
                   }}
