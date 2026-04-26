@@ -89,13 +89,13 @@ export function KoshShell({
           >
             <div className="flex h-full flex-col gap-7 p-5">
               <div className="flex flex-row items-center gap-3 border-b border-slate-200 pb-5 dark:border-sidebar-border">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-primary/20 bg-[#070b10] shadow-[0_0_28px_hsl(188_95%_43%_/_0.16)]">
+                <div className="relative h-10 w-10 shrink-0">
                   <Image
                     src="/branding/kosh-mark.png"
                     alt="Kosh logo"
-                    width={44}
-                    height={44}
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="40px"
+                    className="object-contain"
                     priority
                   />
                 </div>
