@@ -10,7 +10,7 @@ Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage wh
 
 - Encrypted API key vault with platform, environment, notes, rotation metadata, and copy/reveal controls.
 - Usage dashboard for cost, calls, and token trends across API keys and local AI tools.
-- Local Codex and Claude Code imports from JSONL usage metadata.
+- Local Codex and Claude Code imports from usage metadata, with Codex estimates powered by the bundled `@ccusage/codex` analyzer.
 - Codex rate limit snapshots from local auth or CLI status, shown separately from estimated spend.
 - Connector capability model so each provider clearly reports whether validation, sync, billing, or manual entry is supported.
 - Alerts for cost, calls, and token thresholds across API keys or local AI usage sources.
@@ -111,15 +111,9 @@ Kosh can import local AI usage from:
 - `~/.codex/**/*.jsonl`
 - `~/.claude/projects/**/*.jsonl`
 
-For Codex token and spend estimates, Kosh first looks for a locally installed `ccusage-codex` binary from `@ccusage/codex`. If present, Kosh imports its JSON daily report and labels the values as estimated. If it is not installed, Kosh falls back to native Codex log parsing and only imports rows with explicit cost data, avoiding inflated generic `model: "codex"` counters.
+For Codex token and spend estimates, Kosh uses the bundled `@ccusage/codex` analyzer and imports its JSON daily report. These values are labeled as estimated because they are API-equivalent cost estimates, not exact ChatGPT subscription billing. Kosh skips fallback Codex model buckets to avoid inflated generic legacy counters.
 
-To enable the optional Codex analyzer, install it yourself and restart Kosh:
-
-```bash
-npm install -g @ccusage/codex
-```
-
-You can also point Kosh at a specific binary with `KOSH_CODEX_USAGE_COMMAND`.
+If you need to override the bundled analyzer, point Kosh at a specific binary with `KOSH_CODEX_USAGE_COMMAND`.
 
 For Codex quota, Kosh has a separate quota refresh path. It can use local Codex auth or CLI status. OAuth quota refresh sends the local Codex bearer token to OpenAI to read rate-limit windows; the UI labels this explicitly before use.
 
