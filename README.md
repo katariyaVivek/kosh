@@ -16,7 +16,7 @@ Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage wh
 - Alerts for cost, calls, and token thresholds across API keys or local AI usage sources.
 - Pulse view for day-to-day usage and spend scanning.
 - Export/import backup flow for vault metadata and usage history.
-- Auto-lock, light/dark/system appearance, and a setup screen for generating the master key.
+- Auto-lock, light/dark/system appearance, and a setup screen for local bootstrap.
 
 ## Data Model
 
@@ -53,33 +53,13 @@ Local Codex and Claude Code imports store token and cost metadata only. Kosh doe
 npm install
 ```
 
-2. Create an environment file.
+2. Bootstrap the local install.
 
 ```bash
-cp .env.example .env
+npm run bootstrap
 ```
 
-3. Set a strong master key.
-
-```env
-DATABASE_URL="file:./kosh.db"
-KOSH_MASTER_KEY="replace-with-a-long-random-secret"
-```
-
-Generate a strong key with:
-
-```bash
-openssl rand -hex 32
-```
-
-4. Apply database migrations and generate Prisma client.
-
-```bash
-npm run db:deploy
-npm run db:generate
-```
-
-5. Start the app.
+3. Start the app.
 
 ```bash
 npm run dev

@@ -24,15 +24,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client and apply migrations for build-time prerender
+# Generate Prisma client for build-time prerender
 ENV DATABASE_URL="file:./data/kosh.db"
 ENV PATH="/app/node_modules/.bin:$PATH"
 RUN mkdir -p /app/data && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
     chown -R nextjs:nodejs /app/data && \
-    prisma generate && \
-    prisma migrate deploy --schema=./prisma/schema.prisma
+    prisma generate
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
