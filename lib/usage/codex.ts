@@ -269,19 +269,27 @@ function toUsageSample(
   const model = pickModel(entry)
   const inputTokens = getInputTokens(usage) + getCachedInputTokens(usage)
   const outputTokens = getOutputTokens(usage) + getReasoningOutputTokens(usage)
-  const explicitCost = toNumber(entry.costUSD ?? entry.cost_usd)
+  const explicitCost = entry.costUSD ?? entry.cost_usd
+  const costSource =
+    explicitCost === undefined || explicitCost === null
+      ? "estimated"
+      : "explicit"
   const totalUsage = entry.payload?.info?.total_token_usage ?? null
 
   return {
     externalId: getExternalId(filePath, lineNumber, entry),
     date: timestamp,
     calls: 1,
-    cost: explicitCost || estimateCostUsd(model, usage),
+    cost:
+      explicitCost === undefined || explicitCost === null
+        ? estimateCostUsd(model, usage)
+        : explicitCost,
     inputTokens,
     outputTokens,
     tokens: totalTokens,
     model,
     metadata: {
+      costSource,
       cachedInputTokens: getCachedInputTokens(usage),
       reasoningOutputTokens: getReasoningOutputTokens(usage),
       eventType: entry.type ?? entry.payload?.type ?? null,

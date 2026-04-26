@@ -22,6 +22,26 @@ function parseMetadata(metadataJson: string | null) {
   }
 }
 
+function parseCostSource(metadataJson: string | null) {
+  if (!metadataJson) {
+    return null
+  }
+
+  try {
+    const metadata = JSON.parse(metadataJson) as {
+      costSource?: string
+    }
+
+    if (metadata.costSource === "explicit" || metadata.costSource === "estimated") {
+      return metadata.costSource
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
 function getResetDate(value: Date | null, fetchedAt: Date) {
   if (!value) {
     return null
@@ -76,7 +96,7 @@ export async function GET(
     orderBy: { updatedAt: "desc" },
   })
 
-  const [totals, dailyRollups, latestEvents, modelBreakdown, quotaSnapshot] = await Promise.all([
+  const [totals, dailyRollups, latestEvents, modelBreakdown, quotaSnapshot, costSourceEvents] = await Promise.all([
     db.usageDailyRollup.aggregate({
       _sum: { totalTokens: true, cost: true, calls: true },
       where: {
@@ -107,6 +127,7 @@ export async function GET(
         cost: true,
         periodStart: true,
         accuracy: true,
+        metadataJson: true,
       },
     }),
     db.usageEvent.groupBy({
@@ -130,7 +151,42 @@ export async function GET(
       },
       orderBy: { fetchedAt: "desc" },
     }),
+    db.usageEvent.findMany({
+      where: {
+        provider,
+        sourceType: "local_tool",
+      },
+      select: {
+        metadataJson: true,
+      },
+    }),
   ])
+
+  const costSourceCounts = costSourceEvents.reduce(
+    (acc, event) => {
+      const costSource = parseCostSource(event.metadataJson)
+
+      if (costSource === "explicit") {
+        acc.explicit += 1
+      } else if (costSource === "estimated") {
+        acc.estimated += 1
+      } else {
+        acc.unknown += 1
+      }
+
+      return acc
+    },
+    { explicit: 0, estimated: 0, unknown: 0 }
+  )
+
+  const costSourceMode =
+    costSourceCounts.explicit > 0 && costSourceCounts.estimated > 0
+      ? "mixed"
+      : costSourceCounts.explicit > 0
+        ? "explicit"
+        : costSourceCounts.estimated > 0
+          ? "estimated"
+          : "unknown"
 
   return NextResponse.json({
     provider,
@@ -139,6 +195,16 @@ export async function GET(
           id: source.id,
           collectionMethod: source.collectionMethod,
           accuracy: source.accuracy,
+          costSource: {
+            mode: costSourceMode,
+            explicitCount: costSourceCounts.explicit,
+            estimatedCount: costSourceCounts.estimated,
+            unknownCount: costSourceCounts.unknown,
+            totalCount:
+              costSourceCounts.explicit +
+              costSourceCounts.estimated +
+              costSourceCounts.unknown,
+          },
           privacyNote: source.privacyNote,
           importStats: parseMetadata(source.metadataJson),
           updatedAt: source.updatedAt.toISOString(),
@@ -204,6 +270,7 @@ export async function GET(
       cost: event.cost,
       date: event.periodStart.toISOString(),
       accuracy: event.accuracy,
+      costSource: parseCostSource(event.metadataJson) ?? "unknown",
     })),
     modelBreakdown: modelBreakdown.map((entry) => ({
       model: entry.model ?? provider,
