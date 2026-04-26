@@ -207,12 +207,37 @@ function getDefaultCodexPath() {
   return path.join(/*turbopackIgnore: true*/ home, DEFAULT_CODEX_DIR)
 }
 
-function getLocalCcusageBinary() {
-  return path.join(
-    /*turbopackIgnore: true*/ process.cwd(),
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "ccusage-codex.cmd" : "ccusage-codex"
+function getCcusageBinaryNames() {
+  return process.platform === "win32"
+    ? ["ccusage-codex.cmd", "ccusage-codex"]
+    : ["ccusage-codex"]
+}
+
+function getLocalCcusageBinaries() {
+  return getCcusageBinaryNames().map((name) =>
+    path.join(
+      /*turbopackIgnore: true*/ process.cwd(),
+      "node_modules",
+      ".bin",
+      name
+    )
+  )
+}
+
+function getGlobalNpmCcusageBinaries() {
+  const roots = [
+    process.env.APPDATA
+      ? path.join(/*turbopackIgnore: true*/ process.env.APPDATA, "npm")
+      : null,
+    process.env.npm_config_prefix
+      ? path.join(/*turbopackIgnore: true*/ process.env.npm_config_prefix)
+      : null,
+  ].filter(Boolean) as string[]
+
+  return roots.flatMap((root) =>
+    getCcusageBinaryNames().map((name) =>
+      path.join(/*turbopackIgnore: true*/ root, name)
+    )
   )
 }
 
@@ -228,14 +253,24 @@ function getCcusageCommands() {
     })
   }
 
-  const localBinary = getLocalCcusageBinary()
+  for (const localBinary of getLocalCcusageBinaries()) {
+    if (existsSync(/*turbopackIgnore: true*/ localBinary)) {
+      commands.push({
+        command: localBinary,
+        args: ["daily", "--json"],
+        label: "local ccusage-codex",
+      })
+    }
+  }
 
-  if (existsSync(/*turbopackIgnore: true*/ localBinary)) {
-    commands.push({
-      command: localBinary,
-      args: ["daily", "--json"],
-      label: "local ccusage-codex",
-    })
+  for (const globalBinary of getGlobalNpmCcusageBinaries()) {
+    if (existsSync(/*turbopackIgnore: true*/ globalBinary)) {
+      commands.push({
+        command: globalBinary,
+        args: ["daily", "--json"],
+        label: "global ccusage-codex",
+      })
+    }
   }
 
   commands.push({
