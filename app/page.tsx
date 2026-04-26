@@ -39,6 +39,14 @@ type LocalUsageStat = {
   tokens: number
   cost: number
   calls: number
+  quota?: {
+    status: string
+    primaryRemainingPercent: number | null
+    primaryResetsAt: string | null
+    secondaryRemainingPercent: number | null
+    secondaryResetsAt: string | null
+    fetchedAt: string
+  }
 }
 
 function parseCostSource(metadataJson: string | null) {
@@ -63,6 +71,18 @@ function parseCostSource(metadataJson: string | null) {
   return "unknown"
 }
 
+function toRemainingPercent(value: number | null | undefined) {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  if (value <= 1) {
+    return Math.max(0, Math.min(100, value * 100))
+  }
+
+  return Math.max(0, Math.min(100, 100 - value))
+}
+
 function buildLocalUsageStats(
   entries: Array<{
     provider: string | null
@@ -71,7 +91,15 @@ function buildLocalUsageStats(
       cost: number | null
       calls: number | null
     }
-  }>
+  }>,
+  codexQuota: {
+    status: string
+    primaryUsedPercent: number | null
+    primaryResetsAt: Date | null
+    secondaryUsedPercent: number | null
+    secondaryResetsAt: Date | null
+    fetchedAt: Date
+  } | null
 ): LocalUsageStat[] {
   const byProvider = new Map<string, LocalUsageStat>()
 
@@ -86,6 +114,25 @@ function buildLocalUsageStats(
       cost: entry._sum.cost ?? 0,
       calls: entry._sum.calls ?? 0,
     })
+  }
+
+  if (codexQuota) {
+    const codex = byProvider.get("Codex") ?? {
+      provider: "Codex",
+      tokens: 0,
+      cost: 0,
+      calls: 0,
+    }
+
+    codex.quota = {
+      status: codexQuota.status,
+      primaryRemainingPercent: toRemainingPercent(codexQuota.primaryUsedPercent),
+      primaryResetsAt: codexQuota.primaryResetsAt?.toISOString() ?? null,
+      secondaryRemainingPercent: toRemainingPercent(codexQuota.secondaryUsedPercent),
+      secondaryResetsAt: codexQuota.secondaryResetsAt?.toISOString() ?? null,
+      fetchedAt: codexQuota.fetchedAt.toISOString(),
+    }
+    byProvider.set("Codex", codex)
   }
 
   return ["Claude Code", "Codex"].map(
@@ -125,6 +172,7 @@ export default async function Home({
     activeAlerts,
     dailyCosts,
     localUsageEntries,
+    codexQuotaSnapshot,
   ] =
     demoMode
       ? [
@@ -134,6 +182,7 @@ export default async function Home({
           0,
           [],
           [],
+          null,
         ]
       : await Promise.all([
           db.apiKey.findMany({
@@ -170,6 +219,21 @@ export default async function Home({
               },
             },
           }),
+          db.usageQuotaSnapshot.findFirst({
+            where: {
+              provider: "Codex",
+              usageSource: { sourceType: "quota" },
+            },
+            orderBy: { fetchedAt: "desc" },
+            select: {
+              status: true,
+              primaryUsedPercent: true,
+              primaryResetsAt: true,
+              secondaryUsedPercent: true,
+              secondaryResetsAt: true,
+              fetchedAt: true,
+            },
+          }),
         ])
   const totalKeys = keys.length
   const monthlySpend = monthlyUsageAggregate._sum.cost ?? 0
@@ -188,7 +252,10 @@ export default async function Home({
     costByDate.set(dateKey, entry._sum.cost ?? 0)
   }
   const spendSparkline = sparklineDateStrings.map((d) => costByDate.get(d) ?? 0)
-  const localUsageStats = buildLocalUsageStats(localUsageEntries)
+  const localUsageStats = buildLocalUsageStats(
+    localUsageEntries,
+    codexQuotaSnapshot
+  )
   const hasUsageData = monthlySpend > 0 || monthlyTokens > 0
 
   const stats = [

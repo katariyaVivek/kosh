@@ -3,6 +3,7 @@ import { existsSync } from "fs"
 import { readdir, readFile } from "fs/promises"
 import path from "path"
 
+import { db } from "@/lib/db"
 import { ingestUsage, type UsageSampleInput } from "@/lib/usage/ingest"
 
 type TokenUsageShape = Record<string, unknown>
@@ -152,6 +153,10 @@ function normalizeModelName(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
+}
+
+function isGenericCodexModel(model: string) {
+  return normalizeModelName(model) === "codex"
 }
 
 function getDefaultCodexPath() {
@@ -359,9 +364,17 @@ function toUsageSample(
   }
 
   const model = pickModel(entry)
+  const explicitCost = entry.costUSD ?? entry.cost_usd
+
+  if (
+    isGenericCodexModel(model) &&
+    (explicitCost === undefined || explicitCost === null)
+  ) {
+    return null
+  }
+
   const inputTokens = getInputTokens(usage) + getCachedInputTokens(usage)
   const outputTokens = getOutputTokens(usage) + getReasoningOutputTokens(usage)
-  const explicitCost = entry.costUSD ?? entry.cost_usd
   const estimatedCost =
     explicitCost === undefined || explicitCost === null
       ? estimateCostUsd(model, usage)
@@ -401,6 +414,30 @@ function toUsageSample(
       lineNumber,
     },
   }
+}
+
+async function clearExistingCodexUsage() {
+  const source = await db.usageSource.findFirst({
+    where: {
+      sourceType: "local_tool",
+      provider: "Codex",
+      collectionMethod: "local_logs",
+    },
+    select: { id: true },
+  })
+
+  if (!source) {
+    return
+  }
+
+  await db.$transaction([
+    db.usageDailyRollup.deleteMany({
+      where: { usageSourceId: source.id },
+    }),
+    db.usageEvent.deleteMany({
+      where: { usageSourceId: source.id },
+    }),
+  ])
 }
 
 async function parseCodexJsonlFile(filePath: string) {
@@ -448,6 +485,8 @@ export async function importCodexUsage(inputPath?: string | null) {
     entriesScanned += result.entriesScanned
     samples.push(...result.samples)
   }
+
+  await clearExistingCodexUsage()
 
   await ingestUsage({
     source: {
