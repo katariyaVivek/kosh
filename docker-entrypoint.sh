@@ -1,13 +1,13 @@
 #!/bin/sh
 set -e
 
-# Ensure data directory exists and is writable
+# Ensure data directory exists and is writable.
 mkdir -p /app/data
 chmod 777 /app/data
 
 cd /app
 
-# Run migrations — if they fail, log the error and exit cleanly
+# Run migrations. If they fail, log the error and exit cleanly.
 if prisma migrate deploy --schema=./prisma/schema.prisma; then
   echo "Migrations applied successfully."
 else

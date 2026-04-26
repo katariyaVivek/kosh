@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function proxy(request: NextRequest) {
-  const masterKey = process.env.KOSH_MASTER_KEY
-  const isSetupRequired =
-    !masterKey ||
-    masterKey.includes("change-this") ||
-    masterKey.includes("super-secret") ||
-    masterKey.length < 32
+import { isSetupRequired as shouldShowSetup } from "@/lib/setup"
 
+export function proxy(request: NextRequest) {
   const isSetupPage = request.nextUrl.pathname === "/setup"
   const isApiRoute = request.nextUrl.pathname.startsWith("/api")
 
-  if (isSetupRequired && !isSetupPage && !isApiRoute) {
+  if (shouldShowSetup() && !isSetupPage && !isApiRoute) {
     return NextResponse.redirect(new URL("/setup", request.url))
   }
-  if (!isSetupRequired && isSetupPage) {
+  if (!shouldShowSetup() && isSetupPage) {
     return NextResponse.redirect(new URL("/", request.url))
   }
   return NextResponse.next()
