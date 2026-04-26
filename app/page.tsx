@@ -41,6 +41,28 @@ type LocalUsageStat = {
   calls: number
 }
 
+function parseCostSource(metadataJson: string | null) {
+  if (!metadataJson) {
+    return "unknown"
+  }
+
+  try {
+    const metadata = JSON.parse(metadataJson) as { costSource?: string }
+
+    if (
+      metadata.costSource === "explicit" ||
+      metadata.costSource === "estimated" ||
+      metadata.costSource === "unknown"
+    ) {
+      return metadata.costSource
+    }
+  } catch {
+    return "unknown"
+  }
+
+  return "unknown"
+}
+
 function buildLocalUsageStats(
   entries: Array<{
     provider: string | null
@@ -96,11 +118,19 @@ export default async function Home({
   const sparklineEnd = addDays(startOfDay(now), 1)
   const sparklineDateStrings = sparklineDateObjects.map((d) => format(d, "yyyy-MM-dd"))
 
-  const [keys, monthlyUsageAggregate, activeAlerts, dailyCosts, localUsageEntries] =
+  const [
+    keys,
+    monthlyUsageAggregate,
+    monthlyUsageEvents,
+    activeAlerts,
+    dailyCosts,
+    localUsageEntries,
+  ] =
     demoMode
       ? [
           [],
           { _sum: { cost: 0, totalTokens: 0 } },
+          [],
           0,
           [],
           [],
@@ -115,6 +145,14 @@ export default async function Home({
           db.usageDailyRollup.aggregate({
             _sum: { cost: true, totalTokens: true },
             where: { rollupDate: { gte: windowStart, lt: nextMonthStart } },
+          }),
+          db.usageEvent.findMany({
+            where: { periodStart: { gte: windowStart, lt: nextMonthStart } },
+            select: {
+              cost: true,
+              totalTokens: true,
+              metadataJson: true,
+            },
           }),
           db.alert.count({ where: { triggered: true } }),
           db.usageDailyRollup.groupBy({
@@ -136,6 +174,13 @@ export default async function Home({
   const totalKeys = keys.length
   const monthlySpend = monthlyUsageAggregate._sum.cost ?? 0
   const monthlyTokens = monthlyUsageAggregate._sum.totalTokens ?? 0
+  const monthlyUnpricedTokens = monthlyUsageEvents.reduce((sum, event) => {
+    return parseCostSource(event.metadataJson) === "unknown"
+      ? sum + (event.totalTokens ?? 0)
+      : sum
+  }, 0)
+  const monthlyPricedTokens = Math.max(0, monthlyTokens - monthlyUnpricedTokens)
+  const hasUnpricedTokens = monthlyUnpricedTokens > 0
 
   const costByDate = new Map<string, number>()
   for (const entry of dailyCosts) {
@@ -160,7 +205,9 @@ export default async function Home({
       label: "Token Usage",
       value: compactNumberFormatter.format(monthlyTokens),
       icon: Sigma,
-      caption: "Tokens tracked this month",
+      caption: hasUnpricedTokens
+        ? `${compactNumberFormatter.format(monthlyUnpricedTokens)} unpriced`
+        : "Tokens tracked this month",
       accent: "bg-primary/8",
       iconClassName: "text-primary",
     },
@@ -169,7 +216,9 @@ export default async function Home({
       value: currencyFormatter.format(monthlySpend),
       icon: DollarSign,
       sparkline: spendSparkline,
-      caption: "Tracked this month",
+      caption: hasUnpricedTokens
+        ? `${compactNumberFormatter.format(monthlyPricedTokens)} priced tokens`
+        : "Tracked this month",
       accent: "bg-primary/8",
       iconClassName: "text-primary",
     },
