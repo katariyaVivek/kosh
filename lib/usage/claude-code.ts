@@ -207,6 +207,10 @@ function toUsageSample(
   const inputTokens = getInputTokens(usage) + getCacheCreationTokens(usage) + getCacheReadTokens(usage)
   const outputTokens = getOutputTokens(usage)
   const totalTokens = inputTokens + outputTokens
+  const costSource =
+    entry.costUSD === undefined || entry.costUSD === null
+      ? "estimated"
+      : "explicit"
 
   if (totalTokens <= 0) {
     return null
@@ -218,12 +222,16 @@ function toUsageSample(
     externalId: getExternalId(filePath, lineNumber, entry),
     date: timestamp,
     calls: 1,
-    cost: toNumber(entry.costUSD) || estimateCostUsd(model, usage),
+    cost:
+      entry.costUSD === undefined || entry.costUSD === null
+        ? estimateCostUsd(model, usage)
+        : entry.costUSD,
     inputTokens,
     outputTokens,
     tokens: totalTokens,
     model,
     metadata: {
+      costSource,
       cacheCreationTokens: getCacheCreationTokens(usage),
       cacheReadTokens: getCacheReadTokens(usage),
       fileHash: createHash("sha256").update(filePath).digest("hex"),

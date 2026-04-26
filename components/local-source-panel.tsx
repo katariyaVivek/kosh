@@ -19,6 +19,13 @@ type LocalSourceDetails = {
   source: {
     collectionMethod: string
     accuracy: string
+    costSource: {
+      mode: string
+      explicitCount: number
+      estimatedCount: number
+      unknownCount: number
+      totalCount: number
+    }
     privacyNote: string | null
     importStats: {
       filesScanned?: number
@@ -74,6 +81,7 @@ type LocalSourceDetails = {
     cost: number
     date: string
     accuracy: string
+    costSource: string
   }>
   modelBreakdown: Array<{
     model: string
@@ -100,6 +108,18 @@ const compactNumberFormatter = new Intl.NumberFormat("en-US", {
 
 function formatMethod(value: string) {
   return value.replaceAll("_", " ")
+}
+
+function formatCostSource(value: string) {
+  if (value === "mixed") {
+    return "Mixed"
+  }
+
+  if (value === "unknown") {
+    return "Unknown"
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function formatDate(value: string) {
@@ -413,6 +433,19 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                         </span>
                       </div>
                       <div className="mt-2 flex items-center justify-between gap-3">
+                        <span className="text-muted-foreground">Cost source</span>
+                        <span className="font-medium capitalize">
+                          {formatCostSource(details.source.costSource.mode)}
+                        </span>
+                      </div>
+                      {details.source.costSource.mode === "mixed" ? (
+                        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                          {details.source.costSource.explicitCount} explicit and{" "}
+                          {details.source.costSource.estimatedCount} estimated
+                          records
+                        </p>
+                      ) : null}
+                      <div className="mt-2 flex items-center justify-between gap-3">
                         <span className="text-muted-foreground">Last import</span>
                         <span className="font-medium">
                           {formatDate(details.source.updatedAt)}
@@ -700,7 +733,8 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                             <div className="min-w-0">
                               <p className="truncate">{event.model}</p>
                               <p className="mt-0.5 text-xs text-muted-foreground">
-                                {formatDate(event.date)} · {event.accuracy}
+                                {formatDate(event.date)} · {event.accuracy} ·{" "}
+                                {formatCostSource(event.costSource)}
                               </p>
                             </div>
                             <div className="text-right tabular-nums text-muted-foreground">
