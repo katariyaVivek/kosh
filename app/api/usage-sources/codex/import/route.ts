@@ -17,6 +17,9 @@ export async function POST(req: NextRequest) {
       filesScanned: result.filesScanned,
       entriesScanned: result.entriesScanned,
       entriesImported: result.entriesImported,
+      analyzer: result.analyzer,
+      analyzerStatus: result.analyzerStatus,
+      analyzerError: result.analyzerError,
     })
   } catch (error) {
     return NextResponse.json(
