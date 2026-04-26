@@ -43,27 +43,98 @@ const DEFAULT_PROJECTS_DIR = "projects"
 
 const MODEL_PRICING_PER_MILLION = [
   {
-    match: "opus",
+    match: "opus-4-7",
+    input: 5,
+    output: 25,
+    cacheCreate: 6.25,
+    cacheRead: 0.5,
+  },
+  {
+    match: "opus-4-6",
+    input: 5,
+    output: 25,
+    cacheCreate: 6.25,
+    cacheRead: 0.5,
+  },
+  {
+    match: "opus-4-5",
+    input: 5,
+    output: 25,
+    cacheCreate: 6.25,
+    cacheRead: 0.5,
+  },
+  {
+    match: "opus-4-1",
     input: 15,
     output: 75,
     cacheCreate: 18.75,
     cacheRead: 1.5,
   },
   {
-    match: "sonnet",
+    match: "opus-4",
+    input: 15,
+    output: 75,
+    cacheCreate: 18.75,
+    cacheRead: 1.5,
+  },
+  {
+    match: "sonnet-4-6",
     input: 3,
     output: 15,
     cacheCreate: 3.75,
     cacheRead: 0.3,
   },
   {
-    match: "haiku",
+    match: "sonnet-4-5",
+    input: 3,
+    output: 15,
+    cacheCreate: 3.75,
+    cacheRead: 0.3,
+  },
+  {
+    match: "sonnet-4",
+    input: 3,
+    output: 15,
+    cacheCreate: 3.75,
+    cacheRead: 0.3,
+  },
+  {
+    match: "sonnet-3-7",
+    input: 3,
+    output: 15,
+    cacheCreate: 3.75,
+    cacheRead: 0.3,
+  },
+  {
+    match: "haiku-4-5",
+    input: 1,
+    output: 5,
+    cacheCreate: 1.25,
+    cacheRead: 0.1,
+  },
+  {
+    match: "haiku-3-5",
     input: 0.8,
     output: 4,
     cacheCreate: 1,
     cacheRead: 0.08,
   },
+  {
+    match: "haiku-3",
+    input: 0.25,
+    output: 1.25,
+    cacheCreate: 0.3,
+    cacheRead: 0.03,
+  },
 ]
+
+function normalizeModelName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
 
 function toNumber(value: unknown) {
   const parsed = Number(value ?? 0)
@@ -160,14 +231,14 @@ function getOutputTokens(usage: ClaudeUsageShape) {
 }
 
 function estimateCostUsd(model: string, usage: ClaudeUsageShape) {
-  const normalizedModel = model.toLowerCase()
+  const normalizedModel = normalizeModelName(model)
   const pricing =
     MODEL_PRICING_PER_MILLION.find((entry) =>
       normalizedModel.includes(entry.match)
-    ) ?? MODEL_PRICING_PER_MILLION.find((entry) => entry.match === "sonnet")
+    )
 
   if (!pricing) {
-    return 0
+    return null
   }
 
   return (
@@ -207,31 +278,38 @@ function toUsageSample(
   const inputTokens = getInputTokens(usage) + getCacheCreationTokens(usage) + getCacheReadTokens(usage)
   const outputTokens = getOutputTokens(usage)
   const totalTokens = inputTokens + outputTokens
+  const explicitCost = entry.costUSD
+  const model = getModel(entry)
+  const estimatedCost =
+    explicitCost === undefined || explicitCost === null
+      ? estimateCostUsd(model, usage)
+      : null
+  const pricingModel = MODEL_PRICING_PER_MILLION.find((entry) =>
+    normalizeModelName(model).includes(entry.match)
+  )
   const costSource =
-    entry.costUSD === undefined || entry.costUSD === null
-      ? "estimated"
-      : "explicit"
+    explicitCost !== undefined && explicitCost !== null
+      ? "explicit"
+      : estimatedCost !== null
+        ? "estimated"
+        : "unknown"
 
   if (totalTokens <= 0) {
     return null
   }
 
-  const model = getModel(entry)
-
   return {
     externalId: getExternalId(filePath, lineNumber, entry),
     date: timestamp,
     calls: 1,
-    cost:
-      entry.costUSD === undefined || entry.costUSD === null
-        ? estimateCostUsd(model, usage)
-        : entry.costUSD,
+    cost: explicitCost ?? estimatedCost ?? 0,
     inputTokens,
     outputTokens,
     tokens: totalTokens,
     model,
     metadata: {
       costSource,
+      pricingModel: pricingModel?.match ?? null,
       cacheCreationTokens: getCacheCreationTokens(usage),
       cacheReadTokens: getCacheReadTokens(usage),
       fileHash: createHash("sha256").update(filePath).digest("hex"),
