@@ -138,7 +138,6 @@ const MODEL_MATCHERS: Array<{
   { match: "gpt-5-codex", bucket: "gpt51Codex" },
   { match: "codex-mini-latest", bucket: "codexMiniLatest" },
   { match: "codex-mini", bucket: "codexMiniLatest" },
-  { match: "codex", bucket: "gpt51CodexMax" },
 ]
 
 function toNumber(value: unknown) {
