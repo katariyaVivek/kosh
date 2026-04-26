@@ -17,6 +17,7 @@ type CcusageCodexDay = {
   totalTokens?: number
   inputTokens?: number
   outputTokens?: number
+  cachedInputTokens?: number
   cacheCreationTokens?: number
   cacheReadTokens?: number
   calls?: number
@@ -24,22 +25,26 @@ type CcusageCodexDay = {
   requests?: number
   entries?: number
   sessionCount?: number
-  models?: string[]
+  models?: string[] | Record<string, CcusageCodexModel>
   modelsUsed?: string[]
-  modelBreakdowns?: Array<{
-    model?: string
-    modelName?: string
-    totalCost?: number
-    costUSD?: number
-    totalTokens?: number
-    inputTokens?: number
-    outputTokens?: number
-    cacheCreationTokens?: number
-    cacheReadTokens?: number
-    calls?: number
-    requestCount?: number
-    isFallback?: boolean
-  }>
+  modelBreakdowns?: Array<CcusageCodexModel>
+}
+
+type CcusageCodexModel = {
+  model?: string
+  modelName?: string
+  totalCost?: number
+  costUSD?: number
+  totalTokens?: number
+  inputTokens?: number
+  outputTokens?: number
+  cachedInputTokens?: number
+  cacheCreationTokens?: number
+  cacheReadTokens?: number
+  reasoningOutputTokens?: number
+  calls?: number
+  requestCount?: number
+  isFallback?: boolean
 }
 
 type CodexJsonLine = {
@@ -254,23 +259,19 @@ function getCcusageCommands() {
   }
 
   for (const localBinary of getLocalCcusageBinaries()) {
-    if (existsSync(/*turbopackIgnore: true*/ localBinary)) {
-      commands.push({
-        command: localBinary,
-        args: ["daily", "--json"],
-        label: "local ccusage-codex",
-      })
-    }
+    commands.push({
+      command: localBinary,
+      args: ["daily", "--json"],
+      label: "local ccusage-codex",
+    })
   }
 
   for (const globalBinary of getGlobalNpmCcusageBinaries()) {
-    if (existsSync(/*turbopackIgnore: true*/ globalBinary)) {
-      commands.push({
-        command: globalBinary,
-        args: ["daily", "--json"],
-        label: "global ccusage-codex",
-      })
-    }
+    commands.push({
+      command: globalBinary,
+      args: ["daily", "--json"],
+      label: "global ccusage-codex",
+    })
   }
 
   commands.push({
@@ -422,6 +423,7 @@ function getCcusageTotalTokens(day: CcusageCodexDay) {
     toNumber(day.totalTokens) ||
     toNumber(day.inputTokens) +
       toNumber(day.outputTokens) +
+      toNumber(day.cachedInputTokens) +
       toNumber(day.cacheCreationTokens) +
       toNumber(day.cacheReadTokens)
   )
@@ -458,6 +460,79 @@ function getCcusageDays(payload: unknown) {
   return []
 }
 
+function getCcusageDate(value: string) {
+  const isoDate = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T12:00:00.000Z`)
+    : new Date(value)
+
+  if (Number.isNaN(isoDate.getTime())) {
+    return null
+  }
+
+  return new Date(
+    Date.UTC(
+      isoDate.getFullYear(),
+      isoDate.getMonth(),
+      isoDate.getDate(),
+      12,
+      0,
+      0,
+      0
+    )
+  )
+}
+
+function getCcusageModelBreakdowns(day: CcusageCodexDay) {
+  if (Array.isArray(day.modelBreakdowns)) {
+    return day.modelBreakdowns.map((breakdown) => ({
+      model: breakdown.model ?? breakdown.modelName ?? "codex-estimate",
+      breakdown,
+    }))
+  }
+
+  if (day.models && !Array.isArray(day.models)) {
+    return Object.entries(day.models).map(([model, breakdown]) => ({
+      model,
+      breakdown,
+    }))
+  }
+
+  return []
+}
+
+function getCcusageModelTokens(model: CcusageCodexModel) {
+  return (
+    toNumber(model.totalTokens) ||
+    toNumber(model.inputTokens) +
+      toNumber(model.outputTokens) +
+      toNumber(model.reasoningOutputTokens)
+  )
+}
+
+function getCcusageModelCost(model: string, breakdown: CcusageCodexModel) {
+  const explicitCost = breakdown.costUSD ?? breakdown.totalCost
+
+  if (explicitCost !== undefined) {
+    return toNumber(explicitCost)
+  }
+
+  const cachedInputTokens =
+    toNumber(breakdown.cachedInputTokens) + toNumber(breakdown.cacheReadTokens)
+  const uncachedInputTokens = Math.max(
+    0,
+    toNumber(breakdown.inputTokens) - cachedInputTokens
+  )
+
+  return (
+    estimateCostUsd(model, {
+      input_tokens: uncachedInputTokens,
+      cached_input_tokens: cachedInputTokens,
+      output_tokens: toNumber(breakdown.outputTokens),
+      reasoning_output_tokens: toNumber(breakdown.reasoningOutputTokens),
+    }) ?? 0
+  )
+}
+
 function toCcusageSamples(payload: unknown): UsageSampleInput[] {
   const samples: UsageSampleInput[] = []
 
@@ -466,25 +541,21 @@ function toCcusageSamples(payload: unknown): UsageSampleInput[] {
       continue
     }
 
-    const date = new Date(`${day.date}T12:00:00.000Z`)
+    const date = getCcusageDate(day.date)
 
-    if (Number.isNaN(date.getTime())) {
+    if (!date) {
       continue
     }
 
-    const modelBreakdowns = Array.isArray(day.modelBreakdowns)
-      ? day.modelBreakdowns
-      : []
+    const modelBreakdowns = getCcusageModelBreakdowns(day)
 
     if (modelBreakdowns.length > 0) {
-      for (const breakdown of modelBreakdowns) {
-        const model = breakdown.model ?? breakdown.modelName ?? "codex-estimate"
-        const tokens =
-          toNumber(breakdown.totalTokens) ||
-          toNumber(breakdown.inputTokens) +
-            toNumber(breakdown.outputTokens) +
-            toNumber(breakdown.cacheCreationTokens) +
-            toNumber(breakdown.cacheReadTokens)
+      for (const { model, breakdown } of modelBreakdowns) {
+        if (breakdown.isFallback) {
+          continue
+        }
+
+        const tokens = getCcusageModelTokens(breakdown)
 
         if (tokens <= 0) {
           continue
@@ -494,18 +565,26 @@ function toCcusageSamples(payload: unknown): UsageSampleInput[] {
           externalId: `ccusage-codex:${day.date}:${model}`,
           date,
           calls: toNumber(breakdown.calls) || toNumber(breakdown.requestCount),
-          cost: toNumber(breakdown.costUSD ?? breakdown.totalCost),
+          cost: getCcusageModelCost(model, breakdown),
           inputTokens:
-            toNumber(breakdown.inputTokens) + toNumber(breakdown.cacheReadTokens),
-          outputTokens: toNumber(breakdown.outputTokens),
+            toNumber(breakdown.inputTokens) +
+            toNumber(breakdown.cachedInputTokens) +
+            toNumber(breakdown.cacheReadTokens),
+          outputTokens:
+            toNumber(breakdown.outputTokens) +
+            toNumber(breakdown.reasoningOutputTokens),
           tokens,
           model,
           metadata: {
             analyzer: "ccusage-codex",
             costSource: "estimated",
             isFallback: breakdown.isFallback ?? false,
+            fallbackPolicy: "skipped",
             cacheCreationTokens: toNumber(breakdown.cacheCreationTokens),
-            cacheReadTokens: toNumber(breakdown.cacheReadTokens),
+            cacheReadTokens:
+              toNumber(breakdown.cachedInputTokens) +
+              toNumber(breakdown.cacheReadTokens),
+            reasoningOutputTokens: toNumber(breakdown.reasoningOutputTokens),
           },
         })
       }
@@ -524,15 +603,22 @@ function toCcusageSamples(payload: unknown): UsageSampleInput[] {
       date,
       calls: getCcusageCalls(day),
       cost: toNumber(day.costUSD ?? day.totalCost),
-      inputTokens: toNumber(day.inputTokens) + toNumber(day.cacheReadTokens),
+      inputTokens:
+        toNumber(day.inputTokens) +
+        toNumber(day.cachedInputTokens) +
+        toNumber(day.cacheReadTokens),
       outputTokens: toNumber(day.outputTokens),
       tokens,
-      model: (day.modelsUsed ?? day.models ?? []).join(", ") || "codex-estimate",
+      model:
+        (day.modelsUsed ?? (Array.isArray(day.models) ? day.models : [])).join(
+          ", "
+        ) || "codex-estimate",
       metadata: {
         analyzer: "ccusage-codex",
         costSource: "estimated",
         cacheCreationTokens: toNumber(day.cacheCreationTokens),
-        cacheReadTokens: toNumber(day.cacheReadTokens),
+        cacheReadTokens:
+          toNumber(day.cachedInputTokens) + toNumber(day.cacheReadTokens),
       },
     })
   }
@@ -688,6 +774,7 @@ async function importCodexUsageFromCcusage(sourcePath: string) {
           LOG_LEVEL: process.env.LOG_LEVEL ?? "0",
         },
         maxBuffer: 20 * 1024 * 1024,
+        shell: process.platform === "win32",
         windowsHide: true,
         timeout: 30_000,
       })
