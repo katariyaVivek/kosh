@@ -10,10 +10,11 @@ async function syncTriggeredAlerts() {
     include: {
       apiKey: {
         include: {
-          usageLogs: {
+          usageDailyRollups: {
             select: {
               calls: true,
               cost: true,
+              totalTokens: true,
             },
           },
         },
@@ -34,7 +35,7 @@ async function syncTriggeredAlerts() {
 
   await Promise.all(
     alerts.map(async (alert) => {
-      const usageLogs = alert.apiKey?.usageLogs ?? []
+      const usageLogs = alert.apiKey?.usageDailyRollups ?? []
       const sourceRollups = alert.usageSource?.usageDailyRollups ?? []
       const totalCalls =
         usageLogs.reduce((sum, log) => sum + log.calls, 0) +
@@ -42,10 +43,12 @@ async function syncTriggeredAlerts() {
       const totalCost =
         usageLogs.reduce((sum, log) => sum + log.cost, 0) +
         sourceRollups.reduce((sum, rollup) => sum + rollup.cost, 0)
-      const totalTokens = sourceRollups.reduce(
-        (sum, rollup) => sum + (rollup.totalTokens ?? 0),
-        0
-      )
+      const totalTokens =
+        usageLogs.reduce((sum, log) => sum + (log.totalTokens ?? 0), 0) +
+        sourceRollups.reduce(
+          (sum, rollup) => sum + (rollup.totalTokens ?? 0),
+          0
+        )
 
       const hasTriggered =
         alert.type === "cost"

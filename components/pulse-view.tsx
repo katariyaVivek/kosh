@@ -34,7 +34,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { ConnectorInfo } from "@/lib/connectors/types"
-import { formatEnvironment, KoshKey, KoshUsageLog } from "@/lib/kosh"
+import { formatEnvironment, KoshKey } from "@/lib/kosh"
 import {
   getPlatformColor,
   getPlatformColorWithAlpha,
@@ -43,7 +43,13 @@ import {
 import { cn } from "@/lib/utils"
 
 type PulseKey = KoshKey & {
-  usageLogs: KoshUsageLog[]
+  usageDailyRollups: Array<{
+    id: string
+    calls: number
+    cost: number
+    totalTokens: number | null
+    rollupDate: string | Date
+  }>
 }
 
 type PulseUsageSource = {
@@ -81,6 +87,18 @@ function formatCurrency(value: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value)
+}
+
+function sumRecentCalls(
+  rollups: Array<{
+    calls: number
+    rollupDate: string | Date
+  }>,
+  since: Date
+) {
+  return rollups
+    .filter((rollup) => new Date(rollup.rollupDate) >= since)
+    .reduce((sum, rollup) => sum + rollup.calls, 0)
 }
 
 export function PulseView({
@@ -163,6 +181,17 @@ export function PulseView({
   }, [])
 
   const stats = useMemo(() => {
+    const keyLogs = keys.flatMap((key) =>
+      key.usageDailyRollups.map((rollup) => ({
+        id: rollup.id,
+        apiKeyId: key.id,
+        calls: rollup.calls,
+        cost: rollup.cost,
+        tokens: rollup.totalTokens,
+        date: rollup.rollupDate,
+        label: key.name,
+      }))
+    )
     const sourceLogs = usageSources.flatMap((source) =>
       source.usageDailyRollups.map((rollup) => ({
         id: rollup.id,
@@ -171,22 +200,26 @@ export function PulseView({
         cost: rollup.cost,
         tokens: rollup.totalTokens,
         date: rollup.rollupDate,
+        label: source.provider ?? source.name,
       }))
     )
-    const allLogs = [...keys.flatMap((key) => key.usageLogs), ...sourceLogs]
+    const allLogs = [...keyLogs, ...sourceLogs]
     const todayLogs = allLogs.filter((log) => isToday(new Date(log.date)))
     const sevenDaysAgo = subDays(new Date(), 7)
 
     const totalSpendToday = todayLogs.reduce((sum, log) => sum + log.cost, 0)
     const totalCallsToday = todayLogs.reduce((sum, log) => sum + log.calls, 0)
 
-    const mostActive = keys
-      .map((key) => ({
+    const mostActive = [
+      ...keys.map((key) => ({
         name: key.name,
-        calls: key.usageLogs
-          .filter((log) => new Date(log.date) >= sevenDaysAgo)
-          .reduce((sum, log) => sum + log.calls, 0),
-      }))
+        calls: sumRecentCalls(key.usageDailyRollups, sevenDaysAgo),
+      })),
+      ...usageSources.map((source) => ({
+        name: source.provider ?? source.name,
+        calls: sumRecentCalls(source.usageDailyRollups, sevenDaysAgo),
+      })),
+    ]
       .sort((left, right) => right.calls - left.calls)[0]
 
     return {
@@ -219,7 +252,9 @@ export function PulseView({
     })
   }, [effectivePlatform, keys, normalizedSearch])
 
-  const buildSparklineData = (logs: KoshUsageLog[]) => {
+  const buildSparklineData = (
+    logs: Array<{ calls: number; rollupDate: string | Date }>
+  ) => {
     const today = startOfDay(new Date())
     const days = eachDayOfInterval({
       start: subDays(today, 6),
@@ -227,7 +262,7 @@ export function PulseView({
     })
 
     const callsByDay = logs.reduce<Record<string, number>>((acc, log) => {
-      const dayKey = format(startOfDay(new Date(log.date)), "yyyy-MM-dd")
+      const dayKey = format(startOfDay(new Date(log.rollupDate)), "yyyy-MM-dd")
       acc[dayKey] = (acc[dayKey] ?? 0) + log.calls
       return acc
     }, {})
@@ -419,7 +454,7 @@ export function PulseView({
             Pulse
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Usage and cost across all your keys.
+            Usage and cost across your keys and local AI sources.
           </p>
         </div>
       </div>
@@ -473,7 +508,7 @@ export function PulseView({
             </div>
             <div className="space-y-0.5">
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                Most active key
+                Most active source
               </p>
               <p className="truncate text-lg font-medium tracking-tight text-foreground/85">
                 {stats.mostActiveKey}
@@ -496,16 +531,7 @@ export function PulseView({
               0
             )
             const latestLog = logs[0]
-            const sparklineData = buildSparklineData(
-              logs.map((log) => ({
-                id: log.id,
-                apiKeyId: source.id,
-                calls: log.calls,
-                cost: log.cost,
-                tokens: log.totalTokens,
-                date: log.rollupDate,
-              }))
-            )
+            const sparklineData = buildSparklineData(logs)
             const hasSparklineData = sparklineData.some((point) => point.calls > 0)
 
             return (
@@ -642,10 +668,10 @@ export function PulseView({
           const capability = connectorInfo[key.platform] ?? connectorInfo.Other
           const canSync = capability?.canSync ?? false
           const canValidate = capability?.canValidate ?? false
-          const totalCalls = key.usageLogs.reduce((sum, log) => sum + log.calls, 0)
-          const totalCost = key.usageLogs.reduce((sum, log) => sum + log.cost, 0)
-          const latestLog = key.usageLogs[0]
-          const sparklineData = buildSparklineData(key.usageLogs)
+          const totalCalls = key.usageDailyRollups.reduce((sum, log) => sum + log.calls, 0)
+          const totalCost = key.usageDailyRollups.reduce((sum, log) => sum + log.cost, 0)
+          const latestLog = key.usageDailyRollups[0]
+          const sparklineData = buildSparklineData(key.usageDailyRollups)
           const hasSparklineData = sparklineData.some((point) => point.calls > 0)
           const isSyncing = syncingKeyId === key.id
           const isFreePlan = freePlanFlags[key.id] === true
@@ -653,7 +679,7 @@ export function PulseView({
           const syncMessage = syncFeedback[key.id]
           const validationMessage = validationFeedback[key.id]
           const isValidationFading = fadingValidationIds[key.id]
-          const showMetricCards = key.usageLogs.length > 0
+          const showMetricCards = key.usageDailyRollups.length > 0
 
           return (
             <Card
@@ -698,7 +724,7 @@ export function PulseView({
                     <p className="mt-1 text-[11px] text-muted-foreground/70">
                       {latestLog
                         ? `Last logged ${formatDistanceToNow(
-                            new Date(latestLog.date)
+                            new Date(latestLog.rollupDate)
                           )} ago`
                         : "No data yet"}
                     </p>
