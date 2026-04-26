@@ -8,12 +8,22 @@ export default async function PulsePage() {
   const [keys, usageSources] = await Promise.all([
     db.apiKey.findMany({
       orderBy: { createdAt: "desc" },
-      include: { usageLogs: { orderBy: { date: "desc" } } },
+      include: {
+        usageDailyRollups: {
+          orderBy: { rollupDate: "desc" },
+          take: 30,
+        },
+      },
     }),
     db.usageSource.findMany({
       where: { sourceType: "local_tool" },
       orderBy: { updatedAt: "desc" },
-      include: { usageDailyRollups: { orderBy: { rollupDate: "desc" } } },
+      include: {
+        usageDailyRollups: {
+          orderBy: { rollupDate: "desc" },
+          take: 30,
+        },
+      },
     }),
   ])
 
