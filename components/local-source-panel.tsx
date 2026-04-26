@@ -12,6 +12,14 @@ type LocalUsageStat = {
   tokens: number
   cost: number
   calls: number
+  quota?: {
+    status: string
+    primaryRemainingPercent: number | null
+    primaryResetsAt: string | null
+    secondaryRemainingPercent: number | null
+    secondaryResetsAt: string | null
+    fetchedAt: string
+  }
 }
 
 type LocalSourceDetails = {
@@ -153,6 +161,10 @@ function formatReset(value: string) {
     month: "short",
     day: "numeric",
   }).format(date)
+}
+
+function formatQuotaPercent(value: number | null | undefined) {
+  return value === null || value === undefined ? "Unknown" : `${value.toFixed(0)}%`
 }
 
 function toDateKey(date: Date) {
@@ -326,35 +338,62 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                 </h2>
               </div>
               <div className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] text-muted-foreground">
-                Live import
+                {source.provider === "Codex" && source.quota ? "Quota" : "Live import"}
               </div>
             </div>
-            <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
-              <div>
-                <p className="text-[11px] uppercase text-muted-foreground">
-                  Tokens
-                </p>
-                <p className="mt-1 font-semibold tabular-nums text-foreground">
-                  {compactNumberFormatter.format(source.tokens)}
-                </p>
+            {source.provider === "Codex" && source.quota ? (
+              <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground">5h</p>
+                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                    {formatQuotaPercent(source.quota.primaryRemainingPercent)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground">
+                    Weekly
+                  </p>
+                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                    {formatQuotaPercent(source.quota.secondaryRemainingPercent)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground">
+                    Updated
+                  </p>
+                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                    {formatReset(source.quota.fetchedAt)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] uppercase text-muted-foreground">
-                  Spend
-                </p>
-                <p className="mt-1 font-semibold tabular-nums text-foreground">
-                  {currencyFormatter.format(source.cost)}
-                </p>
+            ) : (
+              <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground">
+                    Tokens
+                  </p>
+                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                    {compactNumberFormatter.format(source.tokens)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground">
+                    Spend
+                  </p>
+                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                    {currencyFormatter.format(source.cost)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground">
+                    Calls
+                  </p>
+                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                    {compactNumberFormatter.format(source.calls)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] uppercase text-muted-foreground">
-                  Calls
-                </p>
-                <p className="mt-1 font-semibold tabular-nums text-foreground">
-                  {compactNumberFormatter.format(source.calls)}
-                </p>
-              </div>
-            </div>
+            )}
           </button>
         ))}
       </div>
@@ -397,11 +436,21 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
               {!isLoading && selectedSource ? (
                 <div className="space-y-5">
                   <div className="grid grid-cols-3 gap-3">
-                    {[
-                      ["Tokens", selectedSource.tokens],
-                      ["Spend", selectedSource.cost],
-                      ["Calls", selectedSource.calls],
-                    ].map(([label, value]) => (
+                    {(selectedSource.provider === "Codex" && selectedSource.quota
+                      ? [
+                          ["5h", formatQuotaPercent(selectedSource.quota.primaryRemainingPercent)],
+                          [
+                            "Weekly",
+                            formatQuotaPercent(selectedSource.quota.secondaryRemainingPercent),
+                          ],
+                          ["Updated", formatReset(selectedSource.quota.fetchedAt)],
+                        ]
+                      : [
+                          ["Tokens", compactNumberFormatter.format(selectedSource.tokens)],
+                          ["Spend", currencyFormatter.format(selectedSource.cost)],
+                          ["Calls", compactNumberFormatter.format(selectedSource.calls)],
+                        ]
+                    ).map(([label, value]) => (
                       <div
                         key={label}
                         className="rounded-lg border border-border bg-card p-3"
@@ -410,9 +459,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                           {label}
                         </p>
                         <p className="mt-1 text-lg font-semibold tabular-nums">
-                          {label === "Spend"
-                            ? currencyFormatter.format(Number(value))
-                            : compactNumberFormatter.format(Number(value))}
+                          {value}
                         </p>
                       </div>
                     ))}
