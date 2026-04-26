@@ -111,6 +111,16 @@ Kosh can import local AI usage from:
 - `~/.codex/**/*.jsonl`
 - `~/.claude/projects/**/*.jsonl`
 
+For Codex token and spend estimates, Kosh first looks for a locally installed `ccusage-codex` binary from `@ccusage/codex`. If present, Kosh imports its JSON daily report and labels the values as estimated. If it is not installed, Kosh falls back to native Codex log parsing and only imports rows with explicit cost data, avoiding inflated generic `model: "codex"` counters.
+
+To enable the optional Codex analyzer, install it yourself and restart Kosh:
+
+```bash
+npm install -g @ccusage/codex
+```
+
+You can also point Kosh at a specific binary with `KOSH_CODEX_USAGE_COMMAND`.
+
 For Codex quota, Kosh has a separate quota refresh path. It can use local Codex auth or CLI status. OAuth quota refresh sends the local Codex bearer token to OpenAI to read rate-limit windows; the UI labels this explicitly before use.
 
 ## API Routes

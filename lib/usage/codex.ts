@@ -1,12 +1,46 @@
 import { createHash } from "crypto"
+import { execFile } from "child_process"
 import { existsSync } from "fs"
 import { readdir, readFile } from "fs/promises"
 import path from "path"
+import { promisify } from "util"
 
 import { db } from "@/lib/db"
 import { ingestUsage, type UsageSampleInput } from "@/lib/usage/ingest"
 
 type TokenUsageShape = Record<string, unknown>
+
+type CcusageCodexDay = {
+  date?: string
+  totalCost?: number
+  costUSD?: number
+  totalTokens?: number
+  inputTokens?: number
+  outputTokens?: number
+  cacheCreationTokens?: number
+  cacheReadTokens?: number
+  calls?: number
+  requestCount?: number
+  requests?: number
+  entries?: number
+  sessionCount?: number
+  models?: string[]
+  modelsUsed?: string[]
+  modelBreakdowns?: Array<{
+    model?: string
+    modelName?: string
+    totalCost?: number
+    costUSD?: number
+    totalTokens?: number
+    inputTokens?: number
+    outputTokens?: number
+    cacheCreationTokens?: number
+    cacheReadTokens?: number
+    calls?: number
+    requestCount?: number
+    isFallback?: boolean
+  }>
+}
 
 type CodexJsonLine = {
   id?: string
@@ -49,9 +83,13 @@ export type CodexImportResult = {
   entriesScanned: number
   entriesImported: number
   sourcePath: string
+  analyzer: "ccusage-codex" | "native"
+  analyzerStatus?: "ok" | "missing" | "failed"
+  analyzerError?: string
 }
 
 const DEFAULT_CODEX_DIR = ".codex"
+const execFileAsync = promisify(execFile)
 
 const MODEL_BUCKET_PRICING_PER_MILLION = {
   gpt55: {
@@ -167,6 +205,46 @@ function getDefaultCodexPath() {
   }
 
   return path.join(/*turbopackIgnore: true*/ home, DEFAULT_CODEX_DIR)
+}
+
+function getLocalCcusageBinary() {
+  return path.join(
+    /*turbopackIgnore: true*/ process.cwd(),
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "ccusage-codex.cmd" : "ccusage-codex"
+  )
+}
+
+function getCcusageCommands() {
+  const configuredCommand = process.env.KOSH_CODEX_USAGE_COMMAND
+  const commands: Array<{ command: string; args: string[]; label: string }> = []
+
+  if (configuredCommand) {
+    commands.push({
+      command: configuredCommand,
+      args: ["daily", "--json"],
+      label: "KOSH_CODEX_USAGE_COMMAND",
+    })
+  }
+
+  const localBinary = getLocalCcusageBinary()
+
+  if (existsSync(/*turbopackIgnore: true*/ localBinary)) {
+    commands.push({
+      command: localBinary,
+      args: ["daily", "--json"],
+      label: "local ccusage-codex",
+    })
+  }
+
+  commands.push({
+    command: process.platform === "win32" ? "ccusage-codex.cmd" : "ccusage-codex",
+    args: ["daily", "--json"],
+    label: "PATH ccusage-codex",
+  })
+
+  return commands
 }
 
 function resolveImportPath(inputPath?: string | null) {
@@ -302,6 +380,129 @@ function getTotalTokens(usage: TokenUsageShape) {
     getOutputTokens(usage) +
     getReasoningOutputTokens(usage)
   )
+}
+
+function getCcusageTotalTokens(day: CcusageCodexDay) {
+  return (
+    toNumber(day.totalTokens) ||
+    toNumber(day.inputTokens) +
+      toNumber(day.outputTokens) +
+      toNumber(day.cacheCreationTokens) +
+      toNumber(day.cacheReadTokens)
+  )
+}
+
+function getCcusageCalls(day: CcusageCodexDay) {
+  return (
+    toNumber(day.calls) ||
+    toNumber(day.requestCount) ||
+    toNumber(day.requests) ||
+    toNumber(day.entries) ||
+    toNumber(day.sessionCount)
+  )
+}
+
+function getCcusageDays(payload: unknown) {
+  if (!payload || typeof payload !== "object") {
+    return []
+  }
+
+  const report = payload as {
+    daily?: CcusageCodexDay[]
+    data?: CcusageCodexDay[]
+  }
+
+  if (Array.isArray(report.daily)) {
+    return report.daily
+  }
+
+  if (Array.isArray(report.data)) {
+    return report.data
+  }
+
+  return []
+}
+
+function toCcusageSamples(payload: unknown): UsageSampleInput[] {
+  const samples: UsageSampleInput[] = []
+
+  for (const day of getCcusageDays(payload)) {
+    if (!day.date) {
+      continue
+    }
+
+    const date = new Date(`${day.date}T12:00:00.000Z`)
+
+    if (Number.isNaN(date.getTime())) {
+      continue
+    }
+
+    const modelBreakdowns = Array.isArray(day.modelBreakdowns)
+      ? day.modelBreakdowns
+      : []
+
+    if (modelBreakdowns.length > 0) {
+      for (const breakdown of modelBreakdowns) {
+        const model = breakdown.model ?? breakdown.modelName ?? "codex-estimate"
+        const tokens =
+          toNumber(breakdown.totalTokens) ||
+          toNumber(breakdown.inputTokens) +
+            toNumber(breakdown.outputTokens) +
+            toNumber(breakdown.cacheCreationTokens) +
+            toNumber(breakdown.cacheReadTokens)
+
+        if (tokens <= 0) {
+          continue
+        }
+
+        samples.push({
+          externalId: `ccusage-codex:${day.date}:${model}`,
+          date,
+          calls: toNumber(breakdown.calls) || toNumber(breakdown.requestCount),
+          cost: toNumber(breakdown.costUSD ?? breakdown.totalCost),
+          inputTokens:
+            toNumber(breakdown.inputTokens) + toNumber(breakdown.cacheReadTokens),
+          outputTokens: toNumber(breakdown.outputTokens),
+          tokens,
+          model,
+          metadata: {
+            analyzer: "ccusage-codex",
+            costSource: "estimated",
+            isFallback: breakdown.isFallback ?? false,
+            cacheCreationTokens: toNumber(breakdown.cacheCreationTokens),
+            cacheReadTokens: toNumber(breakdown.cacheReadTokens),
+          },
+        })
+      }
+
+      continue
+    }
+
+    const tokens = getCcusageTotalTokens(day)
+
+    if (tokens <= 0) {
+      continue
+    }
+
+    samples.push({
+      externalId: `ccusage-codex:${day.date}`,
+      date,
+      calls: getCcusageCalls(day),
+      cost: toNumber(day.costUSD ?? day.totalCost),
+      inputTokens: toNumber(day.inputTokens) + toNumber(day.cacheReadTokens),
+      outputTokens: toNumber(day.outputTokens),
+      tokens,
+      model: (day.modelsUsed ?? day.models ?? []).join(", ") || "codex-estimate",
+      metadata: {
+        analyzer: "ccusage-codex",
+        costSource: "estimated",
+        cacheCreationTokens: toNumber(day.cacheCreationTokens),
+        cacheReadTokens: toNumber(day.cacheReadTokens),
+      },
+    })
+  }
+
+  return samples
 }
 
 function getPricingForModel(model: string) {
@@ -440,6 +641,86 @@ async function clearExistingCodexUsage() {
   ])
 }
 
+async function importCodexUsageFromCcusage(sourcePath: string) {
+  let lastError: string | null = null
+
+  for (const candidate of getCcusageCommands()) {
+    try {
+      const { stdout } = await execFileAsync(candidate.command, candidate.args, {
+        env: {
+          ...process.env,
+          CODEX_HOME: sourcePath,
+          LOG_LEVEL: process.env.LOG_LEVEL ?? "0",
+        },
+        maxBuffer: 20 * 1024 * 1024,
+        windowsHide: true,
+        timeout: 30_000,
+      })
+      const payload = JSON.parse(stdout)
+      const samples = toCcusageSamples(payload)
+
+      await clearExistingCodexUsage()
+
+      await ingestUsage({
+        source: {
+          name: "Codex estimated usage",
+          sourceType: "local_tool",
+          provider: "Codex",
+          collectionMethod: "local_logs",
+          accuracy: "estimated",
+          privacyNote:
+            "Reads Codex usage estimates from a locally installed ccusage-codex analyzer. Prompts and responses are not stored.",
+          metadata: {
+            analyzer: "ccusage-codex",
+            analyzerCommand: candidate.label,
+            sourcePathHash: createHash("sha256").update(sourcePath).digest("hex"),
+            filesScanned: 0,
+            entriesScanned: samples.length,
+            entriesImported: samples.length,
+            lastImportedAt: new Date().toISOString(),
+            costSource: "estimated",
+          },
+        },
+        samples,
+      })
+
+      return {
+        filesScanned: 0,
+        entriesScanned: samples.length,
+        entriesImported: samples.length,
+        sourcePath,
+        analyzer: "ccusage-codex",
+        analyzerStatus: "ok",
+      } satisfies CodexImportResult
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "ENOENT"
+      ) {
+        lastError = `${candidate.label} was not found`
+        continue
+      }
+
+      lastError =
+        error instanceof Error
+          ? `${candidate.label}: ${error.message}`
+          : `${candidate.label}: ccusage-codex failed`
+    }
+  }
+
+  return {
+    filesScanned: 0,
+    entriesScanned: 0,
+    entriesImported: 0,
+    sourcePath,
+    analyzer: "ccusage-codex",
+    analyzerStatus: lastError?.includes("not found") ? "missing" : "failed",
+    analyzerError: lastError ?? "ccusage-codex was not found",
+  } satisfies CodexImportResult
+}
+
 async function parseCodexJsonlFile(filePath: string) {
   const content = await readFile(/*turbopackIgnore: true*/ filePath, "utf8")
   const samples: UsageSampleInput[] = []
@@ -476,6 +757,12 @@ export async function importCodexUsage(inputPath?: string | null) {
     throw new Error("Codex usage directory was not found")
   }
 
+  const ccusageResult = await importCodexUsageFromCcusage(sourcePath)
+
+  if (ccusageResult.analyzerStatus === "ok") {
+    return ccusageResult
+  }
+
   const files = await findJsonlFiles(sourcePath)
   let entriesScanned = 0
   const samples: UsageSampleInput[] = []
@@ -503,6 +790,9 @@ export async function importCodexUsage(inputPath?: string | null) {
         entriesScanned,
         entriesImported: samples.length,
         lastImportedAt: new Date().toISOString(),
+        analyzer: "native",
+        analyzerStatus: ccusageResult.analyzerStatus,
+        analyzerError: ccusageResult.analyzerError,
       },
     },
     samples,
@@ -513,5 +803,8 @@ export async function importCodexUsage(inputPath?: string | null) {
     entriesScanned,
     entriesImported: samples.length,
     sourcePath,
+    analyzer: "native",
+    analyzerStatus: ccusageResult.analyzerStatus,
+    analyzerError: ccusageResult.analyzerError,
   } satisfies CodexImportResult
 }
