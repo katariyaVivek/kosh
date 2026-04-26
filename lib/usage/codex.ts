@@ -52,27 +52,107 @@ export type CodexImportResult = {
 
 const DEFAULT_CODEX_DIR = ".codex"
 
-const MODEL_PRICING_PER_MILLION = [
-  {
-    match: "codex-mini",
+const MODEL_BUCKET_PRICING_PER_MILLION = {
+  gpt55: {
+    input: 5,
+    cachedInput: 0.5,
+    output: 30,
+    reasoningOutput: 30,
+  },
+  gpt54: {
+    input: 2.5,
+    cachedInput: 0.25,
+    output: 15,
+    reasoningOutput: 15,
+  },
+  gpt54Mini: {
+    input: 0.75,
+    cachedInput: 0.075,
+    output: 4.5,
+    reasoningOutput: 4.5,
+  },
+  gpt54Nano: {
+    input: 0.2,
+    cachedInput: 0.02,
+    output: 1.25,
+    reasoningOutput: 1.25,
+  },
+  gpt53Codex: {
+    input: 1.75,
+    cachedInput: 0.175,
+    output: 14,
+    reasoningOutput: 14,
+  },
+  gpt52Codex: {
+    input: 1.75,
+    cachedInput: 0.175,
+    output: 14,
+    reasoningOutput: 14,
+  },
+  gpt52: {
+    input: 1.75,
+    cachedInput: 0.175,
+    output: 14,
+    reasoningOutput: 14,
+  },
+  gpt51CodexMax: {
+    input: 1.25,
+    cachedInput: 0.125,
+    output: 10,
+    reasoningOutput: 10,
+  },
+  gpt51Codex: {
+    input: 1.25,
+    cachedInput: 0.125,
+    output: 10,
+    reasoningOutput: 10,
+  },
+  gpt51CodexMini: {
+    input: 0.25,
+    cachedInput: 0.025,
+    output: 2,
+    reasoningOutput: 2,
+  },
+  codexMiniLatest: {
     input: 1.5,
-    output: 6,
     cachedInput: 0.375,
+    output: 6,
     reasoningOutput: 6,
   },
-  {
-    match: "gpt-5",
-    input: 1.5,
-    output: 6,
-    cachedInput: 0.375,
-    reasoningOutput: 6,
-  },
+} as const
+
+const MODEL_MATCHERS: Array<{
+  match: string
+  bucket: keyof typeof MODEL_BUCKET_PRICING_PER_MILLION
+}> = [
+  { match: "gpt-5-5", bucket: "gpt55" },
+  { match: "gpt-5-4-nano", bucket: "gpt54Nano" },
+  { match: "gpt-5-4-mini", bucket: "gpt54Mini" },
+  { match: "gpt-5-4", bucket: "gpt54" },
+  { match: "gpt-5-3-codex", bucket: "gpt53Codex" },
+  { match: "gpt-5-2-codex", bucket: "gpt52Codex" },
+  { match: "gpt-5-2", bucket: "gpt52" },
+  { match: "gpt-5-1-codex-max", bucket: "gpt51CodexMax" },
+  { match: "gpt-5-1-codex-mini", bucket: "gpt51CodexMini" },
+  { match: "gpt-5-1-codex", bucket: "gpt51Codex" },
+  { match: "gpt-5-codex", bucket: "gpt51Codex" },
+  { match: "codex-mini-latest", bucket: "codexMiniLatest" },
+  { match: "codex-mini", bucket: "codexMiniLatest" },
+  { match: "codex", bucket: "gpt51CodexMax" },
 ]
 
 function toNumber(value: unknown) {
   const parsed = Number(value ?? 0)
 
   return Number.isFinite(parsed) ? parsed : 0
+}
+
+function normalizeModelName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
 }
 
 function getDefaultCodexPath() {
@@ -220,12 +300,25 @@ function getTotalTokens(usage: TokenUsageShape) {
   )
 }
 
+function getPricingForModel(model: string) {
+  const normalizedModel = normalizeModelName(model)
+
+  return MODEL_MATCHERS.find(
+    (entry) =>
+      normalizedModel === entry.match ||
+      normalizedModel.startsWith(`${entry.match}-`) ||
+      normalizedModel.startsWith(`${entry.match}_`)
+  )
+}
+
 function estimateCostUsd(model: string, usage: TokenUsageShape) {
-  const normalizedModel = model.toLowerCase()
-  const pricing =
-    MODEL_PRICING_PER_MILLION.find((entry) =>
-      normalizedModel.includes(entry.match)
-    ) ?? MODEL_PRICING_PER_MILLION[0]
+  const pricingMatch = getPricingForModel(model)
+
+  if (!pricingMatch) {
+    return null
+  }
+
+  const pricing = MODEL_BUCKET_PRICING_PER_MILLION[pricingMatch.bucket]
 
   return (
     (getInputTokens(usage) * pricing.input +
@@ -270,26 +363,30 @@ function toUsageSample(
   const inputTokens = getInputTokens(usage) + getCachedInputTokens(usage)
   const outputTokens = getOutputTokens(usage) + getReasoningOutputTokens(usage)
   const explicitCost = entry.costUSD ?? entry.cost_usd
-  const costSource =
+  const estimatedCost =
     explicitCost === undefined || explicitCost === null
-      ? "estimated"
-      : "explicit"
+      ? estimateCostUsd(model, usage)
+      : null
+  const costSource =
+    explicitCost !== undefined && explicitCost !== null
+      ? "explicit"
+      : estimatedCost !== null
+        ? "estimated"
+        : "unknown"
   const totalUsage = entry.payload?.info?.total_token_usage ?? null
 
   return {
     externalId: getExternalId(filePath, lineNumber, entry),
     date: timestamp,
     calls: 1,
-    cost:
-      explicitCost === undefined || explicitCost === null
-        ? estimateCostUsd(model, usage)
-        : explicitCost,
+    cost: explicitCost ?? estimatedCost ?? 0,
     inputTokens,
     outputTokens,
     tokens: totalTokens,
     model,
     metadata: {
       costSource,
+      pricingModel: getPricingForModel(model)?.match ?? null,
       cachedInputTokens: getCachedInputTokens(usage),
       reasoningOutputTokens: getReasoningOutputTokens(usage),
       eventType: entry.type ?? entry.payload?.type ?? null,

@@ -32,7 +32,11 @@ function parseCostSource(metadataJson: string | null) {
       costSource?: string
     }
 
-    if (metadata.costSource === "explicit" || metadata.costSource === "estimated") {
+    if (
+      metadata.costSource === "explicit" ||
+      metadata.costSource === "estimated" ||
+      metadata.costSource === "unknown"
+    ) {
       return metadata.costSource
     }
   } catch {
