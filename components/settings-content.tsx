@@ -372,7 +372,7 @@ export function SettingsContent() {
         </div>
       </div>
 
-      <Card className="rounded-xl border border-red-200 bg-red-50/30 dark:border-red-500/40 dark:bg-red-500/10">
+      <Card className="rounded-xl border border-red-200 bg-red-50/30 dark:border-red-900/50 dark:bg-red-950/30">
         <CardContent className="space-y-4 px-6 py-6">
           <div className="mb-5 border-b border-border pb-3 text-base font-semibold text-destructive">
             Danger Zone

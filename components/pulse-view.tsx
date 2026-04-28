@@ -464,7 +464,7 @@ export function PulseView({
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <Card
           size="sm"
-          className="bg-card/80 shadow-sm ring-border/80 backdrop-blur"
+          className="rounded-lg border border-border/80 bg-card/82 shadow-sm"
         >
           <CardContent className="flex items-center gap-3 py-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -483,7 +483,7 @@ export function PulseView({
 
         <Card
           size="sm"
-          className="bg-card/80 shadow-sm ring-border/80 backdrop-blur"
+          className="rounded-lg border border-border/80 bg-card/82 shadow-sm"
         >
           <CardContent className="flex items-center gap-3 py-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -502,7 +502,7 @@ export function PulseView({
 
         <Card
           size="sm"
-          className="bg-card/80 shadow-sm ring-border/80 backdrop-blur"
+          className="rounded-lg border border-border/80 bg-card/82 shadow-sm"
         >
           <CardContent className="flex items-center gap-3 py-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
