@@ -61,7 +61,7 @@ export function DashboardChart() {
   ] as const
 
   return (
-    <div className="w-full overflow-hidden rounded-lg border border-border/80 bg-card/82 shadow-[0_18px_60px_hsl(222_34%_6%_/_0.08)]">
+    <div className="w-full overflow-hidden rounded-lg border border-border/80 bg-card/82 shadow-sm">
       <div className="flex flex-col gap-4 border-b border-border/70 bg-[linear-gradient(180deg,hsl(188_95%_43%_/_0.07),transparent)] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-foreground">Spend telemetry</p>

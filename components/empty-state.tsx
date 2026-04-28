@@ -9,7 +9,7 @@ export function EmptyState() {
 
   return (
     <div className="flex flex-1 items-center justify-center py-8">
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center overflow-hidden rounded-lg border border-border/80 bg-card/82 text-center shadow-[0_18px_60px_hsl(222_34%_6%_/_0.08)]">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center overflow-hidden rounded-lg border border-border/80 bg-card/82 text-center shadow-sm">
         <div className="h-px w-full bg-primary/70" />
         <div className="flex w-full flex-col items-center px-6 py-10">
           <EmptyStateIllustration variant="treasury" className="mb-4" />
