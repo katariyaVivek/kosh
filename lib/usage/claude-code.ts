@@ -4,6 +4,13 @@ import { readdir, readFile } from "fs/promises"
 import path from "path"
 
 import { ingestUsage, type UsageSampleInput } from "@/lib/usage/ingest"
+import {
+  estimateCostUsd,
+  findPricing,
+  loadPricing,
+  normalizeModelName,
+  type ModelPricing,
+} from "@/lib/usage/pricing"
 
 type ClaudeUsageShape = {
   input_tokens?: number
@@ -41,100 +48,7 @@ export type ClaudeCodeImportResult = {
 const DEFAULT_CLAUDE_DIR = ".claude"
 const DEFAULT_PROJECTS_DIR = "projects"
 
-const MODEL_PRICING_PER_MILLION = [
-  {
-    match: "opus-4-7",
-    input: 5,
-    output: 25,
-    cacheCreate: 6.25,
-    cacheRead: 0.5,
-  },
-  {
-    match: "opus-4-6",
-    input: 5,
-    output: 25,
-    cacheCreate: 6.25,
-    cacheRead: 0.5,
-  },
-  {
-    match: "opus-4-5",
-    input: 5,
-    output: 25,
-    cacheCreate: 6.25,
-    cacheRead: 0.5,
-  },
-  {
-    match: "opus-4-1",
-    input: 15,
-    output: 75,
-    cacheCreate: 18.75,
-    cacheRead: 1.5,
-  },
-  {
-    match: "opus-4",
-    input: 15,
-    output: 75,
-    cacheCreate: 18.75,
-    cacheRead: 1.5,
-  },
-  {
-    match: "sonnet-4-6",
-    input: 3,
-    output: 15,
-    cacheCreate: 3.75,
-    cacheRead: 0.3,
-  },
-  {
-    match: "sonnet-4-5",
-    input: 3,
-    output: 15,
-    cacheCreate: 3.75,
-    cacheRead: 0.3,
-  },
-  {
-    match: "sonnet-4",
-    input: 3,
-    output: 15,
-    cacheCreate: 3.75,
-    cacheRead: 0.3,
-  },
-  {
-    match: "sonnet-3-7",
-    input: 3,
-    output: 15,
-    cacheCreate: 3.75,
-    cacheRead: 0.3,
-  },
-  {
-    match: "haiku-4-5",
-    input: 1,
-    output: 5,
-    cacheCreate: 1.25,
-    cacheRead: 0.1,
-  },
-  {
-    match: "haiku-3-5",
-    input: 0.8,
-    output: 4,
-    cacheCreate: 1,
-    cacheRead: 0.08,
-  },
-  {
-    match: "haiku-3",
-    input: 0.25,
-    output: 1.25,
-    cacheCreate: 0.3,
-    cacheRead: 0.03,
-  },
-]
 
-function normalizeModelName(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-}
 
 function toNumber(value: unknown) {
   const parsed = Number(value ?? 0)
@@ -230,24 +144,64 @@ function getOutputTokens(usage: ClaudeUsageShape) {
   return toNumber(usage.output_tokens ?? usage.outputTokens)
 }
 
-function estimateCostUsd(model: string, usage: ClaudeUsageShape) {
-  const normalizedModel = normalizeModelName(model)
-  const pricing =
-    MODEL_PRICING_PER_MILLION.find((entry) =>
-      normalizedModel.includes(entry.match)
-    )
+function toUsageSample(
+  filePath: string,
+  lineNumber: number,
+  entry: ClaudeJsonLine,
+  pricing: Map<string, ModelPricing>,
+): UsageSampleInput | null {
+  const usage = getUsage(entry)
+  const timestamp = getTimestamp(entry)
 
-  if (!pricing) {
+  if (!usage || !timestamp) {
     return null
   }
 
-  return (
-    (getInputTokens(usage) * pricing.input +
-      getOutputTokens(usage) * pricing.output +
-      getCacheCreationTokens(usage) * pricing.cacheCreate +
-      getCacheReadTokens(usage) * pricing.cacheRead) /
-    1_000_000
-  )
+  const inputTokens = getInputTokens(usage) + getCacheCreationTokens(usage) + getCacheReadTokens(usage)
+  const outputTokens = getOutputTokens(usage)
+  const totalTokens = inputTokens + outputTokens
+  const model = getModel(entry)
+  const hasExplicitCost = typeof entry.costUSD === "number" && entry.costUSD > 0
+  const estimatedCost = hasExplicitCost
+    ? null
+    : estimateCostUsd(pricing, model, {
+        input: getInputTokens(usage),
+        output: getOutputTokens(usage),
+        cacheWrite: getCacheCreationTokens(usage),
+        cacheRead: getCacheReadTokens(usage),
+      })
+  const pricingModel = findPricing(pricing, model)
+  const costSource = hasExplicitCost
+    ? "explicit"
+    : estimatedCost !== null
+      ? "estimated"
+      : "unknown"
+
+  if (totalTokens <= 0) {
+    return null
+  }
+
+  return {
+    externalId: getExternalId(filePath, lineNumber, entry),
+    date: timestamp,
+    calls: 1,
+    cost:
+      typeof entry.costUSD === "number" && entry.costUSD > 0
+        ? entry.costUSD
+        : (estimatedCost ?? 0),
+    inputTokens,
+    outputTokens,
+    tokens: totalTokens,
+    model,
+    metadata: {
+      costSource,
+      pricingModel: pricingModel !== null ? normalizeModelName(model) : null,
+      cacheCreationTokens: getCacheCreationTokens(usage),
+      cacheReadTokens: getCacheReadTokens(usage),
+      fileHash: createHash("sha256").update(filePath).digest("hex"),
+      lineNumber,
+    },
+  }
 }
 
 function getExternalId(filePath: string, lineNumber: number, entry: ClaudeJsonLine) {
@@ -263,62 +217,7 @@ function getExternalId(filePath: string, lineNumber: number, entry: ClaudeJsonLi
     .digest("hex")}`
 }
 
-function toUsageSample(
-  filePath: string,
-  lineNumber: number,
-  entry: ClaudeJsonLine
-): UsageSampleInput | null {
-  const usage = getUsage(entry)
-  const timestamp = getTimestamp(entry)
-
-  if (!usage || !timestamp) {
-    return null
-  }
-
-  const inputTokens = getInputTokens(usage) + getCacheCreationTokens(usage) + getCacheReadTokens(usage)
-  const outputTokens = getOutputTokens(usage)
-  const totalTokens = inputTokens + outputTokens
-  const explicitCost = entry.costUSD
-  const model = getModel(entry)
-  const estimatedCost =
-    explicitCost === undefined || explicitCost === null
-      ? estimateCostUsd(model, usage)
-      : null
-  const pricingModel = MODEL_PRICING_PER_MILLION.find((entry) =>
-    normalizeModelName(model).includes(entry.match)
-  )
-  const costSource =
-    explicitCost !== undefined && explicitCost !== null
-      ? "explicit"
-      : estimatedCost !== null
-        ? "estimated"
-        : "unknown"
-
-  if (totalTokens <= 0) {
-    return null
-  }
-
-  return {
-    externalId: getExternalId(filePath, lineNumber, entry),
-    date: timestamp,
-    calls: 1,
-    cost: explicitCost ?? estimatedCost ?? 0,
-    inputTokens,
-    outputTokens,
-    tokens: totalTokens,
-    model,
-    metadata: {
-      costSource,
-      pricingModel: pricingModel?.match ?? null,
-      cacheCreationTokens: getCacheCreationTokens(usage),
-      cacheReadTokens: getCacheReadTokens(usage),
-      fileHash: createHash("sha256").update(filePath).digest("hex"),
-      lineNumber,
-    },
-  }
-}
-
-async function parseClaudeJsonlFile(filePath: string) {
+async function parseClaudeJsonlFile(filePath: string, pricing: Map<string, ModelPricing>) {
   const content = await readFile(/*turbopackIgnore: true*/ filePath, "utf8")
   const samples: UsageSampleInput[] = []
   let entriesScanned = 0
@@ -334,7 +233,7 @@ async function parseClaudeJsonlFile(filePath: string) {
 
     try {
       const entry = JSON.parse(trimmedLine) as ClaudeJsonLine
-      const sample = toUsageSample(filePath, index + 1, entry)
+      const sample = toUsageSample(filePath, index + 1, entry, pricing)
 
       if (sample) {
         samples.push(sample)
@@ -357,9 +256,10 @@ export async function importClaudeCodeUsage(inputPath?: string | null) {
   const files = await findJsonlFiles(sourcePath)
   let entriesScanned = 0
   const samples: UsageSampleInput[] = []
+  const pricing = await loadPricing()
 
   for (const file of files) {
-    const result = await parseClaudeJsonlFile(file)
+    const result = await parseClaudeJsonlFile(file, pricing)
     entriesScanned += result.entriesScanned
     samples.push(...result.samples)
   }
