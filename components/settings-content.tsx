@@ -11,7 +11,7 @@ import {
   Upload,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/theme-provider"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -184,7 +184,7 @@ export function SettingsContent() {
           <button
             key={option.value}
             type="button"
-            onClick={() => setTheme(option.value)}
+            onClick={() => setTheme(option.value as "light" | "dark" | "system")}
             className={cn(
               "flex flex-col gap-3 rounded-2xl border px-5 py-4 text-left transition-shadow",
               isActive

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server"
 
 import { importClaudeCodeUsage } from "@/lib/usage/claude-code"
 import { importCodexUsage } from "@/lib/usage/codex"
+import { importOpenCodeUsage } from "@/lib/usage/opencode"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 async function refreshSource(
-  provider: "Claude Code" | "Codex",
+  provider: "Claude Code" | "Codex" | "OpenCode",
   importer: () => Promise<{
     filesScanned: number
     entriesScanned: number
@@ -32,13 +33,14 @@ async function refreshSource(
 }
 
 export async function POST() {
-  const [claudeCode, codex] = await Promise.all([
+  const [claudeCode, codex, opencode] = await Promise.all([
     refreshSource("Claude Code", () => importClaudeCodeUsage()),
     refreshSource("Codex", () => importCodexUsage()),
+    refreshSource("OpenCode", () => importOpenCodeUsage()),
   ])
 
   return NextResponse.json({
     success: true,
-    sources: [claudeCode, codex],
+    sources: [claudeCode, codex, opencode],
   })
 }

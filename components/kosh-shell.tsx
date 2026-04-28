@@ -7,7 +7,6 @@ import {
   useContext,
   useState,
 } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -21,6 +20,7 @@ import {
 } from "lucide-react"
 
 import { AddAlertDialog } from "@/components/add-alert-dialog"
+import { BrandMark } from "@/components/brand-mark"
 import { AddKeyDialog } from "@/components/add-key-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -90,14 +90,7 @@ export function KoshShell({
             <div className="flex h-full flex-col gap-7 p-5">
               <div className="flex flex-row items-center gap-3 border-b border-slate-200 pb-5 dark:border-sidebar-border">
                 <div className="relative h-10 w-10 shrink-0">
-                  <Image
-                    src="/branding/kosh-mark.png"
-                    alt="Kosh logo"
-                    fill
-                    sizes="40px"
-                    className="object-contain"
-                    priority
-                  />
+                  <BrandMark fill sizes="40px" priority />
                 </div>
                 <div className="flex flex-col leading-tight">
                   <p className="text-sm font-semibold text-sidebar-foreground">

@@ -49,6 +49,7 @@ type PulseKey = KoshKey & {
     cost: number
     totalTokens: number | null
     rollupDate: string | Date
+    updatedAt: string | Date
   }>
 }
 
@@ -64,6 +65,7 @@ type PulseUsageSource = {
     cost: number
     totalTokens: number | null
     rollupDate: string | Date
+    updatedAt: string | Date
   }>
 }
 
@@ -537,7 +539,7 @@ export function PulseView({
             return (
               <Card
                 key={source.id}
-                className="border-l-4 border-l-primary bg-card/85 shadow-sm ring-border/80"
+                className="overflow-hidden border-l-4 border-l-primary bg-card/85 shadow-sm ring-border/80"
               >
                 <CardContent className="flex flex-col gap-4 px-5 py-4">
                   <div className="flex items-start justify-between gap-3">
@@ -589,12 +591,12 @@ export function PulseView({
 
                   {latestLog ? (
                     <p className="text-[11px] text-muted-foreground">
-                      Last logged {formatDistanceToNow(new Date(latestLog.rollupDate))} ago
+                      Last logged {formatDistanceToNow(new Date(latestLog.updatedAt))} ago
                     </p>
                   ) : null}
 
                   {mounted && hasSparklineData ? (
-                    <div className="h-12 w-full min-w-0 overflow-visible rounded-xl border border-border/60 bg-muted/20 px-2 py-1">
+                    <div className="h-12 w-full min-w-0 overflow-hidden rounded-xl border border-border/60 bg-muted/20 px-2 py-1 pointer-events-none">
                       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <AreaChart data={sparklineData}>
                           <Area
@@ -724,7 +726,7 @@ export function PulseView({
                     <p className="mt-1 text-[11px] text-muted-foreground/70">
                       {latestLog
                         ? `Last logged ${formatDistanceToNow(
-                            new Date(latestLog.rollupDate)
+                            new Date(latestLog.updatedAt)
                           )} ago`
                         : "No data yet"}
                     </p>
@@ -787,7 +789,7 @@ export function PulseView({
                   )}
 
                   {mounted && hasSparklineData ? (
-                    <div className="h-12 w-full min-w-0 overflow-visible rounded-xl border border-border/60 bg-muted/20 px-2 py-1">
+                    <div className="h-12 w-full min-w-0 overflow-hidden rounded-xl border border-border/60 bg-muted/20 px-2 py-1 pointer-events-none">
                       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <AreaChart
                           data={sparklineData}

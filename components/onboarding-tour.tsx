@@ -226,9 +226,9 @@ export function OnboardingTour() {
                 {currentStep.title}
               </h3>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <div className="text-sm text-muted-foreground leading-relaxed">
               {currentStep.description}
-            </p>
+            </div>
           </div>
           <button
             type="button"

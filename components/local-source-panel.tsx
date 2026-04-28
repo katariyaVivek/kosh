@@ -329,8 +329,6 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
             className="rounded-lg border border-border/80 bg-card/82 p-5 text-left shadow-sm transition hover:border-primary/30 hover:bg-accent/40"
           >
             {(() => {
-              const hasCodexEstimate =
-                source.provider === "Codex" && source.tokens > 0
               const codexQuota =
                 source.provider === "Codex" ? source.quota : undefined
 
@@ -346,60 +344,9 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                 </h2>
               </div>
               <div className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] text-muted-foreground">
-                {hasCodexEstimate ? "Estimated" : codexQuota ? "Quota" : "Live import"}
+                {codexQuota ? "Quota" : "Live import"}
               </div>
             </div>
-            {hasCodexEstimate ? (
-              <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
-                <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">
-                    Tokens
-                  </p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
-                    {compactNumberFormatter.format(source.tokens)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">
-                    Est. spend
-                  </p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
-                    {currencyFormatter.format(source.cost)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">5h</p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
-                    {formatQuotaPercent(source.quota?.primaryRemainingPercent)}
-                  </p>
-                </div>
-              </div>
-            ) : codexQuota ? (
-              <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
-                <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">5h</p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
-                    {formatQuotaPercent(codexQuota.primaryRemainingPercent)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">
-                    Weekly
-                  </p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
-                    {formatQuotaPercent(codexQuota.secondaryRemainingPercent)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">
-                    Updated
-                  </p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
-                    {formatReset(codexQuota.fetchedAt)}
-                  </p>
-                </div>
-              </div>
-            ) : (
               <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
                 <div>
                   <p className="text-[11px] uppercase text-muted-foreground">
@@ -426,7 +373,6 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                   </p>
                 </div>
               </div>
-            )}
                 </>
               )
             })()}
