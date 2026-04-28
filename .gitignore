@@ -61,3 +61,6 @@ prisma/*.sqlite-journal
 
 # local screenshot/test databases
 .tmp/
+
+# playwright browser testing
+.playwright-mcp/
