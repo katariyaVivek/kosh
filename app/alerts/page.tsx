@@ -6,7 +6,10 @@ export const dynamic = "force-dynamic"
 
 async function syncTriggeredAlerts() {
   const alerts = await db.alert.findMany({
-    where: { triggered: false },
+    where: {
+      triggered: false,
+      OR: [{ resetsAt: null }, { resetsAt: { lte: new Date() } }],
+    },
     include: {
       apiKey: {
         include: {

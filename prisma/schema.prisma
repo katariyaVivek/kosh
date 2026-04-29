@@ -149,15 +149,16 @@ model UsageQuotaSnapshot {
 }
 
 model Alert {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   apiKeyId   String?
-  apiKey     ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  apiKey     ApiKey?   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
   usageSourceId String?
   usageSource UsageSource? @relation(fields: [usageSourceId], references: [id], onDelete: Cascade)
   type       String
   threshold  Float
-  triggered  Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  triggered  Boolean   @default(false)
+  resetsAt   DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([apiKeyId])
   @@index([usageSourceId])
