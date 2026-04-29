@@ -67,16 +67,20 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
   const router = useRouter()
   const { openSidebarAction } = useKoshShell()
   const [pendingId, setPendingId] = useState<string | null>(null)
+  const [localResets, setLocalResets] = useState<Set<string>>(new Set())
+
+  const triggered = (alert: KoshAlertWithKey) =>
+    localResets.has(alert.id) ? false : alert.triggered
 
   const stats = useMemo(() => {
     return {
       totalAlerts: alerts.length,
-      activeAlerts: alerts.filter((alert) => alert.triggered).length,
+      activeAlerts: alerts.filter((a) => triggered(a)).length,
       keysMonitored: new Set(
         alerts.map((alert) => alert.apiKeyId ?? alert.usageSourceId)
       ).size,
     }
-  }, [alerts])
+  }, [alerts, localResets])
 
   const handleReset = async (id: string) => {
     setPendingId(id)
@@ -87,7 +91,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
 
     if (!res.ok) return
 
-    router.refresh()
+    setLocalResets((prev) => new Set(prev).add(id))
   }
 
   const handleDelete = async (id: string) => {
@@ -239,12 +243,12 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
                     </Badge>
                     <Badge
                       className={
-                        alert.triggered
+                        triggered(alert)
                           ? "bg-destructive/10 text-destructive hover:bg-destructive/10"
-                          : "bg-[color:var(--platform-openai-soft)] text-[color:var(--platform-openai)] hover:bg-[color:var(--platform-openai-soft)]"
+                          : "bg-accent text-accent-foreground hover:bg-accent/80"
                       }
                     >
-                      {alert.triggered ? "Triggered" : "Watching"}
+                      {triggered(alert) ? "Triggered" : "Watching"}
                     </Badge>
                   </div>
 
@@ -253,7 +257,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
                   </p>
 
                   <div className="flex items-center gap-2 self-end">
-                    {alert.triggered ? (
+                    {triggered(alert) ? (
                       <Button
                         type="button"
                         variant="outline"
