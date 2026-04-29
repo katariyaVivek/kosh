@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { addDays } from "date-fns"
 
 import { db } from "@/lib/db"
 
@@ -19,7 +20,7 @@ export async function PATCH(
 
   const alert = await db.alert.update({
     where: { id },
-    data: { triggered: false },
+    data: { triggered: false, resetsAt: addDays(new Date(), 1) },
   })
 
   return NextResponse.json(alert)
