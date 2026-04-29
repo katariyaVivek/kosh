@@ -101,14 +101,14 @@ export function LockScreen() {
             className={cn(
               "mb-6 flex size-20 items-center justify-center rounded-full border transition-colors duration-300",
               success
-                ? "border-emerald-500/30 bg-emerald-500/10"
+                ? "border-success/30 bg-success-soft"
                 : error
                 ? "border-destructive/30 bg-destructive/10"
                 : "border-primary/20 bg-primary/10"
             )}
           >
             {success ? (
-              <Check className="size-10 text-emerald-500 animate-in zoom-in duration-300" />
+              <Check className="size-10 text-success animate-in zoom-in duration-300" />
             ) : (
               <div className={error ? "animate-shake" : ""}>
                 {error ? (
@@ -168,7 +168,7 @@ export function LockScreen() {
               className={cn(
                 "h-11 w-full rounded-xl font-medium transition-all duration-300",
                 success
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                  ? "bg-success text-white hover:bg-success/90"
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               )}
             >

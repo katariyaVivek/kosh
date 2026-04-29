@@ -132,7 +132,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
       <div className="mb-8 space-y-2">
         <Badge
           variant="outline"
-          className="h-6 rounded-full border-border/80 bg-background/70 px-2.5 text-[11px] font-medium text-muted-foreground"
+          className="h-6 rounded-full border-border/80 bg-background/70 px-2.5 text-micro font-medium text-muted-foreground"
         >
           Alerts
         </Badge>
@@ -162,7 +162,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
                 <Icon className="size-4" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                   {label}
                 </p>
                 <p className="text-2xl font-medium tracking-tight text-foreground/85">
@@ -210,7 +210,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
                       </p>
                       <Badge
                         variant="outline"
-                        className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
+                        className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-micro font-medium text-muted-foreground"
                       >
                         {target.environment}
                       </Badge>
@@ -233,7 +233,7 @@ export function AlertsView({ alerts }: { alerts: KoshAlertWithKey[] }) {
                   <div className="flex flex-wrap items-center gap-2 md:justify-end">
                     <Badge
                       variant="outline"
-                      className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
+                      className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-micro font-medium text-muted-foreground"
                     >
                       {formatAlertType(alert.type)}
                     </Badge>

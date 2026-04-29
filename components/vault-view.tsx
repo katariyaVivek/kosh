@@ -293,7 +293,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
       <div className="mb-8 space-y-2">
         <Badge
           variant="outline"
-          className="h-6 rounded-full border-border/80 bg-background/70 px-2.5 text-[11px] font-medium text-muted-foreground"
+          className="h-6 rounded-full border-border/80 bg-background/70 px-2.5 text-micro font-medium text-muted-foreground"
         >
           Vault
         </Badge>
@@ -319,7 +319,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                 <Icon className="size-4" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                   {label}
                 </p>
                 <p className="text-2xl font-medium tracking-tight text-foreground/85">
@@ -334,8 +334,8 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
       <div className="mb-6 h-px bg-border/70" />
 
       {selectedIds.size > 0 && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-3">
-          <span className="flex-1 text-sm font-medium text-indigo-400">
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-info/30 bg-info-soft px-4 py-3">
+          <span className="flex-1 text-sm font-medium text-info">
             {selectedIds.size} key{selectedIds.size > 1 ? "s" : ""} selected
           </span>
           <Button
@@ -450,7 +450,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                       return (
                         <Badge
                           variant="outline"
-                          className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                          className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-micro font-medium text-destructive"
                         >
                           Expired
                         </Badge>
@@ -461,7 +461,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                       return (
                         <Badge
                           variant="outline"
-                          className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                          className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-micro font-medium text-destructive"
                         >
                           Expiring soon
                         </Badge>
@@ -472,7 +472,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                       return (
                         <Badge
                           variant="outline"
-                          className="h-5 rounded-full border border-amber-400/70 bg-amber-400/10 px-2.5 text-[11px] font-medium text-amber-400"
+                          className="h-5 rounded-full border border-warning/70 bg-warning-soft px-2.5 text-micro font-medium text-warning"
                         >
                           Expires in {daysUntilExpiry} days
                         </Badge>
@@ -489,7 +489,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                 ? (
                     <Badge
                       variant="outline"
-                      className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                      className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-micro font-medium text-destructive"
                     >
                       Overdue by {Math.abs(rotation.daysUntilDue ?? 0)} days
                     </Badge>
@@ -498,7 +498,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                   ? (
                       <Badge
                         variant="outline"
-                        className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-[11px] font-medium text-destructive"
+                        className="h-5 rounded-full border border-destructive/70 bg-destructive/10 px-2.5 text-micro font-medium text-destructive"
                       >
                         Rotate today
                       </Badge>
@@ -507,7 +507,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                     ? (
                         <Badge
                           variant="outline"
-                          className="h-5 rounded-full border border-amber-400/70 bg-amber-400/10 px-2.5 text-[11px] font-medium text-amber-400"
+                          className="h-5 rounded-full border border-warning/70 bg-warning-soft px-2.5 text-micro font-medium text-warning"
                         >
                           Rotate in {rotation.daysUntilDue} days
                         </Badge>
@@ -528,7 +528,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                       className={cn(
                         "flex size-5 shrink-0 items-center justify-center rounded border transition-colors",
                         selectedIds.has(key.id)
-                          ? "border-indigo-500 bg-indigo-500 text-white"
+                          ? "border-info bg-info text-white"
                           : "border-border/70 bg-muted/30 text-transparent hover:border-border"
                       )}
                       aria-label={selectedIds.has(key.id) ? "Deselect key" : "Select key"}
@@ -567,7 +567,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                           </div>
                         <Badge
                           variant="outline"
-                          className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
+                          className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-micro font-medium text-muted-foreground"
                         >
                           {formatEnvironment(key.environment)}
                         </Badge>
@@ -581,7 +581,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                           </>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-[11px] text-muted-foreground/70">
+                      <p className="mt-1 text-micro text-muted-foreground/70">
                         Added {formatDistanceToNow(new Date(key.createdAt))} ago
                       </p>
                     </div>
@@ -610,7 +610,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                       <div className="relative">
                         <span
                           className={cn(
-                            "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border/80 bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground shadow-sm transition-all duration-200",
+                            "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border/80 bg-popover px-2 py-1 text-micro font-medium text-popover-foreground shadow-sm transition-all duration-200",
                             copiedId === key.id
                               ? "translate-y-0 opacity-100"
                               : "translate-y-1 opacity-0"
@@ -649,7 +649,7 @@ export function VaultView({ keys }: { keys: KoshKey[] }) {
                             disabled={rotationLoadingId === key.id}
                             className={cn(
                               "rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground",
-                              isRotationDue && "text-amber-500 hover:text-amber-500"
+                              isRotationDue && "text-warning hover:text-warning"
                             )}
                             aria-label="Mark rotated"
                             title="Mark rotated now"

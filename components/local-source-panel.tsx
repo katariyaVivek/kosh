@@ -336,20 +336,20 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                 <>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-medium uppercase text-muted-foreground">
+                <p className="text-micro font-medium uppercase text-muted-foreground">
                   Local Source
                 </p>
                 <h2 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
                   {source.provider}
                 </h2>
               </div>
-              <div className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] text-muted-foreground">
+              <div className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-micro text-muted-foreground">
                 {codexQuota ? "Quota" : "Live import"}
               </div>
             </div>
               <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
                 <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">
+                  <p className="text-micro uppercase text-muted-foreground">
                     Tokens
                   </p>
                   <p className="mt-1 font-semibold tabular-nums text-foreground">
@@ -357,7 +357,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">
+                  <p className="text-micro uppercase text-muted-foreground">
                     Spend
                   </p>
                   <p className="mt-1 font-semibold tabular-nums text-foreground">
@@ -365,7 +365,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase text-muted-foreground">
+                  <p className="text-micro uppercase text-muted-foreground">
                     Calls
                   </p>
                   <p className="mt-1 font-semibold tabular-nums text-foreground">
@@ -391,7 +391,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
           <aside className="relative flex h-full w-full max-w-xl flex-col border-l border-border bg-background shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
               <div>
-                <p className="text-[11px] font-medium uppercase text-muted-foreground">
+                <p className="text-micro font-medium uppercase text-muted-foreground">
                   Local usage source
                 </p>
                 <h2 className="mt-1 text-xl font-semibold tracking-tight">
@@ -448,7 +448,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                         key={label}
                         className="rounded-lg border border-border bg-card p-3"
                       >
-                        <p className="text-[11px] uppercase text-muted-foreground">
+                        <p className="text-micro uppercase text-muted-foreground">
                           {label}
                         </p>
                         <p className="mt-1 text-lg font-semibold tabular-nums">
@@ -531,7 +531,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                           <p className="mt-1 text-xs text-muted-foreground">
                             Uses local Codex auth or CLI status for live limits.
                           </p>
-                          <p className="mt-1 text-[11px] text-muted-foreground/80">
+                          <p className="mt-1 text-micro text-muted-foreground/80">
                             OAuth refresh sends your Codex bearer token to OpenAI.
                           </p>
                         </div>
@@ -577,7 +577,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                                   key={label as string}
                                   className="rounded-lg border border-border/70 bg-muted/20 p-3"
                                 >
-                                  <p className="text-[11px] uppercase text-muted-foreground">
+                                  <p className="text-micro uppercase text-muted-foreground">
                                     {label as string}
                                   </p>
                                   <p className="mt-1 text-lg font-semibold tabular-nums">

@@ -85,10 +85,10 @@ export function KoshShell({
         <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside
             data-tour="sidebar"
-            className="border-b border-slate-200 bg-white text-slate-950 shadow-sm lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0 dark:border-sidebar-border dark:bg-sidebar dark:text-sidebar-foreground dark:shadow-[0_24px_80px_hsl(222_34%_6%_/_0.22)]"
+            className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0 dark:shadow-[0_24px_80px_hsl(222_34%_6%_/_0.22)]"
           >
             <div className="flex h-full flex-col gap-7 p-5">
-              <div className="flex flex-row items-center gap-3 border-b border-slate-200 pb-5 dark:border-sidebar-border">
+              <div className="flex flex-row items-center gap-3 border-b border-sidebar-border pb-5">
                 <div className="relative h-10 w-10 shrink-0">
                   <BrandMark fill sizes="40px" priority />
                 </div>
@@ -96,7 +96,7 @@ export function KoshShell({
                   <p className="text-sm font-semibold text-sidebar-foreground">
                     Kosh
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-sidebar-foreground/55">
+                  <p className="text-xs text-sidebar-foreground/55">
                     API treasury
                   </p>
                 </div>
@@ -121,8 +121,8 @@ export function KoshShell({
                       className={cn(
                         "group flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition-all",
                         isActive
-                          ? "border-primary/35 bg-primary/10 text-slate-950 shadow-sm dark:text-sidebar-foreground dark:bg-primary/12 dark:shadow-[0_0_24px_hsl(188_95%_43%_/_0.1)]"
-                          : "border-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-100/80 hover:text-slate-950 dark:text-sidebar-foreground/60 dark:hover:border-sidebar-border dark:hover:bg-white/[0.04] dark:hover:text-sidebar-foreground"
+                          ? "border-primary/35 bg-primary/10 text-foreground shadow-sm dark:text-sidebar-foreground dark:bg-primary/12 dark:shadow-[0_0_24px_hsl(188_95%_43%_/_0.1)]"
+                          : "border-transparent text-sidebar-foreground/60 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground"
                       )}
                     >
                       {labelContent}
@@ -154,12 +154,12 @@ export function KoshShell({
               </Button>
 
               <div className="mt-auto space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => lock()}
-                  className="w-full justify-center gap-2 border-slate-200 bg-white text-slate-950 hover:bg-slate-100 dark:border-sidebar-border dark:bg-white/[0.03] dark:text-sidebar-foreground dark:hover:bg-white/[0.07]"
-                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => lock()}
+                    className="w-full justify-center gap-2 border-sidebar-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
+                  >
                   <Lock className="size-4" />
                   Lock Now
                 </Button>
@@ -169,7 +169,7 @@ export function KoshShell({
           </aside>
 
           <main className="relative overflow-hidden">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_64rem_26rem_at_42%_-8rem,hsl(188_95%_43%_/_0.1),transparent_72%),linear-gradient(to_bottom,hsl(214_33%_88%_/_0.34),transparent)] dark:bg-[radial-gradient(ellipse_64rem_26rem_at_42%_-8rem,hsl(188_95%_43%_/_0.14),transparent_72%),linear-gradient(to_bottom,hsl(220_24%_14%_/_0.08),transparent)]" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(ellipse_70rem_28rem_at_42%_-10rem,hsl(188_95%_43%_/_0.12),transparent_74%),radial-gradient(ellipse_40rem_20rem_at_80%_0%,hsl(188_95%_43%_/_0.04),transparent_64%),linear-gradient(to_bottom,hsl(214_33%_88%_/_0.28),transparent_60%)] dark:bg-[radial-gradient(ellipse_70rem_28rem_at_42%_-10rem,hsl(188_95%_43%_/_0.14),transparent_74%),radial-gradient(ellipse_40rem_20rem_at_80%_0%,hsl(188_95%_43%_/_0.06),transparent_64%),linear-gradient(to_bottom,hsl(220_24%_14%_/_0.08),transparent_60%)]" />
             <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-8 sm:py-10">
               {children}
             </div>

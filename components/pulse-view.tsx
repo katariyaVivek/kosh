@@ -447,7 +447,7 @@ export function PulseView({
       <div className="mb-8 space-y-2">
         <Badge
           variant="outline"
-          className="h-6 rounded-full border-border/80 bg-background/70 px-2.5 text-[11px] font-medium text-muted-foreground"
+          className="h-6 rounded-full border-border/80 bg-background/70 px-2.5 text-micro font-medium text-muted-foreground"
         >
           Pulse
         </Badge>
@@ -471,7 +471,7 @@ export function PulseView({
               <DollarSign className="size-4" />
             </div>
             <div className="space-y-0.5">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                 Total spend today
               </p>
               <p className="text-2xl font-medium tracking-tight text-foreground/85">
@@ -490,7 +490,7 @@ export function PulseView({
               <Layers className="size-4" />
             </div>
             <div className="space-y-0.5">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                 Total API calls today
               </p>
               <p className="text-2xl font-medium tracking-tight text-foreground/85">
@@ -509,7 +509,7 @@ export function PulseView({
               <FolderOpen className="size-4" />
             </div>
             <div className="space-y-0.5">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                 Most active source
               </p>
               <p className="truncate text-lg font-medium tracking-tight text-foreground/85">
@@ -544,7 +544,7 @@ export function PulseView({
                 <CardContent className="flex flex-col gap-4 px-5 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                         Local source
                       </p>
                       <h2 className="mt-1 text-base font-semibold tracking-tight">
@@ -556,7 +556,7 @@ export function PulseView({
                     </div>
                     <Badge
                       variant="outline"
-                      className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
+                      className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-micro font-medium text-muted-foreground"
                     >
                       Live
                     </Badge>
@@ -564,7 +564,7 @@ export function PulseView({
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <p className="text-[11px] uppercase text-muted-foreground">
+                      <p className="text-micro uppercase text-muted-foreground">
                         Tokens
                       </p>
                       <p className="mt-1 font-semibold tabular-nums">
@@ -572,7 +572,7 @@ export function PulseView({
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] uppercase text-muted-foreground">
+                      <p className="text-micro uppercase text-muted-foreground">
                         Spend
                       </p>
                       <p className="mt-1 font-semibold tabular-nums">
@@ -580,7 +580,7 @@ export function PulseView({
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] uppercase text-muted-foreground">
+                      <p className="text-micro uppercase text-muted-foreground">
                         Calls
                       </p>
                       <p className="mt-1 font-semibold tabular-nums">
@@ -590,7 +590,7 @@ export function PulseView({
                   </div>
 
                   {latestLog ? (
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-micro text-muted-foreground">
                       Last logged {formatDistanceToNow(new Date(latestLog.updatedAt))} ago
                     </p>
                   ) : null}
@@ -709,7 +709,7 @@ export function PulseView({
                       </p>
                       <Badge
                         variant="outline"
-                        className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-[11px] font-medium text-muted-foreground"
+                        className="h-6 rounded-full border-border/80 bg-muted/60 px-2.5 text-micro font-medium text-muted-foreground"
                       >
                         {formatEnvironment(key.environment)}
                       </Badge>
@@ -723,7 +723,7 @@ export function PulseView({
                         </>
                       ) : null}
                     </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground/70">
+                    <p className="mt-1 text-micro text-muted-foreground/70">
                       {latestLog
                         ? `Last logged ${formatDistanceToNow(
                             new Date(latestLog.updatedAt)
@@ -731,21 +731,21 @@ export function PulseView({
                         : "No data yet"}
                     </p>
                     {syncMessage ? (
-                      <p className="mt-1 text-[11px] text-muted-foreground/60">
+                      <p className="mt-1 text-micro text-muted-foreground/60">
                         {syncMessage}
                       </p>
                     ) : null}
                     {syncError ? (
-                      <p className="mt-1 text-[11px] text-destructive/80">
+                      <p className="mt-1 text-micro text-destructive/80">
                         {syncError}
                       </p>
                     ) : null}
                     {validationMessage ? (
                       <p
                         className={cn(
-                          "mt-1 text-[11px] transition-opacity duration-500",
+                          "mt-1 text-micro transition-opacity duration-500",
                           validationMessage.tone === "success"
-                            ? "text-emerald-600 dark:text-emerald-400"
+                            ? "text-success"
                             : "text-destructive/80",
                           isValidationFading ? "opacity-0" : "opacity-100"
                         )}
@@ -764,7 +764,7 @@ export function PulseView({
                   ) : (
                     <div className="grid w-full gap-3 sm:grid-cols-2">
                       <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-2.5">
-                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                        <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                           Total calls
                         </p>
                         <p className="mt-1 text-lg font-medium tracking-tight text-foreground/90">
@@ -772,7 +772,7 @@ export function PulseView({
                         </p>
                       </div>
                       <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-2.5">
-                        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                        <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                           {isFreePlan ? "Free plan" : "Total cost"}
                         </p>
                         {isFreePlan ? (
@@ -865,13 +865,13 @@ export function PulseView({
                   ) : null}
 
                   {key.platform === "NVIDIA NIM" ? (
-                    <p className="w-full text-[11px] text-muted-foreground/70 md:text-right">
+                    <p className="w-full text-micro text-muted-foreground/70 md:text-right">
                       NVIDIA NIM doesn&apos;t expose usage data - log manually
                     </p>
                   ) : null}
 
                   {!canSync && !canValidate ? (
-                    <p className="w-full text-[11px] text-muted-foreground/70 md:text-right">
+                    <p className="w-full text-micro text-muted-foreground/70 md:text-right">
                       Manual logging only
                     </p>
                   ) : null}

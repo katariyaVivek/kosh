@@ -241,7 +241,7 @@ export function SettingsContent() {
                     Change
                   </Button>
                 </div>
-                <div className="flex items-start gap-2 rounded-2xl border border-amber-400/50 bg-amber-400/10 px-4 py-3 text-xs text-amber-400">
+                <div className="flex items-start gap-2 rounded-2xl border border-warning/50 bg-warning-soft px-4 py-3 text-xs text-warning">
                   <AlertTriangle className="size-4" />
                   <p>
                     This key encrypts all your API keys. Never share it. Back it
@@ -320,7 +320,7 @@ export function SettingsContent() {
                   Import a previously exported Kosh backup file.
                 </p>
                 {importMessage ? (
-                  <div className="rounded-2xl bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+                  <div className="rounded-2xl bg-success-soft px-3 py-2 text-xs text-success">
                     {importMessage}
                   </div>
                 ) : null}
