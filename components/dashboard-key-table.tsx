@@ -77,9 +77,9 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 })
 
 const ENVIRONMENT_COLORS: Record<string, string> = {
-  production: "bg-emerald-500",
-  development: "bg-amber-400",
-  staging: "bg-slate-500",
+  production: "bg-success",
+  development: "bg-warning",
+  staging: "bg-muted-foreground",
 }
 
 const MASKED_SEGMENT = "••••••"
@@ -431,7 +431,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                     panelRotationStatus?.state === "due_today"
                       ? "text-destructive"
                       : panelRotationStatus?.state === "due_soon"
-                        ? "text-amber-400"
+                        ? "text-warning"
                         : "text-foreground",
                 },
               ]
@@ -447,7 +447,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                     : panelExpiresInDays < 0
                       ? "text-destructive"
                       : panelExpiresInDays <= 30
-                        ? "text-amber-400"
+                        ? "text-warning"
                         : "text-foreground",
               },
             ]
@@ -535,23 +535,23 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                                   : "Active"
                     const statusTone =
                       healthResult?.valid === true
-                        ? "text-emerald-400"
+                        ? "text-success"
                         : healthResult?.valid === false
                           ? "text-destructive"
                           : healthResult?.valid === null
                             ? "text-muted-foreground"
                             : hasRotationAttention
-                              ? "text-amber-500"
+                              ? "text-warning"
                               : "text-muted-foreground"
                     const statusDot =
                       healthResult?.valid === true
-                        ? "bg-emerald-500"
+                        ? "bg-success"
                         : healthResult?.valid === false
                           ? "bg-destructive/70"
                           : healthResult?.valid === null
                             ? "bg-muted-foreground/60"
                             : hasRotationAttention
-                              ? "bg-amber-500"
+                              ? "bg-warning"
                               : "bg-muted-foreground/60"
 
                     return (
@@ -622,7 +622,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                         <div className="relative inline-flex" onClick={(event) => event.stopPropagation()}>
                           <span
                             className={cn(
-                              "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border/80 bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground shadow-sm transition-all duration-200",
+                              "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border/80 bg-popover px-2 py-1 text-micro font-medium text-popover-foreground shadow-sm transition-all duration-200",
                               copiedId === key.id
                                 ? "translate-y-0 opacity-100"
                                 : "translate-y-1 opacity-0"
@@ -725,7 +725,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 <div className="relative">
                   <span
                     className={cn(
-                      "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border/80 bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground shadow-sm transition-all duration-200",
+                      "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border/80 bg-popover px-2 py-1 text-micro font-medium text-popover-foreground shadow-sm transition-all duration-200",
                       panelCopied ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
                     )}
                   >
@@ -751,7 +751,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                     key={item.label}
                     className="rounded-lg border border-border bg-muted/40 p-3"
                   >
-                    <p className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">
+                    <p className="mb-3 text-micro uppercase tracking-widest text-muted-foreground">
                       {item.label}
                     </p>
                     <div className="flex items-center gap-2 text-sm font-semibold">
@@ -821,7 +821,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
 
             <div className="grid grid-cols-2 gap-3 px-6">
               <div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+                <p className="text-micro uppercase tracking-[0.3em] text-muted-foreground">
                   Total Calls
                 </p>
                 <p className="mt-2 text-lg font-semibold text-foreground">
@@ -829,7 +829,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 </p>
               </div>
               <div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+                <p className="text-micro uppercase tracking-[0.3em] text-muted-foreground">
                   Accrued Cost
                 </p>
                 <p className="mt-2 text-lg font-semibold text-foreground">

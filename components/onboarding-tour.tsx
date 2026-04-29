@@ -193,7 +193,7 @@ export function OnboardingTour() {
       {/* Highlight box */}
       {highlightRect && (
         <div
-          className="fixed z-[9999] rounded-xl border-2 border-indigo-400/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] pointer-events-none animate-pulse"
+          className="fixed z-[9999] rounded-xl border-2 border-primary/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] pointer-events-none animate-pulse"
           style={{
             top: highlightRect.top - 4,
             left: highlightRect.left - 4,
@@ -219,7 +219,7 @@ export function OnboardingTour() {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
-              <span className="flex size-6 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
+              <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                 {step + 1}
               </span>
               <h3 className="text-sm font-semibold text-foreground">
@@ -247,7 +247,7 @@ export function OnboardingTour() {
               key={i}
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-colors",
-                i <= step ? "bg-indigo-500" : "bg-muted"
+                i <= step ? "bg-primary" : "bg-muted"
               )}
             />
           ))}
@@ -265,7 +265,7 @@ export function OnboardingTour() {
           <Button
             size="sm"
             onClick={handleNext}
-            className="gap-1.5 bg-indigo-500 text-white hover:bg-indigo-600"
+            className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {isLastStep ? "Get started" : "Next"}
             {isLastStep ? (

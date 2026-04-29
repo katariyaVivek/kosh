@@ -236,7 +236,7 @@ export function AddKeyDialog({
                   <SelectItem key={platform.platform} value={platform.platform}>
                     <div className="flex w-full items-center justify-between gap-4">
                       <span>{platform.platform}</span>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-micro text-muted-foreground">
                         {getPlatformIndicator(platform)}
                       </span>
                     </div>

@@ -116,7 +116,7 @@ export function ChangeMasterKeyDialog({
             </div>
           )}
           {success && (
-            <div className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+            <div className="rounded-md bg-success-soft px-3 py-2 text-sm text-success">
               {success}
             </div>
           )}

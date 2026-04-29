@@ -265,8 +265,8 @@ export default async function Home({
       icon: BellRing,
       hasWarning: activeAlerts > 0,
       caption: "Signals requiring review",
-      accent: activeAlerts > 0 ? "bg-amber-400/10" : "bg-primary/8",
-      iconClassName: activeAlerts > 0 ? "text-amber-500" : "text-muted-foreground",
+      accent: activeAlerts > 0 ? "bg-warning-soft" : "bg-primary/8",
+      iconClassName: activeAlerts > 0 ? "text-warning" : "text-muted-foreground",
     },
     {
       label: "Token Usage",
@@ -338,7 +338,7 @@ export default async function Home({
                   key={label}
                   className={cn(
                     "relative min-h-32 overflow-hidden rounded-lg border border-border/80 bg-card/82 p-5 shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/25 active:scale-[0.995]",
-                    isWarning && "ring-1 ring-amber-300/40"
+                    isWarning && "ring-1 ring-warning/40"
                   )}
                 >
                   <div className={cn("pointer-events-none absolute inset-0", accent)} />
@@ -346,13 +346,13 @@ export default async function Home({
                   <div className="relative flex h-full flex-col justify-between gap-4">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
-                        <p className="text-[11px] font-medium uppercase text-muted-foreground">
+                        <p className="text-micro font-medium uppercase text-muted-foreground">
                           {label}
                         </p>
                         <p
                           className={cn(
                             "text-3xl font-semibold tracking-tight tabular-nums",
-                            isWarning ? "text-amber-500" : "text-foreground"
+                            isWarning ? "text-warning" : "text-foreground"
                           )}
                         >
                           {value}

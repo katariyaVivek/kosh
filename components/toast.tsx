@@ -40,10 +40,10 @@ const TOAST_ICONS: Record<ToastType, typeof CheckCircle2> = {
 }
 
 const TOAST_COLORS: Record<ToastType, string> = {
-  success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-  error: "border-red-500/30 bg-red-500/10 text-red-400",
-  info: "border-blue-500/30 bg-blue-500/10 text-blue-400",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+  success: "border-success/30 bg-success-soft text-success",
+  error: "border-error/30 bg-error-soft text-error",
+  info: "border-info/30 bg-info-soft text-info",
+  warning: "border-warning/30 bg-warning-soft text-warning",
 }
 
 let nextId = 0
