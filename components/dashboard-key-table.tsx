@@ -824,7 +824,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 <p className="text-micro uppercase tracking-[0.3em] text-muted-foreground">
                   Total Calls
                 </p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
+                <p className="mt-2 text-lg font-semibold font-mono tabular-nums text-foreground">
                   {panelDetails.totalCalls.toLocaleString()}
                 </p>
               </div>
@@ -832,7 +832,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                 <p className="text-micro uppercase tracking-[0.3em] text-muted-foreground">
                   Accrued Cost
                 </p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
+                <p className="mt-2 text-lg font-semibold font-mono tabular-nums text-foreground">
                   {currencyFormatter.format(panelDetails.totalCost)}
                 </p>
               </div>
@@ -864,10 +864,10 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
                           return format(new Date(year, month - 1, day), "MMM d, yyyy")
                         })()}
                       </span>
-                      <span className="text-right font-semibold">
+                      <span className="text-right font-mono tabular-nums font-semibold">
                         {log.calls.toLocaleString()}
                       </span>
-                      <span className="text-right">
+                      <span className="text-right font-mono tabular-nums">
                         {currencyFormatter.format(log.cost)}
                       </span>
                     </div>
