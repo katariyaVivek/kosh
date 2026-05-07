@@ -351,7 +351,7 @@ export default async function Home({
                         </p>
                         <p
                           className={cn(
-                            "text-3xl font-semibold tracking-tight tabular-nums",
+                            "text-3xl font-semibold tracking-tight font-mono tabular-nums",
                             isWarning ? "text-warning" : "text-foreground"
                           )}
                         >

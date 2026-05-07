@@ -567,7 +567,7 @@ export function PulseView({
                       <p className="text-micro uppercase text-muted-foreground">
                         Tokens
                       </p>
-                      <p className="mt-1 font-semibold tabular-nums">
+                      <p className="mt-1 font-semibold font-mono tabular-nums">
                         {totalTokens.toLocaleString()}
                       </p>
                     </div>
@@ -575,7 +575,7 @@ export function PulseView({
                       <p className="text-micro uppercase text-muted-foreground">
                         Spend
                       </p>
-                      <p className="mt-1 font-semibold tabular-nums">
+                      <p className="mt-1 font-semibold font-mono tabular-nums">
                         {formatCurrency(totalCost)}
                       </p>
                     </div>
@@ -583,7 +583,7 @@ export function PulseView({
                       <p className="text-micro uppercase text-muted-foreground">
                         Calls
                       </p>
-                      <p className="mt-1 font-semibold tabular-nums">
+                      <p className="mt-1 font-semibold font-mono tabular-nums">
                         {totalCalls.toLocaleString()}
                       </p>
                     </div>
