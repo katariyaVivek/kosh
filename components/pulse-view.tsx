@@ -474,7 +474,7 @@ export function PulseView({
               <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                 Total spend today
               </p>
-              <p className="text-2xl font-medium tracking-tight text-foreground/85">
+              <p className="text-2xl font-medium font-mono tabular-nums tracking-tight text-foreground/85">
                 {formatCurrency(stats.totalSpendToday)}
               </p>
             </div>
@@ -493,7 +493,7 @@ export function PulseView({
               <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                 Total API calls today
               </p>
-              <p className="text-2xl font-medium tracking-tight text-foreground/85">
+              <p className="text-2xl font-medium font-mono tabular-nums tracking-tight text-foreground/85">
                 {stats.totalCallsToday}
               </p>
             </div>
@@ -767,7 +767,7 @@ export function PulseView({
                         <p className="text-micro font-medium uppercase tracking-[0.16em] text-muted-foreground">
                           Total calls
                         </p>
-                        <p className="mt-1 text-lg font-medium tracking-tight text-foreground/90">
+                        <p className="mt-1 text-lg font-medium font-mono tabular-nums tracking-tight text-foreground/90">
                           {totalCalls}
                         </p>
                       </div>
@@ -780,7 +780,7 @@ export function PulseView({
                             Free plan - $0 cost tracked
                           </p>
                         ) : (
-                          <p className="mt-1 text-lg font-medium tracking-tight text-foreground/90">
+                          <p className="mt-1 text-lg font-medium font-mono tabular-nums tracking-tight text-foreground/90">
                             {formatCurrency(totalCost)}
                           </p>
                         )}
