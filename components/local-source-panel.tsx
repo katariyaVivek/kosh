@@ -352,7 +352,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                   <p className="text-micro uppercase text-muted-foreground">
                     Tokens
                   </p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                  <p className="mt-1 font-semibold font-mono tabular-nums text-foreground">
                     {compactNumberFormatter.format(source.tokens)}
                   </p>
                 </div>
@@ -360,7 +360,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                   <p className="text-micro uppercase text-muted-foreground">
                     Spend
                   </p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                  <p className="mt-1 font-semibold font-mono tabular-nums text-foreground">
                     {currencyFormatter.format(source.cost)}
                   </p>
                 </div>
@@ -368,7 +368,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                   <p className="text-micro uppercase text-muted-foreground">
                     Calls
                   </p>
-                  <p className="mt-1 font-semibold tabular-nums text-foreground">
+                  <p className="mt-1 font-semibold font-mono tabular-nums text-foreground">
                     {compactNumberFormatter.format(source.calls)}
                   </p>
                 </div>
@@ -451,7 +451,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                         <p className="text-micro uppercase text-muted-foreground">
                           {label}
                         </p>
-                        <p className="mt-1 text-lg font-semibold tabular-nums">
+                        <p className="mt-1 text-lg font-semibold font-mono tabular-nums">
                           {value}
                         </p>
                       </div>
@@ -580,7 +580,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                                   <p className="text-micro uppercase text-muted-foreground">
                                     {label as string}
                                   </p>
-                                  <p className="mt-1 text-lg font-semibold tabular-nums">
+                                  <p className="mt-1 text-lg font-semibold font-mono tabular-nums">
                                     {quotaWindow.remainingPercent === null
                                       ? "Unknown"
                                       : `${quotaWindow.remainingPercent.toFixed(0)}%`}
@@ -689,10 +689,10 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                             className="grid grid-cols-[1fr_auto_auto] gap-3 px-4 py-3 text-sm"
                           >
                             <span className="truncate">{model.model}</span>
-                            <span className="tabular-nums text-muted-foreground">
+                            <span className="font-mono tabular-nums text-muted-foreground">
                               {compactNumberFormatter.format(model.tokens)}
                             </span>
-                            <span className="tabular-nums text-muted-foreground">
+                            <span className="font-mono tabular-nums text-muted-foreground">
                               {currencyFormatter.format(model.cost)}
                             </span>
                           </div>
@@ -730,10 +730,10 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                             className="grid grid-cols-[1fr_auto_auto] gap-3 px-4 py-3 text-sm"
                           >
                             <span>{formatDate(day.date)}</span>
-                            <span className="tabular-nums text-muted-foreground">
+                            <span className="font-mono tabular-nums text-muted-foreground">
                               {compactNumberFormatter.format(day.tokens)}
                             </span>
-                            <span className="tabular-nums text-muted-foreground">
+                            <span className="font-mono tabular-nums text-muted-foreground">
                               {currencyFormatter.format(day.cost)}
                             </span>
                           </div>
@@ -777,7 +777,7 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
                                 {formatCostSource(event.costSource)}
                               </p>
                             </div>
-                            <div className="text-right tabular-nums text-muted-foreground">
+                            <div className="text-right font-mono tabular-nums text-muted-foreground">
                               <p>{compactNumberFormatter.format(event.tokens)}</p>
                               <p className="text-xs">
                                 {currencyFormatter.format(event.cost)}
