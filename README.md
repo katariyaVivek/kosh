@@ -72,26 +72,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Optional Windows Tray MVP
-
-Kosh includes an optional desktop tray companion in `desktop/`. It is isolated and does not affect normal web usage unless you run it.
-
-Run:
-
-```bash
-npm run desktop:install
-npm run desktop:dev
-```
-
-This expects Kosh web to be running at `http://localhost:3000` and opens a compact panel at `/tray`.
-
-Disable:
-- Stop the tray process and avoid `desktop:*` scripts.
-
-Remove:
-1. Delete `desktop/`.
-2. Remove `desktop:*` scripts from root `package.json`.
-
 ## Docker
 
 ```bash
