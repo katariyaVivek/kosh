@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 
 import { AddAlertDialog } from "@/components/add-alert-dialog"
+import { AmbientVideoBackground } from "@/components/ambient-video-background"
 import { BrandMark } from "@/components/brand-mark"
 import { AddKeyDialog } from "@/components/add-key-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -81,11 +82,12 @@ export function KoshShell({
     <KoshShellContext.Provider
       value={{ openSidebarAction: () => setOpen(true) }}
     >
-      <div className="min-h-screen bg-background text-foreground">
-        <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="relative isolate min-h-screen bg-background text-foreground">
+        <AmbientVideoBackground />
+        <div className="relative z-10 grid min-h-screen grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside
             data-tour="sidebar"
-            className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0 dark:shadow-[0_24px_80px_hsl(222_34%_6%_/_0.22)]"
+            className="border-b border-sidebar-border bg-sidebar/95 text-sidebar-foreground shadow-sm backdrop-blur-xl lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0 dark:bg-sidebar/92 dark:shadow-[0_24px_80px_hsl(222_34%_6%_/_0.22)]"
           >
             <div className="flex h-full flex-col gap-7 p-5">
               <div className="flex flex-row items-center gap-3 border-b border-sidebar-border pb-5">
@@ -169,7 +171,7 @@ export function KoshShell({
           </aside>
 
           <main className="relative overflow-hidden">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(ellipse_70rem_28rem_at_42%_-10rem,hsl(188_95%_43%_/_0.12),transparent_74%),radial-gradient(ellipse_40rem_20rem_at_80%_0%,hsl(188_95%_43%_/_0.04),transparent_64%),linear-gradient(to_bottom,hsl(214_33%_88%_/_0.28),transparent_60%)] dark:bg-[radial-gradient(ellipse_70rem_28rem_at_42%_-10rem,hsl(188_95%_43%_/_0.14),transparent_74%),radial-gradient(ellipse_40rem_20rem_at_80%_0%,hsl(188_95%_43%_/_0.06),transparent_64%),linear-gradient(to_bottom,hsl(220_24%_14%_/_0.08),transparent_60%)]" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(ellipse_70rem_28rem_at_42%_-10rem,hsl(188_95%_43%_/_0.1),transparent_74%),linear-gradient(to_bottom,var(--background),transparent_70%)] dark:bg-[radial-gradient(ellipse_70rem_28rem_at_42%_-10rem,hsl(188_95%_43%_/_0.12),transparent_74%),linear-gradient(to_bottom,hsl(222_34%_6%_/_0.74),transparent_70%)]" />
             <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-8 sm:py-10">
               {children}
             </div>
