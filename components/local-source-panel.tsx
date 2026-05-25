@@ -212,7 +212,9 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
 
     setIsLoading(true)
     fetch(
-      `/api/usage-sources/local/${encodeURIComponent(selectedProvider)}/details`,
+      `/api/usage-sources/local/details?provider=${encodeURIComponent(
+        selectedProvider
+      )}`,
       { signal: controller.signal, cache: "no-store" }
     )
       .then(async (response) => {
@@ -302,7 +304,9 @@ export function LocalSourcePanel({ sources }: LocalSourcePanelProps) {
       setQuotaMessage("Quota refreshed")
 
       const detailsResponse = await fetch(
-        `/api/usage-sources/local/${encodeURIComponent(selectedProvider)}/details`,
+        `/api/usage-sources/local/details?provider=${encodeURIComponent(
+          selectedProvider
+        )}`,
         { cache: "no-store" }
       )
 

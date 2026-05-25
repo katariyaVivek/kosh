@@ -33,6 +33,7 @@ export function useLock() {
 
 const TIMEOUT_KEY = "kosh_auto_lock_timeout"
 const LOCK_KEY = "kosh_master_key_hash"
+const LOCK_STATE_KEY = "kosh_locked"
 
 function getStoredTimeout(): AutoLockTimeout {
   if (typeof window === "undefined") return "never"
@@ -41,6 +42,15 @@ function getStoredTimeout(): AutoLockTimeout {
 
 function setStoredTimeout(minutes: AutoLockTimeout): void {
   localStorage.setItem(TIMEOUT_KEY, minutes)
+}
+
+function getStoredLockState(): boolean {
+  if (typeof window === "undefined") return false
+  return localStorage.getItem(LOCK_STATE_KEY) === "true"
+}
+
+function setStoredLockState(locked: boolean): void {
+  localStorage.setItem(LOCK_STATE_KEY, String(locked))
 }
 
 function hashKey(key: string): string {
@@ -54,7 +64,7 @@ function hashKey(key: string): string {
 }
 
 export function LockProvider({ children }: { children: React.ReactNode }) {
-  const [isLocked, setIsLocked] = useState(false)
+  const [isLocked, setIsLocked] = useState(() => getStoredLockState())
   const [timeout, setTimeoutState] = useState<AutoLockTimeout>(() => getStoredTimeout())
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const storedKeyRef = useRef<string | null>(null)
@@ -81,6 +91,7 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
     if (isNaN(minutes)) return
 
     timerRef.current = setTimeout(() => {
+      setStoredLockState(true)
       setIsLocked(true)
     }, minutes * 60 * 1000)
   }, [timeout, clearTimer])
@@ -113,6 +124,7 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
   }, [isLocked, resetTimer, startTimer, clearTimer])
 
   const lock = useCallback(() => {
+    setStoredLockState(true)
     setIsLocked(true)
     clearTimer()
   }, [clearTimer])
@@ -136,7 +148,7 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
       if (!res.ok || !data.valid) {
         return false
       }
-    } catch (_e) {
+    } catch {
       return false
     }
     
@@ -144,6 +156,7 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
     storedKeyRef.current = inputHash
     localStorage.setItem(LOCK_KEY, inputHash)
 
+    setStoredLockState(false)
     setIsLocked(false)
     startTimer()
     return true

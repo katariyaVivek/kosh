@@ -13,7 +13,6 @@ export function LockScreen() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [isShaking, setIsShaking] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -37,14 +36,30 @@ export function LockScreen() {
     }
   }, [isLocked, success])
 
-  // Trigger shake on error
   useEffect(() => {
-    if (error) {
-      setIsShaking(true)
-      const timer = setTimeout(() => setIsShaking(false), 500)
-      return () => clearTimeout(timer)
+    if (!isVisible) {
+      return
     }
-  }, [error])
+
+    const previousBodyOverflow = document.body.style.overflow
+    const previousRootOverflow = document.documentElement.style.overflow
+    const previousScrollX = window.scrollX
+    const previousScrollY = window.scrollY
+
+    document.body.style.overflow = "hidden"
+    document.documentElement.style.overflow = "hidden"
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      document.documentElement.style.overflow = previousRootOverflow
+      window.scrollTo({
+        left: previousScrollX,
+        top: previousScrollY,
+        behavior: "instant",
+      })
+    }
+  }, [isVisible])
 
   const handleUnlock = async () => {
     if (!masterKey) return
@@ -79,7 +94,7 @@ export function LockScreen() {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xl transition-opacity duration-300 ease-out",
+        "fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-none bg-background/80 backdrop-blur-xl transition-opacity duration-300 ease-out",
         isVisible ? "opacity-100" : "opacity-0"
       )}
     >

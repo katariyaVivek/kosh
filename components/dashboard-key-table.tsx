@@ -118,7 +118,7 @@ function PanelSkeleton() {
 export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
   const [query, setQuery] = useState("")
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const { success, error: toastError, info } = useToast()
+  const { success, error: toastError } = useToast()
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [panelDetails, setPanelDetails] = useState<DashboardKeyDetails | null>(null)
   const [panelError, setPanelError] = useState<string | null>(null)
@@ -139,9 +139,11 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
     let checked = 0
 
     for (const key of keys) {
-      const connector = await fetch("/api/connectors").then((r) => r.json())
+      const connector = (await fetch("/api/connectors").then((r) =>
+        r.json()
+      )) as Array<{ platform: string; canValidate?: boolean }>
       const platformConnector = connector.find(
-        (c: any) => c.platform === key.platform
+        (c) => c.platform === key.platform
       )
 
       if (!platformConnector?.canValidate) {
@@ -232,7 +234,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
       setTimeout(() => {
         setCopiedId((current) => (current === id ? null : current))
       }, 1400)
-    } catch (err) {
+    } catch {
       toastError("Copy failed")
     }
   }
@@ -258,7 +260,7 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
       setPanelCopied(true)
       success("Key copied to clipboard")
       setTimeout(() => setPanelCopied(false), 2000)
-    } catch (err) {
+    } catch {
       toastError("Copy failed")
     }
   }
@@ -651,30 +653,22 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
         </div>
       </div>
 
-      <div
-        className={cn(
-          "fixed inset-0 z-40 transition-opacity duration-300",
-          selectedKeyId
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
-        )}
-        onClick={closePanel}
-        aria-hidden={!selectedKeyId}
-      >
-        <div className="h-full w-full bg-black/40" />
-      </div>
+      {selectedKeyId ? (
+        <>
+          <div
+            className="fixed inset-0 z-40 transition-opacity duration-300"
+            onClick={closePanel}
+          >
+            <div className="h-full w-full bg-black/40" />
+          </div>
 
-      <div
-        className={cn(
-          "fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-[400px] transform flex-col overflow-y-auto border-l border-border bg-card shadow-lg transition-transform duration-300",
-          selectedKeyId ? "translate-x-0" : "translate-x-full"
-        )}
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Key details panel"
-        aria-hidden={!selectedKeyId}
-      >
+          <div
+            className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-[400px] flex-col overflow-y-auto border-l border-border bg-card shadow-lg"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Key details panel"
+          >
         <div className="flex items-center justify-between border-b border-border px-6 pb-4 mb-4">
           <div className="flex items-center gap-4">
             <div
@@ -877,7 +871,9 @@ export function DashboardKeyTable({ keys }: DashboardKeyTableProps) {
             </div>
           </div>
         ) : null}
-      </div>
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }

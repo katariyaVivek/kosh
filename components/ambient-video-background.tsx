@@ -65,12 +65,12 @@ export function AmbientVideoBackground() {
         preload="metadata"
         className={[
           "h-full w-full object-cover transition-opacity duration-700",
-          isReady ? "opacity-100" : "opacity-0",
+          isReady ? "opacity-30 dark:opacity-100" : "opacity-0",
         ].join(" ")}
       />
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-[1px] dark:bg-background/82" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--background)_0%,hsl(222_34%_6%_/_0.54)_34%,var(--background)_100%)] opacity-35 dark:opacity-55" />
-      <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(to_bottom,hsl(188_95%_43%_/_0.18),transparent)]" />
+      <div className="absolute inset-0 bg-background/92 backdrop-blur-[2px] dark:bg-background/82 dark:backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(210_24%_97%_/_0.98)_0%,hsl(210_24%_97%_/_0.9)_42%,hsl(210_24%_97%_/_0.98)_100%)] dark:bg-[linear-gradient(90deg,var(--background)_0%,hsl(222_34%_6%_/_0.54)_34%,var(--background)_100%)] dark:opacity-55" />
+      <div className="absolute inset-x-0 top-0 h-72 bg-[linear-gradient(to_bottom,hsl(188_95%_43%_/_0.08),transparent)] dark:bg-[linear-gradient(to_bottom,hsl(188_95%_43%_/_0.18),transparent)]" />
     </div>
   )
 }

@@ -20,7 +20,7 @@ Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage wh
 - **Key rotation** — track rotation cycles, due dates, and overdue keys with color-coded badges.
 - **Export/import backup flow** for vault metadata and usage history.
 - **Theme-aware branding** with light/dark logo assets and a custom ThemeProvider that avoids `<script>` tag warnings.
-- **Auto-lock**, light/dark/system appearance, command palette, onboarding tour, and lock screen.
+- **Persistent lock screen**, light/dark/system appearance, command palette, onboarding tour, and auto-lock.
 
 ## Data Model
 
@@ -134,7 +134,7 @@ For Codex token and spend estimates, Kosh uses the bundled `@ccusage/codex` anal
 
 If you need to override the bundled analyzer, point Kosh at a specific binary with `KOSH_CODEX_USAGE_COMMAND`.
 
-For Codex quota, Kosh has a separate quota refresh path. It can use local Codex auth or CLI status. OAuth quota refresh sends the local Codex bearer token to OpenAI to read rate-limit windows; the UI labels this explicitly before use.
+For Codex quota, Kosh has a separate quota refresh path. It can use local Codex auth or CLI status. OAuth quota refresh sends the local Codex bearer token to OpenAI to read rate-limit windows; the UI labels this explicitly before use. Refreshed quota snapshots are read back through the local source details API so the Codex side panel can show 5h and weekly windows immediately after refresh.
 
 ## API Routes
 
@@ -146,6 +146,7 @@ For Codex quota, Kosh has a separate quota refresh path. It can use local Codex 
 - `GET /api/dashboard/chart` — 30-day spend/calls chart data
 - `POST /api/usage-sources/local/refresh` — Refresh all local sources (Codex, Claude Code, OpenCode)
 - `GET /api/usage-sources/local/[provider]/details` — Per-source detail
+- `GET /api/usage-sources/local/details?provider=Codex` — Stable per-source detail endpoint for UI refreshes
 - `POST /api/usage-sources/codex/quota` — Codex rate limit snapshot
 - `POST /api/alerts` — Create alert
 - `PATCH /api/alerts/[id]/reset` — Reset triggered alert
@@ -161,7 +162,7 @@ Kosh has six main views:
 - **Pulse** — Per-source and per-key usage breakdown with 7-day sparklines, cost/calls/tokens, and sync controls.
 - **Vault** — Encrypted key treasury with search, filtering, bulk selection, rotation tracking, and expiry badges.
 - **Alerts** — Configure and manage cost, calls, and token threshold alerts across keys and local sources.
-- **Settings** — Security (master key, auto-lock), data management (export/import), appearance (light/dark/system), and danger zone.
+- **Settings** — Security (master key, persistent lock, auto-lock), data management (export/import), appearance (light/dark/system), and danger zone.
 - **Setup** — One-time local bootstrap with onboarding instructions.
 
 ## Project Structure
