@@ -404,3 +404,45 @@
 .animate-shake {
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
+
+/* React Flow Topology Controls */
+.react-flow__controls {
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.react-flow__controls-button {
+  background: var(--card) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  fill: var(--foreground) !important;
+  width: 30px !important;
+  height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--secondary) !important;
+  color: var(--primary) !important;
+  fill: var(--primary) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+}
+

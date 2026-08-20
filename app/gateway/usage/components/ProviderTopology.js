@@ -110,13 +110,9 @@ function RouterNode({ data }) {
       <Handle type="source" position={Position.Left} id="left" className="!bg-transparent !border-0 !w-0 !h-0" />
       <Handle type="source" position={Position.Right} id="right" className="!bg-transparent !border-0 !w-0 !h-0" />
 
-      <img
-        src="/favicon.svg"
-        alt="Gateway"
-        className={`w-6 h-6 mr-2 ${powering ? "topology-router-icon" : ""}`}
-        loading="lazy"
-        decoding="async"
-      />
+      <div className={`flex size-6 items-center justify-center mr-2 rounded bg-primary/20 text-primary ${powering ? "topology-router-icon" : ""}`}>
+        <span className="material-symbols-outlined text-[18px]">hub</span>
+      </div>
       <span className={`text-sm font-bold ${powering ? "topology-router-label text-yellow-300" : "text-primary"}`}>
         Gateway
       </span>
