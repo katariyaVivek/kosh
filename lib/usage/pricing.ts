@@ -24,8 +24,10 @@ type LiteLLMEntry = {
 }
 
 const FALLBACK_PRICING: Record<string, ModelPricing> = {
+  // Claude 4 & 3.7 Series (2026)
   "claude-opus-4-7": { input: 5, output: 25, cacheCreate: 6.25, cacheRead: 0.5 },
   "claude-opus-4-6": { input: 5, output: 25, cacheCreate: 6.25, cacheRead: 0.5 },
+  "claude-opus-4-6-thinking": { input: 5, output: 25, cacheCreate: 6.25, cacheRead: 0.5 },
   "claude-opus-4-5": { input: 5, output: 25, cacheCreate: 6.25, cacheRead: 0.5 },
   "claude-opus-4": { input: 15, output: 75, cacheCreate: 18.75, cacheRead: 1.5 },
   "claude-sonnet-4-6": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
@@ -33,10 +35,33 @@ const FALLBACK_PRICING: Record<string, ModelPricing> = {
   "claude-sonnet-4": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
   "claude-sonnet-3-7": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
   "claude-sonnet-3.7": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
+  "claude-3-7-sonnet": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
   "claude-haiku-4-5": { input: 1, output: 5, cacheCreate: 1.25, cacheRead: 0.1 },
   "claude-haiku-3-5": { input: 0.8, output: 4, cacheCreate: 1, cacheRead: 0.08 },
   "claude-haiku-3.5": { input: 0.8, output: 4, cacheCreate: 1, cacheRead: 0.08 },
+  "claude-3-5-haiku": { input: 0.8, output: 4, cacheCreate: 1, cacheRead: 0.08 },
+
+  // Gemini 3 & 2 Series (2026)
+  "gemini-3.1-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
+  "gemini-3.1-pro-high": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
+  "gemini-3-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
+  "gemini-pro-default": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
+  "gemini-3-flash": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-3-flash-a": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-3": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-2.5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.031 },
+  "gemini-2-5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.031 },
+  "gemini-2.5-flash": { input: 0.3, output: 2.5, cacheCreate: 0.15, cacheRead: 0.008 },
+  "gemini-2-5-flash": { input: 0.3, output: 2.5, cacheCreate: 0.15, cacheRead: 0.008 },
+  "gemini-2.0-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.005 },
+  "gemini-2-0-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.005 },
+  "gemini-flash": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
+  "gemini": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+
+  // OpenAI & Reasoning Series
   "gpt-5": { input: 3, output: 12, cacheCreate: 3.75, cacheRead: 0.3 },
+  "gpt-5-mini": { input: 0.5, output: 2, cacheCreate: 0.625, cacheRead: 0.05 },
   "gpt-4-5": { input: 75, output: 150, cacheCreate: 93.75, cacheRead: 7.5 },
   "gpt-4.5": { input: 75, output: 150, cacheCreate: 93.75, cacheRead: 7.5 },
   "gpt-4o": { input: 2.5, output: 10, cacheCreate: 3.13, cacheRead: 0.25 },
@@ -44,19 +69,6 @@ const FALLBACK_PRICING: Record<string, ModelPricing> = {
   "o3": { input: 10, output: 40, cacheCreate: 12.5, cacheRead: 1 },
   "o1": { input: 15, output: 60, cacheCreate: 18.75, cacheRead: 1.5 },
   "deepseek": { input: 0.9, output: 3.6, cacheCreate: 0.9, cacheRead: 0.09 },
-  "gemini-2.5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.31 },
-  "gemini-2-5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.31 },
-  "gemini-2.5-flash": { input: 0.3, output: 2.5, cacheCreate: 0.15, cacheRead: 0.08 },
-  "gemini-2-5-flash": { input: 0.3, output: 2.5, cacheCreate: 0.15, cacheRead: 0.08 },
-  "gemini-2.0-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
-  "gemini-2-0-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
-  "gemini-1.5-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.3125 },
-  "gemini-1-5-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.3125 },
-  "gemini-1.5-flash": { input: 0.075, output: 0.3, cacheCreate: 0.01875, cacheRead: 0.01875 },
-  "gemini-1-5-flash": { input: 0.075, output: 0.3, cacheCreate: 0.01875, cacheRead: 0.01875 },
-  "gemini-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
-  "gemini-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.3125 },
-  "gemini": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
 }
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
