@@ -6,7 +6,7 @@ import {
   ReactFlow,
   Handle,
   Position,
-  Controls,
+  useReactFlow,
   BaseEdge,
   getBezierPath,
 } from "@xyflow/react";
@@ -350,6 +350,42 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
   return { nodes, edges };
 }
 
+function CustomTopologyControls() {
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
+
+  return (
+    <div className="absolute bottom-3 left-3 z-10 flex flex-col rounded-lg border border-border/80 bg-card/90 backdrop-blur-md shadow-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => zoomIn({ duration: 250 })}
+        className="flex size-8 items-center justify-center text-muted-foreground hover:text-primary hover:bg-secondary/70 border-b border-border/60 transition-colors"
+        title="Zoom In"
+        aria-label="Zoom In"
+      >
+        <span className="material-symbols-outlined text-[18px]">add</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => zoomOut({ duration: 250 })}
+        className="flex size-8 items-center justify-center text-muted-foreground hover:text-primary hover:bg-secondary/70 border-b border-border/60 transition-colors"
+        title="Zoom Out"
+        aria-label="Zoom Out"
+      >
+        <span className="material-symbols-outlined text-[18px]">remove</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => fitView({ duration: 250, padding: 0.2 })}
+        className="flex size-8 items-center justify-center text-muted-foreground hover:text-primary hover:bg-secondary/70 transition-colors"
+        title="Fit to Screen"
+        aria-label="Fit to Screen"
+      >
+        <span className="material-symbols-outlined text-[18px]">fit_screen</span>
+      </button>
+    </div>
+  );
+}
+
 export default function ProviderTopology({ providers = [], activeRequests = [], lastProvider = "", errorProvider = "" }) {
   // Serialize to stable string keys so useMemo only re-runs when values actually change
   const activeKey = useMemo(
@@ -460,7 +496,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
           nodesConnectable={false}
           elementsSelectable={false}
         >
-          <Controls showInteractive={false} className="react-flow-controls-custom" />
+          <CustomTopologyControls />
         </ReactFlow>
       )}
     </div>
