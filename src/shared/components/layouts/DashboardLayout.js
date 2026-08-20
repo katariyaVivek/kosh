@@ -32,20 +32,64 @@ function getToastStyle(type) {
   };
 }
 
-const GATEWAY_TABS = [
-  { label: "Endpoint & Keys", href: "/gateway/endpoint", match: ["/gateway", "/gateway/endpoint"], icon: "vpn_key" },
-  { label: "Providers", href: "/gateway/providers", match: ["/gateway/providers"], icon: "dns" },
-  { label: "Combos", href: "/gateway/combos", match: ["/gateway/combos"], icon: "layers" },
-  { label: "Usage", href: "/gateway/usage", match: ["/gateway/usage"], icon: "bar_chart" },
-  { label: "Quota", href: "/gateway/quota", match: ["/gateway/quota"], icon: "data_usage" },
-  { label: "Token Saver", href: "/gateway/token-saver", match: ["/gateway/token-saver"], icon: "savings" },
-  { label: "CLI Tools", href: "/gateway/cli-tools", match: ["/gateway/cli-tools"], icon: "terminal" },
-  { label: "MITM Proxy", href: "/gateway/mitm", match: ["/gateway/mitm"], icon: "security" },
-  { label: "Media Providers", href: "/gateway/media-providers/web", match: ["/gateway/media-providers"], icon: "perm_media" },
-  { label: "Proxy Pools", href: "/gateway/proxy-pools", match: ["/gateway/proxy-pools"], icon: "lan" },
-  { label: "Agent Skills", href: "/gateway/skills", match: ["/gateway/skills"], icon: "extension" },
-  { label: "Console Log", href: "/gateway/console-log", match: ["/gateway/console-log"], icon: "monitor" },
-  { label: "Settings", href: "/gateway/profile", match: ["/gateway/profile"], icon: "settings" },
+const GATEWAY_HUBS = [
+  {
+    id: "endpoint",
+    label: "Keys & Endpoint",
+    icon: "vpn_key",
+    href: "/gateway/endpoint",
+    match: ["/gateway", "/gateway/endpoint"],
+    subTabs: [],
+  },
+  {
+    id: "providers",
+    label: "Providers & Models",
+    icon: "dns",
+    href: "/gateway/providers",
+    match: ["/gateway/providers", "/gateway/combos", "/gateway/media-providers"],
+    subTabs: [
+      { label: "AI Providers", href: "/gateway/providers", match: ["/gateway/providers"] },
+      { label: "Combos & Fallbacks", href: "/gateway/combos", match: ["/gateway/combos"] },
+      { label: "Media & Web", href: "/gateway/media-providers/web", match: ["/gateway/media-providers"] },
+    ],
+  },
+  {
+    id: "tools",
+    label: "CLI & Integrations",
+    icon: "terminal",
+    href: "/gateway/cli-tools",
+    match: ["/gateway/cli-tools", "/gateway/mitm", "/gateway/skills"],
+    subTabs: [
+      { label: "CLI Tools", href: "/gateway/cli-tools", match: ["/gateway/cli-tools"] },
+      { label: "MITM Proxy", href: "/gateway/mitm", match: ["/gateway/mitm"] },
+      { label: "Agent Skills", href: "/gateway/skills", match: ["/gateway/skills"] },
+    ],
+  },
+  {
+    id: "analytics",
+    label: "Usage & Analytics",
+    icon: "bar_chart",
+    href: "/gateway/usage",
+    match: ["/gateway/usage", "/gateway/quota", "/gateway/token-saver"],
+    subTabs: [
+      { label: "Usage & Logs", href: "/gateway/usage", match: ["/gateway/usage"] },
+      { label: "Quota Tracker", href: "/gateway/quota", match: ["/gateway/quota"] },
+      { label: "Token Saver", href: "/gateway/token-saver", match: ["/gateway/token-saver"] },
+    ],
+  },
+  {
+    id: "settings",
+    label: "Settings & System",
+    icon: "settings",
+    href: "/gateway/profile",
+    match: ["/gateway/profile", "/gateway/proxy-pools", "/gateway/console-log", "/gateway/translator"],
+    subTabs: [
+      { label: "Gateway Settings", href: "/gateway/profile", match: ["/gateway/profile"] },
+      { label: "Proxy Pools", href: "/gateway/proxy-pools", match: ["/gateway/proxy-pools"] },
+      { label: "Console Log", href: "/gateway/console-log", match: ["/gateway/console-log"] },
+      { label: "Translator", href: "/gateway/translator", match: ["/gateway/translator"] },
+    ],
+  },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -58,14 +102,14 @@ export default function DashboardLayout({ children }) {
   const searchPlaceholder = useHeaderSearchStore((s) => s.placeholder);
   const setSearchQuery = useHeaderSearchStore((s) => s.setQuery);
 
-  const activeTab = useMemo(() => {
-    return GATEWAY_TABS.find((tab) =>
-      tab.match.some((m) =>
+  const activeHub = useMemo(() => {
+    return GATEWAY_HUBS.find((hub) =>
+      hub.match.some((m) =>
         m === "/gateway"
           ? pathname === "/gateway" || pathname === "/gateway/endpoint"
           : pathname.startsWith(m)
       )
-    ) || GATEWAY_TABS[0];
+    ) || GATEWAY_HUBS[0];
   }, [pathname]);
 
   return (
@@ -101,8 +145,8 @@ export default function DashboardLayout({ children }) {
         })}
       </div>
 
-      {/* Gateway Integrated Header */}
-      <div className="flex flex-col gap-5 w-full mb-8">
+      {/* Gateway Integrated Header & Navigation */}
+      <div className="flex flex-col gap-4 w-full mb-7">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-[0_0_20px_hsl(188_95%_43%_/_0.15)]">
@@ -151,33 +195,55 @@ export default function DashboardLayout({ children }) {
           )}
         </div>
 
-        {/* Horizontal Navigation Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1.5 border-b border-border/60 scrollbar-none">
-          {GATEWAY_TABS.map((tab) => {
-            const isSelected = tab.match.some((m) =>
-              m === "/gateway"
-                ? pathname === "/gateway" || pathname === "/gateway/endpoint"
-                : pathname.startsWith(m)
-            );
+        {/* Primary 5 Hubs Navigation */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 p-1 rounded-xl bg-secondary/30 border border-border/50">
+          {GATEWAY_HUBS.map((hub) => {
+            const isSelected = hub.id === activeHub.id;
             return (
               <Link
-                key={tab.label}
-                href={tab.href}
+                key={hub.id}
+                href={hub.href}
                 className={cn(
-                  "flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all",
+                  "flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all text-center",
                   isSelected
-                    ? "bg-primary/15 text-primary font-semibold border border-primary/30 shadow-[0_0_16px_hsl(188_95%_43%_/_0.08)]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    ? "bg-card text-primary font-semibold shadow-sm border border-primary/25 dark:bg-card/90"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/50"
                 )}
               >
-                <span className={cn("material-symbols-outlined text-[16px]", isSelected ? "text-primary" : "text-muted-foreground")}>
-                  {tab.icon}
+                <span className={cn("material-symbols-outlined text-[17px]", isSelected ? "text-primary" : "text-muted-foreground")}>
+                  {hub.icon}
                 </span>
-                <span>{tab.label}</span>
+                <span className="truncate">{hub.label}</span>
               </Link>
             );
           })}
         </div>
+
+        {/* Secondary Sub-tabs for the Active Hub (if available) */}
+        {activeHub.subTabs && activeHub.subTabs.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-1 scrollbar-none">
+            <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider mr-1 shrink-0">
+              Section:
+            </span>
+            {activeHub.subTabs.map((subTab) => {
+              const isSubSelected = subTab.match.some((m) => pathname.startsWith(m));
+              return (
+                <Link
+                  key={subTab.label}
+                  href={subTab.href}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all",
+                    isSubSelected
+                      ? "bg-primary/15 text-primary font-semibold border border-primary/30 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
+                  )}
+                >
+                  <span>{subTab.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Gateway Page Content */}
