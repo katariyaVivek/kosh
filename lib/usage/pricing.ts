@@ -5,8 +5,8 @@ import path from "path"
 export type TokenCounts = {
   input: number
   output: number
-  cacheWrite: number
-  cacheRead: number
+  cacheWrite?: number
+  cacheRead?: number
 }
 
 export type ModelPricing = {
@@ -32,17 +32,31 @@ const FALLBACK_PRICING: Record<string, ModelPricing> = {
   "claude-sonnet-4-5": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
   "claude-sonnet-4": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
   "claude-sonnet-3-7": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
+  "claude-sonnet-3.7": { input: 3, output: 15, cacheCreate: 3.75, cacheRead: 0.3 },
   "claude-haiku-4-5": { input: 1, output: 5, cacheCreate: 1.25, cacheRead: 0.1 },
   "claude-haiku-3-5": { input: 0.8, output: 4, cacheCreate: 1, cacheRead: 0.08 },
+  "claude-haiku-3.5": { input: 0.8, output: 4, cacheCreate: 1, cacheRead: 0.08 },
   "gpt-5": { input: 3, output: 12, cacheCreate: 3.75, cacheRead: 0.3 },
   "gpt-4-5": { input: 75, output: 150, cacheCreate: 93.75, cacheRead: 7.5 },
+  "gpt-4.5": { input: 75, output: 150, cacheCreate: 93.75, cacheRead: 7.5 },
   "gpt-4o": { input: 2.5, output: 10, cacheCreate: 3.13, cacheRead: 0.25 },
   "o4": { input: 10, output: 40, cacheCreate: 12.5, cacheRead: 1 },
   "o3": { input: 10, output: 40, cacheCreate: 12.5, cacheRead: 1 },
   "o1": { input: 15, output: 60, cacheCreate: 18.75, cacheRead: 1.5 },
   "deepseek": { input: 0.9, output: 3.6, cacheCreate: 0.9, cacheRead: 0.09 },
   "gemini-2.5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.31 },
+  "gemini-2-5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.31 },
   "gemini-2.5-flash": { input: 0.3, output: 2.5, cacheCreate: 0.15, cacheRead: 0.08 },
+  "gemini-2-5-flash": { input: 0.3, output: 2.5, cacheCreate: 0.15, cacheRead: 0.08 },
+  "gemini-2.0-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
+  "gemini-2-0-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
+  "gemini-1.5-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.3125 },
+  "gemini-1-5-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.3125 },
+  "gemini-1.5-flash": { input: 0.075, output: 0.3, cacheCreate: 0.01875, cacheRead: 0.01875 },
+  "gemini-1-5-flash": { input: 0.075, output: 0.3, cacheCreate: 0.01875, cacheRead: 0.01875 },
+  "gemini-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
+  "gemini-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.3125 },
+  "gemini": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.025 },
 }
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
@@ -98,13 +112,13 @@ async function fetchAndCachePricing(): Promise<Map<string, ModelPricing>> {
 
 async function loadCachedPricing(): Promise<Map<string, ModelPricing> | null> {
   try {
-    const raw = await readFile(getCachePath(), "utf-8")
-    const cached = JSON.parse(raw) as {
+    const raw = await readFile(getCachePath(), "utf8")
+    const { timestamp, data } = JSON.parse(raw) as {
       timestamp: number
       data: [string, ModelPricing][]
     }
-    if (Date.now() - cached.timestamp > CACHE_TTL_MS) return null
-    return new Map(cached.data)
+    if (Date.now() - timestamp > CACHE_TTL_MS) return null
+    return new Map(data)
   } catch {
     return null
   }
@@ -134,7 +148,7 @@ export function normalizeModelName(value: string): string {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/[^a-z0-9.]+/g, "-")
     .replace(/^-+|-+$/g, "")
 }
 
@@ -149,16 +163,33 @@ export function findPricing(
   pricing: Map<string, ModelPricing>,
   model: string,
 ): ModelPricing | null {
-  const canonical = getCanonicalName(normalizeModelName(model))
+  const norm = normalizeModelName(model)
+  const canonical = getCanonicalName(norm)
+  const dotToDash = canonical.replace(/\./g, "-")
+  const candidates = [canonical, norm, dotToDash]
 
-  if (pricing.has(canonical)) return pricing.get(canonical)!
+  for (const c of candidates) {
+    if (pricing.has(c)) return pricing.get(c)!
+  }
 
   for (const [key, costs] of pricing) {
-    if (canonical === key || canonical.startsWith(key)) return costs
+    const keyNorm = normalizeModelName(key)
+    const keyCanonical = getCanonicalName(keyNorm)
+    for (const c of candidates) {
+      if (keyCanonical === c || c.startsWith(keyCanonical) || keyCanonical.startsWith(c)) {
+        return costs
+      }
+    }
   }
 
   for (const [key, costs] of Object.entries(FALLBACK_PRICING)) {
-    if (canonical === key || canonical.startsWith(key)) return costs
+    const keyNorm = normalizeModelName(key)
+    const keyCanonical = getCanonicalName(keyNorm)
+    for (const c of candidates) {
+      if (keyCanonical === c || c.startsWith(keyCanonical) || keyCanonical.startsWith(c)) {
+        return costs
+      }
+    }
   }
 
   return null
@@ -172,11 +203,21 @@ export function estimateCostUsd(
   const modelPricing = findPricing(pricing, model)
   if (!modelPricing) return null
 
+  const input = tokens.input || 0
+  const output = tokens.output || 0
+  const cacheWrite = tokens.cacheWrite || 0
+  const cacheRead = tokens.cacheRead || 0
+
+  const inputCost = modelPricing.input ?? 0
+  const outputCost = modelPricing.output ?? 0
+  const cacheCreateCost = modelPricing.cacheCreate ?? 0
+  const cacheReadCost = modelPricing.cacheRead ?? 0
+
   return (
-    (tokens.input * modelPricing.input +
-      tokens.output * modelPricing.output +
-      tokens.cacheWrite * modelPricing.cacheCreate +
-      tokens.cacheRead * modelPricing.cacheRead) /
+    (input * inputCost +
+      output * outputCost +
+      cacheWrite * cacheCreateCost +
+      cacheRead * cacheReadCost) /
     1_000_000
   )
 }

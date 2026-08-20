@@ -50,8 +50,6 @@ function calculateCost(
   return estimateCostUsd(pricing, normModel, {
     input: inputTokens,
     output: outputTokens,
-    cacheCreate: 0,
-    cacheRead: 0,
   })
 }
 
@@ -114,6 +112,7 @@ export async function importAntigravityUsage(inputPath?: string | null) {
 
     const lines = content.split("\n").filter((l) => l.trim().length > 0)
     let currentModel = "gemini-2.5-flash"
+    let contextChars = 0
 
     for (const line of lines) {
       totalEntriesScanned++
@@ -129,6 +128,17 @@ export async function importAntigravityUsage(inputPath?: string | null) {
           }
         }
 
+        const contentChars = typeof row.content === "string" ? row.content.length : 0
+        const thinkingChars = typeof row.thinking === "string" ? row.thinking.length : 0
+        const toolCallsChars = row.tool_calls ? JSON.stringify(row.tool_calls).length : 0
+        const stepChars = contentChars + thinkingChars + toolCallsChars
+
+        // Accumulate context
+        if (row.type !== "PLANNER_RESPONSE") {
+          contextChars += stepChars
+          continue
+        }
+
         const createdAtStr = row.created_at || row.timestamp
         if (!createdAtStr) continue
         const date = new Date(createdAtStr)
@@ -139,23 +149,11 @@ export async function importAntigravityUsage(inputPath?: string | null) {
         if (seenKeys.has(dedupeKey)) continue
         seenKeys.add(dedupeKey)
 
-        let inputTokens = 0
-        let outputTokens = 0
-
-        if (row.type === "PLANNER_RESPONSE") {
-          const contentChars = typeof row.content === "string" ? row.content.length : 0
-          const thinkingChars = typeof row.thinking === "string" ? row.thinking.length : 0
-          const toolCallsChars = row.tool_calls ? JSON.stringify(row.tool_calls).length : 0
-          outputTokens = Math.max(1, Math.round((contentChars + thinkingChars + toolCallsChars) / 3.8))
-        } else if (row.type === "USER_INPUT" || row.type === "GENERIC" || row.type === "SYSTEM_MESSAGE") {
-          const contentChars = typeof row.content === "string" ? row.content.length : 0
-          inputTokens = Math.max(1, Math.round(contentChars / 3.8))
-        } else {
-          continue
-        }
-
+        const outputTokens = Math.max(1, Math.round(stepChars / 3.8))
+        const inputTokens = Math.max(1, Math.round(contextChars / 3.8))
         const totalTokens = inputTokens + outputTokens
-        if (totalTokens === 0) continue
+
+        contextChars += stepChars
 
         const cost = calculateCost(pricing, currentModel, inputTokens, outputTokens) ?? 0
 
