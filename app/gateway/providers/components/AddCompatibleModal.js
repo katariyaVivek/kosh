@@ -134,7 +134,29 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
   };
 
   return (
-    <Modal isOpen={isOpen} title={config.title} onClose={onClose}>
+    <Modal
+      isOpen={isOpen}
+      title={config.title}
+      onClose={onClose}
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <Button onClick={onClose} variant="ghost">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              !formData.name.trim() ||
+              !formData.prefix.trim() ||
+              !formData.baseUrl.trim() ||
+              submitting
+            }
+          >
+            {submitting ? "Creating..." : "Create"}
+          </Button>
+        </div>
+      }
+    >
       <div className="flex flex-col gap-4">
         <Input
           label="Name"
@@ -178,7 +200,7 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
           placeholder={config.modelIdPlaceholder}
           hint="If provider lacks /models endpoint, enter a model ID to validate via chat/completions instead."
         />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center pt-1">
           <Button
             onClick={handleValidate}
             disabled={!checkKey || validating || !formData.baseUrl.trim()}
@@ -188,23 +210,6 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
             {validating ? "Checking..." : "Check"}
           </Button>
           {renderValidationResult()}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            onClick={handleSubmit}
-            fullWidth
-            disabled={
-              !formData.name.trim() ||
-              !formData.prefix.trim() ||
-              !formData.baseUrl.trim() ||
-              submitting
-            }
-          >
-            {submitting ? "Creating..." : "Create"}
-          </Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>
-            Cancel
-          </Button>
         </div>
       </div>
     </Modal>

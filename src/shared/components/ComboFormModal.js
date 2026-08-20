@@ -110,7 +110,19 @@ export default function ComboFormModal({ isOpen, combo, onClose, onSave, activeP
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title={title || (isEdit ? "Edit Combo" : "Create Combo")}>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={title || (isEdit ? "Edit Combo" : "Create Combo")}
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button onClick={onClose} variant="ghost" size="sm">Cancel</Button>
+            <Button onClick={handleSave} size="sm" disabled={!name.trim() || !!nameError || saving}>
+              {saving ? "Saving..." : isEdit ? "Save" : "Create"}
+            </Button>
+          </div>
+        }
+      >
         <div className="flex flex-col gap-3">
           <div>
             {forcePrefix ? (
@@ -155,13 +167,6 @@ export default function ComboFormModal({ isOpen, combo, onClose, onSave, activeP
               <span className="material-symbols-outlined text-[16px]">add</span>
               Add Model
             </button>
-          </div>
-
-          <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-            <Button onClick={onClose} variant="ghost" fullWidth size="sm">Cancel</Button>
-            <Button onClick={handleSave} fullWidth size="sm" disabled={!name.trim() || !!nameError || saving}>
-              {saving ? "Saving..." : isEdit ? "Save" : "Create"}
-            </Button>
           </div>
         </div>
       </Modal>
