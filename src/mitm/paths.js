@@ -6,10 +6,17 @@ const APP_NAME = "kosh";
 const SUB_DIR = "gateway";
 
 function defaultDir() {
-  if (process.platform === "win32") {
-    return path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), APP_NAME, SUB_DIR);
+  const projectDir = path.join(process.cwd(), "data", SUB_DIR);
+  try {
+    fs.mkdirSync(projectDir, { recursive: true });
+    return projectDir;
+  } catch {
+    const fallback = process.platform === "win32"
+      ? path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), APP_NAME, SUB_DIR)
+      : path.join(os.homedir(), `.${APP_NAME}`, SUB_DIR);
+    fs.mkdirSync(fallback, { recursive: true });
+    return fallback;
   }
-  return path.join(os.homedir(), `.${APP_NAME}`, SUB_DIR);
 }
 
 function getDataDir() {

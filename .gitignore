@@ -52,12 +52,17 @@ next-env.d.ts
 
 /lib/generated/prisma
 
-# local SQLite database (never commit)
+# local SQLite database and keys (never commit)
+/data/
 prisma/kosh.db
 prisma/*.db
 prisma/*.db-journal
 prisma/*.sqlite
 prisma/*.sqlite-journal
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 
 # local screenshot/test databases
 .tmp/

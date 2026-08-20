@@ -1,6 +1,8 @@
 import { randomBytes } from "crypto"
 import { readFile, writeFile, mkdir } from "fs/promises"
+import { existsSync, copyFileSync, readdirSync, statSync } from "fs"
 import path from "path"
+import os from "os"
 import { execSync } from "child_process"
 
 const rootDir = process.cwd()
@@ -9,6 +11,9 @@ const envExamplePath = path.join(rootDir, ".env.example")
 const dataDir = path.join(rootDir, "data")
 const masterKeyPath = path.join(dataDir, "master.key")
 const databaseUrl = "file:./kosh.db"
+const gatewayDataDir = path.join(dataDir, "gateway")
+const gatewayDbDir = path.join(gatewayDataDir, "db")
+const gatewayDbPath = path.join(gatewayDbDir, "data.sqlite")
 
 function normalizeNewlines(value) {
   return value.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
@@ -67,6 +72,175 @@ function extractMasterKeyFromEnv(contents) {
   return match[1].trim().replace(/^["']|["']$/g, "")
 }
 
+async function initGatewayDatabase() {
+  await mkdir(gatewayDbDir, { recursive: true })
+
+  // 1. Auto-migrate existing AppData or legacy database if target doesn't exist yet
+  if (!existsSync(gatewayDbPath)) {
+    const appDataDir = process.platform === "win32"
+      ? path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "kosh", "gateway", "db")
+      : path.join(os.homedir(), ".kosh", "gateway", "db")
+
+    const legacy9routerDir = process.platform === "win32"
+      ? path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "9router", "db")
+      : path.join(os.homedir(), ".9router", "db")
+
+    const sourceDbDir = existsSync(path.join(appDataDir, "data.sqlite"))
+      ? appDataDir
+      : existsSync(path.join(legacy9routerDir, "data.sqlite"))
+        ? legacy9routerDir
+        : null
+
+    if (sourceDbDir) {
+      try {
+        const files = readdirSync(sourceDbDir)
+        for (const file of files) {
+          const src = path.join(sourceDbDir, file)
+          const dst = path.join(gatewayDbDir, file)
+          if (statSync(src).isFile()) {
+            copyFileSync(src, dst)
+          }
+        }
+        console.log(`[Gateway DB] Migrated existing database from ${sourceDbDir} -> ${gatewayDbPath}`)
+      } catch (err) {
+        console.warn(`[Gateway DB] Migration warning: ${err.message}`)
+      }
+    }
+  }
+
+  // 2. Ensure SQLite schema and tables are created
+  try {
+    const sqlite = await import("node:sqlite")
+    const db = new sqlite.DatabaseSync(gatewayDbPath)
+
+    // Execute standard schema initialization
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS _meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        data TEXT NOT NULL,
+        createdAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updatedAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS providerConnections (
+        id TEXT PRIMARY KEY,
+        provider TEXT NOT NULL,
+        authType TEXT,
+        name TEXT,
+        email TEXT,
+        priority INTEGER DEFAULT 1,
+        isActive INTEGER DEFAULT 1,
+        data TEXT,
+        createdAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updatedAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS providerNodes (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        data TEXT NOT NULL,
+        createdAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updatedAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS proxyPools (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        protocol TEXT DEFAULT 'http',
+        enabled INTEGER DEFAULT 1,
+        autoRotate INTEGER DEFAULT 0,
+        rotateInterval INTEGER DEFAULT 0,
+        strategy TEXT DEFAULT 'round-robin',
+        urls TEXT,
+        proxies TEXT,
+        auth TEXT,
+        customHeaders TEXT,
+        createdAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updatedAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS apiKeys (
+        id TEXT PRIMARY KEY,
+        key TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        machineId TEXT,
+        isActive INTEGER DEFAULT 1,
+        createdAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS combos (
+        id TEXT PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        models TEXT NOT NULL,
+        createdAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updatedAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS kv (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updatedAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS usageHistory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp INTEGER NOT NULL,
+        model TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        connectionId TEXT,
+        connectionName TEXT,
+        inputTokens INTEGER NOT NULL,
+        outputTokens INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        requestDetailsId INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS usageDaily (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        model TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        connectionId TEXT,
+        connectionName TEXT,
+        inputTokens INTEGER NOT NULL,
+        outputTokens INTEGER NOT NULL,
+        requests INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS requestDetails (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp INTEGER NOT NULL,
+        body TEXT,
+        createdAt TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+    `)
+
+    // Ensure a default Gateway key exists if empty
+    const keyCount = db.prepare("SELECT count(*) as count FROM apiKeys").get()?.count || 0
+    if (keyCount === 0) {
+      const defaultKey = `sk-${randomBytes(8).toString("hex")}-${randomBytes(3).toString("hex")}-${randomBytes(4).toString("hex")}`
+      db.prepare("INSERT INTO apiKeys (id, key, name, machineId, isActive) VALUES (?, ?, ?, ?, 1)").run(
+        randomBytes(16).toString("hex"),
+        defaultKey,
+        "Default Key",
+        randomBytes(8).toString("hex")
+      )
+    }
+
+    db.close()
+    console.log(`[Gateway DB] Initialized SQLite schema at ${gatewayDbPath}`)
+  } catch (err) {
+    console.warn(`[Gateway DB] SQLite init note: ${err.message}`)
+  }
+}
+
 async function main() {
   await mkdir(dataDir, { recursive: true })
 
@@ -95,10 +269,19 @@ async function main() {
   await writeFile(masterKeyPath, `${masterKey}\n`, "utf8")
   await writeFile(envPath, await buildEnvFile(masterKey), "utf8")
 
+  // Step 1: Kosh Vault & Pulse Prisma DB
+  console.log("\n--- [1/2] Initializing Kosh Vault & Pulse Database (Prisma) ---")
   execSync("npm run db:generate", { stdio: "inherit" })
   execSync("npm run db:deploy", { stdio: "inherit" })
 
-  console.log(`Bootstrap complete. Master key stored at ${masterKeyPath}`)
+  // Step 2: Kosh Gateway DB
+  console.log("\n--- [2/2] Initializing Kosh Gateway Database (SQLite) ---")
+  await initGatewayDatabase()
+
+  console.log(`\n✓ Bootstrap complete! All databases and keys are ready.`)
+  console.log(`  - Master Key:       ${masterKeyPath}`)
+  console.log(`  - Vault DB:         ./prisma/kosh.db`)
+  console.log(`  - Gateway DB:       ${gatewayDbPath}\n`)
 }
 
 async function buildEnvFile(masterKey) {

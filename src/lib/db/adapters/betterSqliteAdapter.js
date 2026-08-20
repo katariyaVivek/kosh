@@ -6,7 +6,7 @@ const CHECKPOINT_INTERVAL_MS = 60 * 1000;
 export async function createBetterSqliteAdapter(filePath) {
   let Database;
   try {
-    Database = (await import("better-sqlite3")).default;
+    Database = (await import(/* webpackIgnore: true */ "better-sqlite3")).default;
   } catch {
     throw new Error("better-sqlite3 is not installed");
   }
