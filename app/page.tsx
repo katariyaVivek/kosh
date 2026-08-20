@@ -135,7 +135,7 @@ function buildLocalUsageStats(
     byProvider.set("Codex", codex)
   }
 
-  return ["Claude Code", "Codex", "OpenCode"].map(
+  return ["Claude Code", "Codex", "OpenCode", "Antigravity"].map(
     (provider) =>
       byProvider.get(provider) ?? {
         provider,

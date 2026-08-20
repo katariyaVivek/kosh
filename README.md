@@ -2,7 +2,7 @@
 
 Local-first API key treasury and AI usage monitor for developers.
 
-Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage where APIs allow it, and imports local Codex, Claude Code, and OpenCode usage without storing prompts or responses.
+Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage where APIs allow it, and imports local Codex, Claude Code, OpenCode, and Antigravity usage without storing prompts or responses.
 
 ![Kosh dashboard](./public/screenshots/dashboard.png)
 
@@ -10,9 +10,9 @@ Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage wh
 
 - **Encrypted API key vault** with platform, environment, notes, rotation metadata, and copy/reveal controls.
 - **Usage dashboard** for cost, calls, and token trends across API keys and local AI tools.
-- **Local AI usage imports** from Codex (`~/.codex/`), Claude Code (`~/.claude/`), and OpenCode (`~/.opencode/`) — all priced via shared LiteLLM pricing with automatic fallback for 700+ models.
+- **Local AI usage imports** from Codex (`~/.codex/`), Claude Code (`~/.claude/`), OpenCode (`~/.opencode/`), and Antigravity (`~/.gemini/antigravity-cli/`) — all priced via shared LiteLLM pricing with automatic fallback for 700+ models.
 - **Codex rate limit snapshots** from local auth or CLI status.
-- **Pricing via LiteLLM** — shared pricing module with 24h cache and bundled fallback table, so Codex, Claude Code, and OpenCode all estimate costs consistently.
+- **Pricing via LiteLLM** — shared pricing module with 24h cache and bundled fallback table, so Codex, Claude Code, OpenCode, and Antigravity all estimate costs consistently.
 - **20 provider connectors** with a capability model reporting whether validation, usage sync, billing, or manual entry is supported.
 - **Alerts** for cost, calls, and token thresholds across API keys or local AI usage sources.
 - **Pulse view** for day-to-day usage, spend scanning, and per-key sparklines.
@@ -30,7 +30,7 @@ Kosh separates three kinds of telemetry:
 - **Usage history**: `UsageEvent` and `UsageDailyRollup` records for cost, calls, and tokens.
 - **Quota snapshots**: `UsageQuotaSnapshot` records for live Codex rate-limit windows.
 
-Local Codex, Claude Code, and OpenCode imports store token and cost metadata only. Kosh does not store prompts, responses, or transcript content.
+Local Codex, Claude Code, OpenCode, and Antigravity imports store token and cost metadata only. Kosh does not store prompts, responses, or transcript content.
 
 ## Tech Stack
 

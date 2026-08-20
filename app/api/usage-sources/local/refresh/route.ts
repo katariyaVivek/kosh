@@ -3,12 +3,13 @@ import { NextResponse } from "next/server"
 import { importClaudeCodeUsage } from "@/lib/usage/claude-code"
 import { importCodexUsage } from "@/lib/usage/codex"
 import { importOpenCodeUsage } from "@/lib/usage/opencode"
+import { importAntigravityUsage } from "@/lib/usage/antigravity"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 async function refreshSource(
-  provider: "Claude Code" | "Codex" | "OpenCode",
+  provider: "Claude Code" | "Codex" | "OpenCode" | "Antigravity",
   importer: () => Promise<{
     filesScanned: number
     entriesScanned: number
@@ -33,14 +34,15 @@ async function refreshSource(
 }
 
 export async function POST() {
-  const [claudeCode, codex, opencode] = await Promise.all([
+  const [claudeCode, codex, opencode, antigravity] = await Promise.all([
     refreshSource("Claude Code", () => importClaudeCodeUsage()),
     refreshSource("Codex", () => importCodexUsage()),
     refreshSource("OpenCode", () => importOpenCodeUsage()),
+    refreshSource("Antigravity", () => importAntigravityUsage()),
   ])
 
   return NextResponse.json({
     success: true,
-    sources: [claudeCode, codex, opencode],
+    sources: [claudeCode, codex, opencode, antigravity],
   })
 }

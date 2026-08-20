@@ -1,6 +1,7 @@
 export const PLATFORM_INITIALS: Record<string, string> = {
   OpenAI: "OA",
   OpenCode: "OC",
+  Antigravity: "AG",
   OpenRouter: "OR",
   "NVIDIA NIM": "NV",
   Anthropic: "AN",
@@ -27,6 +28,7 @@ export const PLATFORM_INITIALS: Record<string, string> = {
 export const PLATFORM_COLORS: Record<string, string> = {
   OpenAI: "#10a37f",
   OpenCode: "#000000",
+  Antigravity: "#8b5cf6",
   OpenRouter: "#6366f1",
   Anthropic: "#d97706",
   "NVIDIA NIM": "#76b900",
