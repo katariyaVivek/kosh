@@ -19,6 +19,7 @@ import {
   Lock,
   PanelLeftClose,
   PanelLeftOpen,
+  Network,
 } from "lucide-react"
 
 import { AddAlertDialog } from "@/components/add-alert-dialog"
@@ -42,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Vault", href: "/vault", icon: KeyRound },
   { label: "Pulse", href: "/pulse", icon: Activity },
   { label: "Alerts", href: "/alerts", icon: BellRing },
+  { label: "Gateway", href: "/gateway", icon: Network },
   { label: "Settings", href: "/settings", icon: Settings2 },
 ]
 
@@ -157,7 +159,10 @@ export function KoshShell({
 
               <nav className="space-y-1">
                 {NAV_ITEMS.map((item) => {
-                  const isActive = pathname === item.href
+                  const isActive =
+                    item.href === "/"
+                      ? pathname === "/"
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`)
                   const labelContent = (
                     <span
                       className={cn(

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { encrypt } from "@/lib/encryption"
+import { getApiKeys, createApiKey } from "@/src/lib/localDb"
+import { getConsistentMachineId } from "@/src/shared/utils/machineId"
+
+export const dynamic = "force-dynamic"
 
 function parseRotationIntervalDays(value: unknown) {
   if (value === null || value === undefined || value === "") {
@@ -26,47 +30,81 @@ function parseRotationReminderDays(value: unknown) {
   return value
 }
 
-export async function POST(req: NextRequest) {
-  const {
-    name,
-    platform,
-    keyValue,
-    projectTag,
-    environment,
-    notes,
-    rotationIntervalDays: rawRotationIntervalDays,
-    rotationReminderDays: rawRotationReminderDays,
-  } = await req.json()
-
-  let rotationIntervalDays: number | null
-  let rotationReminderDays: number
-
+// GET /api/keys - List Gateway API keys
+export async function GET() {
   try {
-    rotationIntervalDays = parseRotationIntervalDays(rawRotationIntervalDays)
-    rotationReminderDays = parseRotationReminderDays(rawRotationReminderDays)
+    const keys = await getApiKeys()
+    return NextResponse.json({ keys })
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "rotation_payload_invalid"
-
-    return NextResponse.json(
-      { error: message, message: "Invalid rotation reminder settings." },
-      { status: 400 }
-    )
+    console.log("Error fetching gateway keys:", error)
+    return NextResponse.json({ error: "Failed to fetch keys" }, { status: 500 })
   }
+}
 
-  const key = await db.apiKey.create({
-    data: {
+// POST /api/keys - Handle both Kosh Vault Key creation and Gateway API Key creation
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const {
       name,
       platform,
-      keyEncrypted: encrypt(keyValue),
-      projectTag: projectTag || null,
+      keyValue,
+      projectTag,
       environment,
-      notes: notes || null,
-      rotationIntervalDays,
-      rotationReminderDays,
-      lastRotatedAt: rotationIntervalDays ? new Date() : null,
-    }
-  })
+      notes,
+      rotationIntervalDays: rawRotationIntervalDays,
+      rotationReminderDays: rawRotationReminderDays,
+    } = body
 
-  return NextResponse.json(key)
+    // Gateway API Key generation (when platform / keyValue is not provided)
+    if (!platform && !keyValue && name) {
+      const machineId = await getConsistentMachineId()
+      const apiKey = await createApiKey(name, machineId)
+      return NextResponse.json(
+        {
+          key: apiKey.key,
+          name: apiKey.name,
+          id: apiKey.id,
+          machineId: apiKey.machineId,
+        },
+        { status: 201 }
+      )
+    }
+
+    // Kosh Vault Key creation
+    let rotationIntervalDays: number | null
+    let rotationReminderDays: number
+
+    try {
+      rotationIntervalDays = parseRotationIntervalDays(rawRotationIntervalDays)
+      rotationReminderDays = parseRotationReminderDays(rawRotationReminderDays)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "rotation_payload_invalid"
+
+      return NextResponse.json(
+        { error: message, message: "Invalid rotation reminder settings." },
+        { status: 400 }
+      )
+    }
+
+    const key = await db.apiKey.create({
+      data: {
+        name,
+        platform,
+        keyEncrypted: encrypt(keyValue),
+        projectTag: projectTag || null,
+        environment,
+        notes: notes || null,
+        rotationIntervalDays,
+        rotationReminderDays,
+        lastRotatedAt: rotationIntervalDays ? new Date() : null,
+      },
+    })
+
+    return NextResponse.json(key)
+  } catch (error) {
+    console.error("Error creating key:", error)
+    return NextResponse.json({ error: "Failed to create key" }, { status: 500 })
+  }
 }
