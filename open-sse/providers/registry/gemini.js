@@ -22,8 +22,7 @@ export default {
   transport: {
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
     format: "gemini",
-    clientId: "***CREDENTIAL-REMOVED***.apps.googleusercontent.com",
-    clientSecret: "***CREDENTIAL-REMOVED***",
+    ...GOOGLE_OAUTH_CLIENT,
     auth: {
       apiKey: {
         header: "x-goog-api-key",

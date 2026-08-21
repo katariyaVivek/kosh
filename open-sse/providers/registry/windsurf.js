@@ -36,8 +36,8 @@ export default {
   //  3) Firebase JWT (eyJ...) → same RegisterUser exchange as #1
   //  4) Devin auth1_... → self-serve chain → ide_token used as apiKey on server.self-serve.windsurf.com
   oauth: {
-    clientId: "***CREDENTIAL-REMOVED***",
-    firebaseApiKey: "***CREDENTIAL-REMOVED***",
+    clientId: process.env.WINDSURF_OAUTH_CLIENT_ID || "",
+    firebaseApiKey: process.env.WINDSURF_FIREBASE_API_KEY || "",
     firebaseSignInUrl: "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
     registerUrl: "https://register.windsurf.com/exa.seat_management_pb.SeatManagementService/RegisterUser",
     apiServerUrl: "https://server.codeium.com",
