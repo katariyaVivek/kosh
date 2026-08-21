@@ -3,6 +3,7 @@
  */
 import { platform, arch } from "os";
 import { ANTIGRAVITY_OAUTH_CLIENT, GOOGLE_OAUTH_CLIENT } from "open-sse/providers/shared.js";
+import { getCreds } from "open-sse/shared/providerCreds.js";
 import { PROVIDER_OAUTH, PROVIDERS as REGISTRY_PROVIDERS } from "open-sse/providers/index.js";
 
 /**
@@ -25,8 +26,12 @@ export const CLAUDE_CONFIG = { ...PROVIDER_OAUTH["claude"] };
 export const CODEX_CONFIG = { ...PROVIDER_OAUTH["codex"] };
 
 // Gemini (Google) OAuth Configuration (Standard OAuth2)
-// clientId/clientSecret from GOOGLE_OAUTH_CLIENT (shared.js) — not stored in registry
-export const GEMINI_CONFIG = { ...GOOGLE_OAUTH_CLIENT, ...PROVIDER_OAUTH["gemini-cli"] };
+// credentials resolved at request time: env -> local cache -> installed-app detection
+export const GEMINI_CONFIG = {
+  ...PROVIDER_OAUTH["gemini-cli"],
+  get clientId() { return GOOGLE_OAUTH_CLIENT.clientId; },
+  get clientSecret() { return GOOGLE_OAUTH_CLIENT.clientSecret; },
+};
 
 // Qoder OAuth Configuration (Device Token Flow with PKCE).
 // Device tokens are long-lived (~30 days for access, ~360 for refresh).
@@ -36,14 +41,19 @@ export const GEMINI_CONFIG = { ...GOOGLE_OAUTH_CLIENT, ...PROVIDER_OAUTH["gemini
 export const QODER_CONFIG = { ...PROVIDER_OAUTH["qoder"] };
 
 // iFlow OAuth Configuration (Authorization Code)
-export const IFLOW_CONFIG = { ...PROVIDER_OAUTH["iflow"] };
+export const IFLOW_CONFIG = {
+  ...PROVIDER_OAUTH["iflow"],
+  get clientId() { return getCreds("iflow")?.clientId ?? ""; },
+  get clientSecret() { return getCreds("iflow")?.clientSecret ?? ""; },
+};
 
 // Antigravity OAuth Configuration (Standard OAuth2 with Google)
 // clientId/clientSecret from ANTIGRAVITY_OAUTH_CLIENT (shared.js) — not stored in registry
 // loadCodeAssistClientMetadata is dynamic (runtime platform detection)
 export const ANTIGRAVITY_CONFIG = {
-  ...ANTIGRAVITY_OAUTH_CLIENT,
   ...PROVIDER_OAUTH["antigravity"],
+  get clientId() { return ANTIGRAVITY_OAUTH_CLIENT.clientId; },
+  get clientSecret() { return ANTIGRAVITY_OAUTH_CLIENT.clientSecret; },
   loadCodeAssistClientMetadata: JSON.stringify({ ideType: 9, platform: getOAuthPlatformEnum(), pluginType: 2 }),
 };
 
@@ -167,7 +177,7 @@ export const TRAE_CONFIG = {
 //   3) POST RegisterUser {firebase_id_token} → {apiKey, apiServerUrl, name}
 //   4) POST GetOneTimeAuthToken → GetCurrentUser (best-effort email/plan)
 export const WINDSURF_CONFIG = {
-  clientId: process.env.WINDSURF_OAUTH_CLIENT_ID || "",
+  get clientId() { return getCreds("windsurf")?.clientId ?? ""; },
   authBaseUrl: "https://www.windsurf.com",
   signInPath: "/windsurf/signin",
   registerApiBaseUrl: "https://register.windsurf.com",
@@ -177,7 +187,7 @@ export const WINDSURF_CONFIG = {
   planStatusPath: "/exa.seat_management_pb.SeatManagementService/GetPlanStatus",
   userStatusPath: "/exa.seat_management_pb.SeatManagementService/GetUserStatus",
   defaultApiServerUrl: "https://server.codeium.com",
-  firebaseApiKey: process.env.WINDSURF_FIREBASE_API_KEY || "",
+  get firebaseApiKey() { return getCreds("windsurf")?.clientSecret ?? ""; },
   callbackPath: "/windsurf-auth-callback",
   userAgent: "antigravity-cockpit-tools",
   oauthTimeoutMs: 600_000,

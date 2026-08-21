@@ -1,3 +1,5 @@
+import { getCreds } from "../../shared/providerCreds.js";
+
 export default {
   id: "iflow",
   hidden: true,
@@ -38,8 +40,9 @@ export default {
     { id: "iflow-rome-30ba3b", name: "iFlow ROME" },
   ],
   oauth: {
-    clientId: process.env.IFLOW_OAUTH_CLIENT_ID || "",
-    clientSecret: process.env.IFLOW_OAUTH_CLIENT_SECRET || "",
+    // resolved at request time: env -> local cache -> installed-app detection
+    get clientId() { return getCreds("iflow")?.clientId ?? ""; },
+    get clientSecret() { return getCreds("iflow")?.clientSecret ?? ""; },
     authorizeUrl: "https://iflow.cn/oauth",
     tokenUrl: "https://iflow.cn/oauth/token",
     userInfoUrl: "https://iflow.cn/api/oauth/getUserInfo",

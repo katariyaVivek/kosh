@@ -81,18 +81,19 @@ export const ANTIGRAVITY_IDE_VERSION = "2.1.1";
 export const ANTIGRAVITY_IDE_BASE_URL = "https://daily-cloudcode-pa.googleapis.com";
 export const ANTIGRAVITY_IDE_USER_AGENT = `antigravity/ide/${ANTIGRAVITY_IDE_VERSION} darwin/arm64`;
 
-// Provider OAuth client credentials are supplied via environment variables and
-// are never committed to the repository (see .env.example).
-const fromEnv = (name) => process.env[name] || "";
+// Provider OAuth client credentials are resolved at runtime (never committed):
+//   1. env vars (see .env.example)  2. local cache  3. auto-detect from the
+// provider's own installed app/CLI on this machine (open-sse/shared/providerCreds.js)
+import { getCreds } from "../shared/providerCreds.js";
 
 // Antigravity OAuth client credentials (used by registry, usage.js, src/lib/oauth)
 export const ANTIGRAVITY_OAUTH_CLIENT = {
-  clientId: fromEnv("ANTIGRAVITY_OAUTH_CLIENT_ID"),
-  clientSecret: fromEnv("ANTIGRAVITY_OAUTH_CLIENT_SECRET"),
+  get clientId() { return getCreds("antigravity")?.clientId ?? ""; },
+  get clientSecret() { return getCreds("antigravity")?.clientSecret ?? ""; },
 };
 
 // Gemini (Google) OAuth client credentials (shared by gemini, gemini-cli, src/lib/oauth)
 export const GOOGLE_OAUTH_CLIENT = {
-  clientId: fromEnv("GEMINI_OAUTH_CLIENT_ID"),
-  clientSecret: fromEnv("GEMINI_OAUTH_CLIENT_SECRET"),
+  get clientId() { return getCreds("gemini")?.clientId ?? ""; },
+  get clientSecret() { return getCreds("gemini")?.clientSecret ?? ""; },
 };

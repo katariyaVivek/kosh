@@ -270,13 +270,25 @@ async function main() {
   await writeFile(envPath, await buildEnvFile(masterKey), "utf8")
 
   // Step 1: Kosh Vault & Pulse Prisma DB
-  console.log("\n--- [1/2] Initializing Kosh Vault & Pulse Database (Prisma) ---")
+  console.log("\n--- [1/3] Initializing Kosh Vault & Pulse Database (Prisma) ---")
   execSync("npm run db:generate", { stdio: "inherit" })
   execSync("npm run db:deploy", { stdio: "inherit" })
 
   // Step 2: Kosh Gateway DB
-  console.log("\n--- [2/2] Initializing Kosh Gateway Database (SQLite) ---")
+  console.log("\n--- [2/3] Initializing Kosh Gateway Database (SQLite) ---")
   await initGatewayDatabase()
+
+  // Step 3: Provider OAuth credentials (best-effort auto-detection)
+  console.log("\n--- [3/3] Resolving provider OAuth credentials ---")
+  try {
+    const { ensureDetected } = await import("../open-sse/shared/providerCredsNode.js")
+    const results = await ensureDetected()
+    for (const [provider, status] of Object.entries(results)) {
+      console.log(`  - ${provider}: ${status}`)
+    }
+  } catch (err) {
+    console.warn(`[Provider creds] detection skipped: ${err?.message || err}`)
+  }
 
   console.log(`\n✓ Bootstrap complete! All databases and keys are ready.`)
   console.log(`  - Master Key:       ${masterKeyPath}`)

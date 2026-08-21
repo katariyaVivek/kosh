@@ -41,7 +41,9 @@ export default {
       loadProjectApiUrl: "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist",
       tokenUrl: "https://oauth2.googleapis.com/token",
     },
-    ...ANTIGRAVITY_OAUTH_CLIENT,
+    // resolved at request time: env -> local cache -> installed-app detection
+    get clientId() { return ANTIGRAVITY_OAUTH_CLIENT.clientId; },
+    get clientSecret() { return ANTIGRAVITY_OAUTH_CLIENT.clientSecret; },
   },
   models: [
     { id: "gemini-3.7-flash-high", name: "Gemini 3.7 Flash (High)", upstreamModelId: "gemini-3.7-flash-tiered(high)" },

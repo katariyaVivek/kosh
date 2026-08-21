@@ -7,9 +7,11 @@ import { ANTIGRAVITY_IDE_USER_AGENT, ANTIGRAVITY_IDE_VERSION, ANTIGRAVITY_OAUTH_
 import { U, parseResetTime, normalizeCloudCodeProjectId, fetchWithTimeout } from "./shared.js";
 
 // Antigravity API config (from Quotio) — urls from registry, oauth client + dynamic UA kept here
+// credentials resolved live via getters so detection/env changes apply without restart
 const ANTIGRAVITY_CONFIG = {
   ...U("antigravity"),
-  ...ANTIGRAVITY_OAUTH_CLIENT,
+  get clientId() { return ANTIGRAVITY_OAUTH_CLIENT.clientId; },
+  get clientSecret() { return ANTIGRAVITY_OAUTH_CLIENT.clientSecret; },
   userAgent: ANTIGRAVITY_IDE_USER_AGENT,
 };
 

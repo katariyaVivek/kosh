@@ -2,6 +2,8 @@
 // Chat = Codeium gRPC-web protobuf:
 //   POST {base}  Content-Type: application/grpc-web+proto
 //   Service: exa.language_server_pb.LanguageServerService / GetChatMessage
+import { getCreds } from "../../shared/providerCreds.js";
+
 export default {
   id: "windsurf",
   alias: "ws",
@@ -36,8 +38,9 @@ export default {
   //  3) Firebase JWT (eyJ...) → same RegisterUser exchange as #1
   //  4) Devin auth1_... → self-serve chain → ide_token used as apiKey on server.self-serve.windsurf.com
   oauth: {
-    clientId: process.env.WINDSURF_OAUTH_CLIENT_ID || "",
-    firebaseApiKey: process.env.WINDSURF_FIREBASE_API_KEY || "",
+    // resolved at request time: env -> local cache -> installed-app detection
+    get clientId() { return getCreds("windsurf")?.clientId ?? ""; },
+    get firebaseApiKey() { return getCreds("windsurf")?.clientSecret ?? ""; },
     firebaseSignInUrl: "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
     registerUrl: "https://register.windsurf.com/exa.seat_management_pb.SeatManagementService/RegisterUser",
     apiServerUrl: "https://server.codeium.com",

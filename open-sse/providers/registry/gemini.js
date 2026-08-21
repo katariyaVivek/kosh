@@ -22,7 +22,9 @@ export default {
   transport: {
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
     format: "gemini",
-    ...GOOGLE_OAUTH_CLIENT,
+    // resolved at request time: env -> local cache -> installed-app detection
+    get clientId() { return GOOGLE_OAUTH_CLIENT.clientId; },
+    get clientSecret() { return GOOGLE_OAUTH_CLIENT.clientSecret; },
     auth: {
       apiKey: {
         header: "x-goog-api-key",
