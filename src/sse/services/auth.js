@@ -339,3 +339,27 @@ export async function isValidApiKey(apiKey) {
   if (!apiKey) return false;
   return await validateApiKey(apiKey);
 }
+
+/**
+ * Enforce the gateway API key on public endpoints (e.g. /v1/models) when
+ * requireApiKey is enabled in settings. Mirrors the chat handler's check.
+ * Returns null when authorized, otherwise a 401 Response ready to return.
+ */
+export async function authorizeApiKey(request) {
+  const settings = await getSettings();
+  if (!settings.requireApiKey) return null;
+  const apiKey = extractApiKey(request);
+  if (!apiKey) {
+    return Response.json(
+      { error: { message: "Missing API key", type: "authentication_error" } },
+      { status: 401, headers: { "Access-Control-Allow-Origin": "*" } }
+    );
+  }
+  if (!(await isValidApiKey(apiKey))) {
+    return Response.json(
+      { error: { message: "Invalid API key", type: "authentication_error" } },
+      { status: 401, headers: { "Access-Control-Allow-Origin": "*" } }
+    );
+  }
+  return null;
+}

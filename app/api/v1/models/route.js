@@ -16,6 +16,8 @@ import { resolveGrokCliModels } from "open-sse/services/grokCliModels.js";
 import { resolveCursorModels } from "open-sse/services/cursorModels.js";
 import { resolveZedModels } from "open-sse/shared/zedAuth.js";
 import { updateProviderCredentials } from "@/sse/services/tokenRefresh";
+import { authorizeApiKey } from "@/sse/services/auth";
+import { NO_AUTH_ALIASES } from "open-sse/providers/index.js";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
 import { capabilitiesFromServiceKind, getCapabilitiesForModel } from "open-sse/providers/capabilities.js";
 
@@ -247,11 +249,13 @@ export async function buildModelsList(kindFilter, options = {}) {
   // cross-instance recursive loops.
   const skipDynamicFetch = options.skipDynamicFetch === true;
   let connections = [];
+  let dbAvailable = true;
   try {
     connections = await getProviderConnections();
     connections = connections.filter(c => c.isActive !== false);
   } catch (e) {
-    console.log("Could not fetch providers, returning all models");
+    dbAvailable = false;
+    console.log("Could not fetch providers, returning static catalog fallback");
   }
 
   let combos = [];
@@ -306,12 +310,18 @@ export async function buildModelsList(kindFilter, options = {}) {
     models.push(entry);
   }
 
-  if (connections.length === 0) {
-    // DB unavailable -> return static models, filtered by per-model kind
+  if (!dbAvailable || connections.length === 0) {
+    // Two distinct cases share this branch:
+    // - DB unavailable -> emergency fallback: full static catalog so local use still works.
+    // - Zero configured connections -> only no-auth providers (they serve requests
+    //   without any credentials). Never advertise the whole registry through a
+    //   publicly reachable endpoint.
+    const staticFallbackAll = !dbAvailable;
     const aliasToProviderId = Object.fromEntries(
       Object.entries(PROVIDER_ID_TO_ALIAS).map(([id, alias]) => [alias, id])
     );
     for (const [alias, providerModels] of Object.entries(PROVIDER_MODELS)) {
+      if (!staticFallbackAll && !NO_AUTH_ALIASES.has(alias)) continue;
       const providerId = aliasToProviderId[alias] || alias;
       if (!providerMatchesKinds(providerId, kindFilter)) continue;
       for (const model of providerModels) {
@@ -560,6 +570,9 @@ export async function OPTIONS() {
  */
 export async function GET(request) {
   try {
+    const unauthorized = await authorizeApiKey(request);
+    if (unauthorized) return unauthorized;
+
     // Detect cross-instance recursive /models fetch (another 9router fetching our /models)
     const skipDynamicFetch = request?.headers?.get(INTERNAL_MODELS_FETCH_HEADER) === "1";
     const data = await buildModelsList([LLM_KIND], { skipDynamicFetch });

@@ -31,6 +31,13 @@ export const PROVIDERS = {};
 export const PROVIDER_MODELS = {};
 export const PROVIDER_OAUTH = {};
 export const PROVIDER_MEDIA = {};
+
+// Aliases whose registry entry is marked noAuth — these serve requests without any
+// stored connection (virtual "public" credentials), so they are safe to advertise
+// even when zero provider connections are configured.
+export const NO_AUTH_ALIASES = new Set(
+  REGISTRY.filter((e) => e.noAuth === true).map((e) => e.alias || e.id)
+);
 for (const entry of REGISTRY) {
   if (entry.transport) {
     PROVIDERS[entry.id] = buildTransport(entry.transport, entry.oauth);
