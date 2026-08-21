@@ -29,25 +29,29 @@ function getAntigravityDataDir() {
 }
 
 function normalizeAntigravityModel(name?: string | null): string {
-  if (!name) return "gemini-3-flash"
+  if (!name) return "gemini-3.7-flash"
   const clean = name.trim().toLowerCase()
   if (clean === "model_placeholder_m26") return "claude-3-7-sonnet"
   if (clean === "model_placeholder_m35") return "claude-opus-4-5"
-  if (clean === "model_placeholder_m50") return "gemini-3-flash"
+  if (clean === "model_placeholder_m50") return "gemini-3.7-flash"
   if (clean === "model_placeholder_m7") return "claude-haiku-3-5"
-  if (clean === "model_placeholder_m18") return "gemini-3-flash"
-  if (clean === "model_placeholder_m132") return "gemini-3.1-pro"
-  if (clean === "model_google_gemini_2_5_flash_lite") return "gemini-3-flash"
-  if (clean === "gemini-pro-default") return "gemini-3-pro"
-  if (clean === "gemini-3.1-pro-high") return "gemini-3.1-pro"
-  if (clean === "gemini-3-flash-a") return "gemini-3-flash"
-  if (clean.includes("opus-4-6")) return "claude-opus-4-6"
+  if (clean === "model_placeholder_m18") return "gemini-3.5-flash-lite"
+  if (clean === "model_placeholder_m132") return "gemini-3.1-pro-preview"
+  if (clean === "model_placeholder_m298") return "gemini-3.7-flash"
+  if (clean === "model_google_gemini_2_5_flash_lite") return "gemini-3.5-flash-lite"
+  if (clean === "gemini-pro-default") return "gemini-3.1-pro-preview"
+  if (clean === "gemini-3.1-pro-high" || clean.includes("3.1-pro")) return "gemini-3.1-pro-preview"
+  if (clean.includes("3.7") && clean.includes("flash")) return "gemini-3.7-flash"
+  if (clean.includes("3.5") && clean.includes("flash")) return "gemini-3.5-flash-lite"
+  if (clean === "gemini-3-flash-a" || clean.includes("3-flash")) return "gemini-3.7-flash"
+  if (clean.includes("opus-4-6")) return "claude-opus-4-6-thinking"
   if (clean.includes("opus-4-5")) return "claude-opus-4-5"
   if (clean.includes("sonnet-3-7") || clean.includes("3-7-sonnet")) return "claude-3-7-sonnet"
-  if (clean.includes("3.1") && clean.includes("pro")) return "gemini-3.1-pro"
-  if (clean.includes("3") && clean.includes("pro")) return "gemini-3-pro"
-  if (clean.includes("3") && clean.includes("flash")) return "gemini-3-flash"
-  if (clean.includes("2.5") || clean.includes("2-5")) return "gemini-3-flash"
+  if (clean.includes("sonnet-4-5") || clean.includes("4-5-sonnet")) return "claude-sonnet-4-5"
+  if (clean.includes("3.1") && clean.includes("pro")) return "gemini-3.1-pro-preview"
+  if (clean.includes("3") && clean.includes("pro")) return "gemini-3.1-pro-preview"
+  if (clean.includes("3") && clean.includes("flash")) return "gemini-3.7-flash"
+  if (clean.includes("gemini")) return "gemini-3.7-flash"
   return normalizeModelName(clean)
 }
 

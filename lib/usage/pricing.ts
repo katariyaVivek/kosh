@@ -41,7 +41,14 @@ const FALLBACK_PRICING: Record<string, ModelPricing> = {
   "claude-haiku-3.5": { input: 0.8, output: 4, cacheCreate: 1, cacheRead: 0.08 },
   "claude-3-5-haiku": { input: 0.8, output: 4, cacheCreate: 1, cacheRead: 0.08 },
 
-  // Gemini 3 & 2 Series (2026)
+  // Gemini 3 Series (2026 Flagships)
+  "gemini-3.7-flash": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-3.7-flash-high": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-3.7-flash-medium": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-3.7-flash-low": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemini-3.5-flash-lite": { input: 0.075, output: 0.3, cacheCreate: 0.01875, cacheRead: 0.001875 },
+  "gemini-3.5-flash": { input: 0.1, output: 0.4, cacheCreate: 0.025, cacheRead: 0.0025 },
+  "gemini-3.1-pro-preview": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
   "gemini-3.1-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
   "gemini-3.1-pro-high": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
   "gemini-3-pro": { input: 1.25, output: 5, cacheCreate: 0.3125, cacheRead: 0.03125 },
@@ -49,6 +56,8 @@ const FALLBACK_PRICING: Record<string, ModelPricing> = {
   "gemini-3-flash": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
   "gemini-3-flash-a": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
   "gemini-3": { input: 0.15, output: 0.6, cacheCreate: 0.0375, cacheRead: 0.00375 },
+  "gemma-4-31b-it": { input: 0.1, output: 0.1, cacheCreate: 0.02, cacheRead: 0.002 },
+  "gemma-4-26b-a4b-it": { input: 0.05, output: 0.05, cacheCreate: 0.01, cacheRead: 0.001 },
   "gemini-2.5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.031 },
   "gemini-2-5-pro": { input: 1.25, output: 10, cacheCreate: 0.63, cacheRead: 0.031 },
   "gemini-2.5-flash": { input: 0.3, output: 2.5, cacheCreate: 0.15, cacheRead: 0.008 },

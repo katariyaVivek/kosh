@@ -192,6 +192,45 @@ export async function GET(
           ? "estimated"
           : "unknown"
 
+  const resolvedTotals =
+    totals._sum.calls && totals._sum.calls > 0
+      ? totals
+      : await db.usageEvent.aggregate({
+          _sum: { totalTokens: true, cost: true, calls: true },
+          where: { provider, sourceType: "local_tool" },
+        })
+
+  let resolvedDailyRollups = dailyRollups.map((rollup) => ({
+    id: rollup.id,
+    date: format(rollup.rollupDate, "yyyy-MM-dd"),
+    tokens: rollup.totalTokens ?? 0,
+    cost: rollup.cost,
+    calls: rollup.calls,
+    accuracy: rollup.accuracy,
+  }))
+
+  if (resolvedDailyRollups.length === 0) {
+    const eventRollups = await db.usageEvent.groupBy({
+      by: ["periodStart", "accuracy"],
+      _sum: { totalTokens: true, cost: true, calls: true },
+      where: {
+        provider,
+        sourceType: "local_tool",
+        periodStart: { gte: rangeStart, lt: rangeEnd },
+      },
+      orderBy: { periodStart: "asc" },
+    })
+
+    resolvedDailyRollups = eventRollups.map((r, i) => ({
+      id: `ev-rollup-${i}`,
+      date: format(r.periodStart, "yyyy-MM-dd"),
+      tokens: r._sum.totalTokens ?? 0,
+      cost: r._sum.cost ?? 0,
+      calls: r._sum.calls ?? 0,
+      accuracy: r.accuracy,
+    }))
+  }
+
   return NextResponse.json({
     provider,
     source: source
@@ -254,18 +293,11 @@ export async function GET(
         }
       : null,
     totals: {
-      tokens: totals._sum.totalTokens ?? 0,
-      cost: totals._sum.cost ?? 0,
-      calls: totals._sum.calls ?? 0,
+      tokens: resolvedTotals._sum.totalTokens ?? 0,
+      cost: resolvedTotals._sum.cost ?? 0,
+      calls: resolvedTotals._sum.calls ?? 0,
     },
-    dailyRollups: dailyRollups.map((rollup) => ({
-      id: rollup.id,
-      date: format(rollup.rollupDate, "yyyy-MM-dd"),
-      tokens: rollup.totalTokens ?? 0,
-      cost: rollup.cost,
-      calls: rollup.calls,
-      accuracy: rollup.accuracy,
-    })),
+    dailyRollups: resolvedDailyRollups,
     latestEvents: latestEvents.map((event) => ({
       id: event.id,
       model: event.model ?? provider,

@@ -214,10 +214,7 @@ async function updateDailyRollup(
     },
     where: {
       usageSourceId,
-      periodStart: {
-        gte: start,
-        lt: end,
-      },
+      periodStart: start,
     },
   })
 
