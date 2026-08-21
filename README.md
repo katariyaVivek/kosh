@@ -1,14 +1,16 @@
 # Kosh
 
-Local-first API key treasury and AI usage monitor for developers.
+Local-first API key treasury, AI usage monitor, and self-hosted AI gateway for developers.
 
-Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage where APIs allow it, and imports local Codex, Claude Code, OpenCode, and Antigravity usage without storing prompts or responses.
+Kosh stores API keys locally, encrypts secrets at rest, tracks provider usage where APIs allow it, imports local Codex, Claude Code, OpenCode, and Antigravity usage without storing prompts or responses, and exposes a unified OpenAI-compatible gateway over all your providers.
 
 ![Kosh dashboard](./public/screenshots/dashboard.png)
 
 ## What Kosh Does
 
 - **Encrypted API key vault** with platform, environment, notes, rotation metadata, and copy/reveal controls.
+- **AI gateway** — OpenAI-compatible REST API (`/v1/chat/completions`, `/v1/messages`, `/v1/models`, images, embeddings, TTS, search, and more) served from your own machine. One key, many providers.
+- **Combos** — route a model name across multiple providers with automatic fallback when one fails or runs dry.
 - **Usage dashboard** for cost, calls, and token trends across API keys and local AI tools.
 - **Local AI usage imports** from Codex (`~/.codex/`), Claude Code (`~/.claude/`), OpenCode (`~/.opencode/`), and Antigravity (`~/.gemini/antigravity-cli/`) — all priced via shared LiteLLM pricing with automatic fallback for 700+ models.
 - **Codex rate limit snapshots** from local auth or CLI status.
@@ -156,12 +158,13 @@ For Codex quota, Kosh has a separate quota refresh path. It can use local Codex 
 
 ## Views
 
-Kosh has six main views:
+Kosh has seven main views:
 
 - **Dashboard** — Metric overview, spend telemetry chart, local source summary cards, and key table with search.
 - **Pulse** — Per-source and per-key usage breakdown with 7-day sparklines, cost/calls/tokens, and sync controls.
 - **Vault** — Encrypted key treasury with search, filtering, bulk selection, rotation tracking, and expiry badges.
 - **Alerts** — Configure and manage cost, calls, and token threshold alerts across keys and local sources.
+- **Gateway** — Provider connections, model combos, proxy pools, media providers, request console, and CLI tool integrations.
 - **Settings** — Security (master key, persistent lock, auto-lock), data management (export/import), appearance (light/dark/system), and danger zone.
 - **Setup** — One-time local bootstrap with onboarding instructions.
 
@@ -175,6 +178,7 @@ kosh/
   lib/
     connectors/           20 provider connectors with capability metadata
     usage/                Import, rollup, pricing, and quota helpers
+  open-sse/               Gateway engine: provider registry, executors, translators
   prisma/                 Schema and migrations
   public/
     branding/             Theme-aware kosh logo assets (dark/light)
@@ -183,7 +187,7 @@ kosh/
 
 ## Security Notes
 
-- Never commit `.env`.
+- Never commit `.env`, `data/master.key`, or anything under `data/`.
 - Back up `KOSH_MASTER_KEY`; losing it means losing access to encrypted keys.
 - Local usage imports store token/cost metadata, not prompt or response content.
 - Exported backups exclude decrypted key values.
