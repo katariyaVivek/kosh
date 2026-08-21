@@ -4,6 +4,12 @@ const proxyClientMaxBodySize = (process.env.NINEROUTER_PROXY_CLIENT_MAX_BODY_SIZ
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Repo runs `tsc --noEmit` directly (see CI/dev). Skipped during consumer
+  // builds because npm installs this package INSIDE node_modules, where
+  // TypeScript refuses to include our own .js modules for inference.
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   serverExternalPackages: ["better-sqlite3", "sql.js", "node:sqlite", "bun:sqlite", "open"],
   turbopack: {
     root: process.cwd(),

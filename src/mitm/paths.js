@@ -6,7 +6,9 @@ const APP_NAME = "kosh";
 const SUB_DIR = "gateway";
 
 function defaultDir() {
-  const projectDir = path.join(process.cwd(), "data", SUB_DIR);
+  const projectDir = process.env.KOSH_HOME
+    ? path.join(process.env.KOSH_HOME, "data", SUB_DIR)
+    : path.join(process.cwd(), "data", SUB_DIR);
   try {
     fs.mkdirSync(projectDir, { recursive: true });
     return projectDir;

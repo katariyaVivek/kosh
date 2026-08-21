@@ -72,3 +72,6 @@ prisma/*.sqlite-journal
 
 # playwright browser testing
 .playwright-mcp/
+
+# npm pack artifacts
+*.tgz

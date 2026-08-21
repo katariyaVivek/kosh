@@ -20,7 +20,9 @@ import {
   __setCacheData,
 } from "./providerCreds.js";
 
-const CACHE_DIR = path.join(process.cwd(), "data");
+// Cache lives under KOSH_HOME (set by the kosh CLI) so npm updates never wipe
+// detected credentials; falls back to project ./data for source runs / Docker.
+const CACHE_DIR = path.join(process.env.KOSH_HOME || process.cwd(), "data");
 const CACHE_FILE = path.join(CACHE_DIR, "provider-creds.json");
 
 // ---------------------------------------------------------------------------

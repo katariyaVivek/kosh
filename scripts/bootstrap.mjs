@@ -5,12 +5,17 @@ import path from "path"
 import os from "os"
 import { execSync } from "child_process"
 
-const rootDir = process.cwd()
+const rootDir = process.env.KOSH_HOME || process.cwd()
 const envPath = path.join(rootDir, ".env")
-const envExamplePath = path.join(rootDir, ".env.example")
+const envExamplePath = path.join(process.cwd(), ".env.example")
 const dataDir = path.join(rootDir, "data")
 const masterKeyPath = path.join(dataDir, "master.key")
-const databaseUrl = "file:./kosh.db"
+// Absolute DB path under KOSH_HOME so the CLI install keeps its database
+// outside the npm package dir; relative ./kosh.db preserved for dev/Docker.
+const toPosix = (p) => p.split(path.sep).join("/")
+const databaseUrl = process.env.KOSH_HOME
+  ? `file:${toPosix(path.join(rootDir, "kosh.db"))}`
+  : "file:./kosh.db"
 const gatewayDataDir = path.join(dataDir, "gateway")
 const gatewayDbDir = path.join(gatewayDataDir, "db")
 const gatewayDbPath = path.join(gatewayDbDir, "data.sqlite")
@@ -271,8 +276,11 @@ async function main() {
 
   // Step 1: Kosh Vault & Pulse Prisma DB
   console.log("\n--- [1/3] Initializing Kosh Vault & Pulse Database (Prisma) ---")
-  execSync("npm run db:generate", { stdio: "inherit" })
-  execSync("npm run db:deploy", { stdio: "inherit" })
+  // Prisma CLI reads .env from cwd/schema dir; with KOSH_HOME relocation the
+  // .env lives elsewhere, so pass the resolved URL explicitly.
+  const dbEnv = { ...process.env, DATABASE_URL: databaseUrl }
+  execSync("npm run db:generate", { stdio: "inherit", env: dbEnv })
+  execSync("npm run db:deploy", { stdio: "inherit", env: dbEnv })
 
   // Step 2: Kosh Gateway DB
   console.log("\n--- [2/3] Initializing Kosh Gateway Database (SQLite) ---")

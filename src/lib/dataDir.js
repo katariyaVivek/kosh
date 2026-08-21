@@ -6,8 +6,11 @@ const APP_NAME = "kosh";
 const SUB_DIR = "gateway";
 
 function defaultDir() {
-  // 1. Primary: Project local ./data/gateway directory
-  const projectDir = path.join(process.cwd(), "data", SUB_DIR);
+  // 0. KOSH_HOME (set by the kosh CLI) keeps data outside the npm package dir
+  const koshHomeDir = process.env.KOSH_HOME
+    ? path.join(process.env.KOSH_HOME, "data", SUB_DIR)
+    : null;
+  const projectDir = koshHomeDir || path.join(process.cwd(), "data", SUB_DIR);
 
   // 2. Auto-migrate existing AppData/Roaming database if present and target doesn't exist
   try {

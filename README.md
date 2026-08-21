@@ -49,8 +49,47 @@ Local Codex, Claude Code, OpenCode, and Antigravity imports store token and cost
 
 ### Prerequisites
 
-- Node.js 20+
-- npm
+- Node.js 20+ (22.5+ recommended)
+- npm, pnpm, or yarn
+
+### Install (any OS: Windows PowerShell, macOS, Linux)
+
+```bash
+npm install -g kosh-treasury
+```
+
+Then run it from any terminal:
+
+```bash
+kosh
+```
+
+First run generates your master key and databases under `~/.kosh` (never inside the npm package, so updates are always safe), builds once (~60s), and opens `http://localhost:3000`.
+
+Other package managers:
+
+```bash
+pnpm add -g kosh-treasury        # pnpm
+yarn global add kosh-treasury    # yarn 1.x
+npx kosh-treasury@latest         # try without installing
+```
+
+Useful commands:
+
+```bash
+kosh --port 4000        # choose a port (default 3000, or KOSH_PORT)
+kosh --dir D:\kosh-data # custom data directory (or KOSH_HOME env var)
+kosh --no-open          # don't auto-open the browser
+kosh bootstrap          # re-run setup only
+kosh build              # refresh the production build only
+```
+
+Updates and removal:
+
+```bash
+npm update -g kosh-treasury     # update (your data in ~/.kosh survives)
+npm uninstall -g kosh-treasury  # remove the app (data is kept)
+```
 
 ### Local Development
 

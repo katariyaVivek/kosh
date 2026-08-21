@@ -3,7 +3,9 @@ import * as fs from "fs"
 import * as path from "path"
 
 export const MIN_MASTER_KEY_LENGTH = 12
-const MASTER_KEY_FILE = path.join(process.cwd(), "data", "master.key")
+// KOSH_HOME (set by the kosh CLI) keeps the key outside the npm package dir
+// so updates never wipe it; falls back to project ./data for source runs/Docker.
+const MASTER_KEY_FILE = path.join(process.env.KOSH_HOME || process.cwd(), "data", "master.key")
 
 export function validateMasterKey(key: string): boolean {
   return key.length >= MIN_MASTER_KEY_LENGTH
